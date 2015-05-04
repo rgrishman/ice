@@ -1,0 +1,11 @@
+*.ipr
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/artifacts/**
+config/**
+target/
+*.bak
+*.b
+*.save
+tmp/

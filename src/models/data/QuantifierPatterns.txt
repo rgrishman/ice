@@ -1,0 +1,9 @@
+// handle gram of drugs
+
+pattern set quantifiers;
+
+quantifier	:= "gram" | "grams" | "kilogram" | "kilograms" | "pound" | "pounds" | "ounce" | "ounces";
+
+name-with-quantifier := (quantifier):Arg2 "of" [enamex]:Arg1;
+
+when name-with-quantifier	add [qenamex name=Arg1];

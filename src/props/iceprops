@@ -1,0 +1,4 @@
+Ice.TermRanker.alpha = 0
+# Ice.DepEmbeddings.fileName = deps.words
+Ice.Bootstrapper.diversify = false
+Ice.Bootstrapper.debug     = false
