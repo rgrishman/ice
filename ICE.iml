@@ -20,7 +20,7 @@
     <orderEntry type="module-library">
       <library name="Maven: edu.nyu.cs.proteus:Jet:1.8.0.11-ICE">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/Jet-1.8.0.11-ICE-jar-with-dependencies.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/jet-all.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

@@ -73,7 +73,7 @@
         <artifactId>Jet</artifactId>
         <version>1.8.0.11-ICE</version>
         <scope>system</scope>
-        <systemPath>${project.basedir}/lib/Jet-1.8.0.11-ICE-jar-with-dependencies.jar</systemPath>
+        <systemPath>${project.basedir}/lib/jet-all.jar</systemPath>
     </dependency>
 </dependencies>
 
