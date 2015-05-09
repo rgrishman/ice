@@ -403,13 +403,13 @@ public class Corpus {
         Box box = Box.createVerticalBox();
         box.setOpaque(false);
         box.setMinimumSize(new Dimension(500, 300));
-        TitledBorder border = new TitledBorder("Find Patterns");
+        TitledBorder border = new TitledBorder("Find Phrases");
         // border.setTitleColor(Color.RED);
         box.setBorder(border);
 
         Box buttonsBox = Box.createHorizontalBox();
-        JButton findRelationsButton = new JButton("Find patterns");
-        JButton rankRelationsButton = new JButton("Rank patterns");
+        JButton findRelationsButton = new JButton("Find Phrases");
+        JButton rankRelationsButton = new JButton("Rank Phrases");
         buttonsBox.add(findRelationsButton);
         buttonsBox.add(rankRelationsButton);
         box.add(buttonsBox);
@@ -457,13 +457,13 @@ public class Corpus {
     public Box patternBox() {
 
         Box box = Box.createVerticalBox();
-        TitledBorder border = new TitledBorder("Find Patterns");
+        TitledBorder border = new TitledBorder("Find Phrases");
         border.setTitleColor(Color.RED);
         box.setBorder(border);
 
         Box buttonsBox = Box.createHorizontalBox();
-        JButton findRelationsButton = new JButton("find patterns");
-        JButton rankRelationsButton = new JButton("rank patterns");
+        JButton findRelationsButton = new JButton("Find Phrases");
+        JButton rankRelationsButton = new JButton("Rank Phrases");
         buttonsBox.add(findRelationsButton);
         buttonsBox.add(rankRelationsButton);
         box.add(buttonsBox);

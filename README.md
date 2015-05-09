@@ -41,8 +41,8 @@ obtain Jet from: <http://cs.nyu.edu/grishman/jet/jet.html>
 
 The current version of Ice assumes that it is run from a "working directory", where three 
 Jet property files are located: *props*, *parseprops*, and *onomaprops*. These three files 
-tell Ice where models for Jet are located. These two files are released together with the 
-Java source code: `src/props`.
+tell Ice where models for Jet are located. These files are released together with the 
+Java source code in the `src/props` directory.
 
 In theory, Jet model files can sit anywhere. However, to use the property files directly, 
 you can copy `data/` and `acedata/` directories from Jet into the working directory.
@@ -86,5 +86,5 @@ Then, from the working directory, run
 
 # Using Ice
 
-Please refer to docs/iceman.html for usage.
+Please refer to [Iceman](docs/iceman.html) for usage.
 

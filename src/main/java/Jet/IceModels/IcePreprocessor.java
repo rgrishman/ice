@@ -27,6 +27,7 @@ import Jet.Tipster.Document;
 import Jet.Tipster.ExternalDocument;
 import Jet.Tipster.Span;
 import Jet.Zoner.SentenceSet;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.*;
@@ -112,9 +113,16 @@ public class IcePreprocessor extends Thread {
 
         File cacheDirFile = new File(cacheDir);
         cacheDirFile.mkdirs();
+        try {
+            FileUtils.copyFile(new File(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
+                    new File(cacheDir + File.separator + "apf.v5.1.1.dtd"));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
         //String cacheRepository = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
         // initialize Jet
-
 
         JetTest.initializeFromConfig(propsFile);
         // load ACE type dictionary

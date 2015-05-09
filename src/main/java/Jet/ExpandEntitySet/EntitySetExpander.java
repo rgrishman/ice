@@ -450,7 +450,9 @@ class SquaredEuclideanSimilarity extends Similarity {
 
 class SimilarityComparator implements Comparator<Entity> {
     public int compare(Entity entity1, Entity entity2) {
-        return entity1.getScore() > entity2.getScore() ? 1 : -1;
+        if (entity1.getScore() > entity2.getScore()) return 1;
+        if (entity1.getScore() < entity2.getScore()) return -1;
+        return 0;
     }
 
     @Override

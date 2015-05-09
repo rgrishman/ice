@@ -160,7 +160,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                     Ice.selectedCorpus.directory,
-                        "parseprops",
+                        Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
                         Ice.selectedCorpus.docListFileName,
                         filterTextField.getText(),
                         FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)

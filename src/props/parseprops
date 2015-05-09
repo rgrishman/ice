@@ -8,7 +8,8 @@ Gazetteer.fileName      = loc.dict
 NameGender.fileName     = gender.dict
 Tags.fileName           = pos_hmm.txt
 Chunker.fileName        = chunkModel.txt
-NameTags.fileName        = ../acedata/AceName06HMM.txt
+NameTags.ME.fileName = ../acedata/AceOntoMeneModel
+WordClusters.fileName = brownClusters10-2014.txt
 Pattern.fileName1       = MEchunkPatterns.txt
 Ace.EDTtype.fileName     = ../kddData/EDTypesForKDD13.dict
 Ace.NameSubtypeModel.fileName     = ../acedata/ACEnameSubtypeModel 05.txt
@@ -16,9 +17,9 @@ DepParser.model.fileName = parseModel.gz
 DepParser.transformations = yes
 Ace.generic.fileName      = ../acedata/generic dict 05.txt
 ##### ICE USER CONFIG FILES #####
-Onoma.fileName           = ../kddData/ice_onoma.dict
-Ace.EDTtype.auxFileName  = ../kddData/EDTypesFromUser.dict
-Ace.RelationModel.fileName = ../kddData/iceRelationModel
+Onoma.fileName           = ../acedata/ice_onoma.dict
+Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
+Ace.RelationModel.fileName = ../acedata/iceRelationModel
 #################################
 #
 processDocument      =sentenceSplit, sentence:processSentence
