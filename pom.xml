@@ -71,7 +71,7 @@
     <dependency>
         <groupId>edu.nyu.cs.proteus</groupId>
         <artifactId>Jet</artifactId>
-        <version>1.8.0.11-ICE</version>
+        <version>1.8.1</version>
         <scope>system</scope>
         <systemPath>${project.basedir}/lib/jet-all.jar</systemPath>
     </dependency>
