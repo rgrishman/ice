@@ -15,8 +15,8 @@ import java.util.Map;
  */
 public class PathMatcher {
 
-    private TObjectDoubleHashMap<String> weights = new TObjectDoubleHashMap<String>();
-    private TObjectDoubleHashMap<String> labelWeights = new TObjectDoubleHashMap<String>();
+    private TObjectDoubleHashMap weights = new TObjectDoubleHashMap();
+    private TObjectDoubleHashMap labelWeights = new TObjectDoubleHashMap();
 
     private static final double LABEL_MISMATCH_PENALTY = 2.5;
     private Map<String, double[]> embeddings = null;

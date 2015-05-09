@@ -17,7 +17,7 @@ public class IcePath implements Comparable<IcePath> {
     private String repr;
     private String example;
     private double score;
-    public  TObjectDoubleHashMap<String> subScores;
+    public  TObjectDoubleHashMap subScores;
     private IcePathChoice choice;
 
     public IcePath(String path, String repr, String example, double score, IcePathChoice choice) {
@@ -36,7 +36,7 @@ public class IcePath implements Comparable<IcePath> {
         this.choice = IcePathChoice.UNDECIDED;
     }
 
-    public IcePath(String path, String repr, String example, double score, TObjectDoubleHashMap<String> subScores) {
+    public IcePath(String path, String repr, String example, double score, TObjectDoubleHashMap subScores) {
         this.path = path;
         this.repr = repr;
         this.example = example;

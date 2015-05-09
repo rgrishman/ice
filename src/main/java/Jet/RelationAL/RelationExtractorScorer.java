@@ -9,14 +9,14 @@ import gnu.trove.TObjectIntHashMap;
  * @version 1.0
  */
 public class RelationExtractorScorer {
-    TObjectIntHashMap<String> correctCounter = new TObjectIntHashMap<String>();
-    TObjectIntHashMap<String> proposedCounter = new TObjectIntHashMap<String>();
-    TObjectIntHashMap<String> goldCounter = new TObjectIntHashMap<String>();
+    TObjectIntHashMap correctCounter = new TObjectIntHashMap();
+    TObjectIntHashMap proposedCounter = new TObjectIntHashMap();
+    TObjectIntHashMap goldCounter = new TObjectIntHashMap();
 
     public void init() {
-        correctCounter = new TObjectIntHashMap<String>();
-        proposedCounter = new TObjectIntHashMap<String>();
-        goldCounter = new TObjectIntHashMap<String>();
+        correctCounter = new TObjectIntHashMap();
+        proposedCounter = new TObjectIntHashMap();
+        goldCounter = new TObjectIntHashMap();
     }
 
     public void addEvent(String goldLabel, String predictedLabel) {

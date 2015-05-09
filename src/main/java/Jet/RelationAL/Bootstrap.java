@@ -265,7 +265,7 @@ public class Bootstrap {
                 continue;
             }
             String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
-            TObjectDoubleHashMap<String> subScores = new TObjectDoubleHashMap<String>();
+            TObjectDoubleHashMap subScores = new TObjectDoubleHashMap();
             subScores.put("nearestNeighborConfusion", nearestNeighborConfusion);
             subScores.put("borderConfusion", borderConfusion);
             subScores.put("argConfusion", argConfusion);
