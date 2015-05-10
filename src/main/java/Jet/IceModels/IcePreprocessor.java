@@ -113,6 +113,12 @@ public class IcePreprocessor extends Thread {
 
         File cacheDirFile = new File(cacheDir);
         cacheDirFile.mkdirs();
+
+        //String cacheRepository = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
+        // initialize Jet
+
+        JetTest.initializeFromConfig(propsFile);
+
         try {
             FileUtils.copyFile(new File(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
                     new File(cacheDir + File.separator + "apf.v5.1.1.dtd"));
@@ -121,10 +127,6 @@ public class IcePreprocessor extends Thread {
             e.printStackTrace();
             return;
         }
-        //String cacheRepository = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
-        // initialize Jet
-
-        JetTest.initializeFromConfig(propsFile);
         // load ACE type dictionary
         EDTtype.readTypeDict();
         // turn off traces
