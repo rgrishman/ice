@@ -38,7 +38,12 @@ __ Adding a new corpus__
 
 To add a new corpus, first click *add corpus* , then either enter the path of the
 root directory of the corpus or click *browse* to select the directory where the
-files are located. You can apply a filter on the extension of the filename (e.g. sgm) in the corresponding text filter;  You need to hit Enter key to apply the filter.
+files are located. You can apply a filter on the extension of the filename (e.g. sgm) 
+in the corresponding text filter;  You need to click "Apply" to apply the filter.
+
+Clicking "Apply" will start the preprocessing process, which is rather **slow**.
+This process will perform dependency parsing, name tagging, and coref resolution, and
+will save the result of these steps for use by the following components.
 
 __The background corpus__
 
