@@ -1,11 +1,10 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.IceModels.IcePreprocessor;
-import Jet.IceUI.Ice;
-import Jet.IceUtils.FileNameSchema;
-import Jet.IceUtils.SwingProgressMonitor;
+import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.controllers.IceController;
-import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.views.CorpusPanel;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;

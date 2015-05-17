@@ -1,12 +1,12 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.ExpandEntitySet.EntitySetExpander;
-import Jet.ExpandEntitySet.EntitySetRankThread;
-import Jet.IceModels.IceEntitySet;
-import Jet.IceUI.EntitySetRankerFrame;
-import Jet.IceUI.Ice;
-import Jet.IceUtils.FileNameSchema;
-import Jet.IceUtils.SwingProgressMonitor;
+import edu.nyu.jet.ice.entityset.EntitySetExpander;
+import edu.nyu.jet.ice.entityset.EntitySetRankThread;
+import edu.nyu.jet.ice.models.IceEntitySet;
+import edu.nyu.jet.ice.uicomps.EntitySetRankerFrame;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 

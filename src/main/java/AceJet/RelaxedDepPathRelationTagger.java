@@ -1,11 +1,11 @@
 package AceJet;
 
-import Jet.IceModels.DepPathRegularizer;
-import Jet.IceUtils.IceUtils;
+import edu.nyu.jet.ice.models.DepPathRegularizer;
+import edu.nyu.jet.ice.utils.IceUtils;
 import Jet.JetTest;
 import Jet.Parser.SyntacticRelationSet;
 import Jet.Refres.Resolve;
-import Jet.RelationAL.PathRelationExtractor;
+import edu.nyu.jet.ice.relation.PathRelationExtractor;
 import Jet.Tipster.Document;
 import Jet.Tipster.ExternalDocument;
 import Jet.Zoner.SentenceSet;

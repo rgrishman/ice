@@ -1,10 +1,9 @@
 package AceJet;
 
 import Jet.Control;
-import Jet.IceModels.DepPath;
-import Jet.IceModels.DepPaths;
-import Jet.IceModels.IcePreprocessor;
-import Jet.IceUtils.IceUtils;
+import edu.nyu.jet.ice.models.DepPaths;
+import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.utils.IceUtils;
 import Jet.JetTest;
 import Jet.Parser.DepParser;
 import Jet.Parser.SyntacticRelation;

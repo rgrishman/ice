@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.IceUI.Ice;
+import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 

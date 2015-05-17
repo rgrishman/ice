@@ -1,12 +1,12 @@
 package edu.nyu.jet.ice.controllers;
 
-import Jet.IceModels.Corpus;
-import Jet.IceModels.JetEngineBuilder;
-import Jet.IceModels.PathMatcher;
-import Jet.RelationAL.Bootstrap;
+import edu.nyu.jet.ice.models.Corpus;
+import edu.nyu.jet.ice.models.JetEngineBuilder;
+import edu.nyu.jet.ice.models.PathMatcher;
+import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
-import Jet.IceUI.Ice;
+import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.views.CorpusPanel;
 import net.miginfocom.swing.MigLayout;
 import org.ho.yaml.YamlDecoder;

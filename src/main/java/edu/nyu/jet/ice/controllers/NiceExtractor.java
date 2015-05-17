@@ -1,9 +1,8 @@
 package edu.nyu.jet.ice.controllers;
 
-import Jet.IceModels.Corpus;
-import Jet.IceModels.DepPaths;
-import Jet.IceUtils.FileNameSchema;
-import Jet.IceUtils.IceUtils;
+import edu.nyu.jet.ice.models.Corpus;
+import edu.nyu.jet.ice.models.DepPaths;
+import edu.nyu.jet.ice.utils.IceUtils;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.io.FileUtils;
 
