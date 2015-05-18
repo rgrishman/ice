@@ -34,7 +34,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
     private JTextField directoryTextField = new JTextField();
     private JLabel filterLabel = new JLabel("Filter");
     private JTextField filterTextField = new JTextField();
-    private JButton applyFilterButton = new JButton("Apply");
+    private JButton preprocessButton = new JButton("Preprocess");
     private JLabel statisticsLabel = new JLabel("Current corpus has 0 documents.");
     private JButton saveProgressButton = new JButton("Save progress");
     private JButton exportButton = new JButton("Export to Jet");
@@ -68,7 +68,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         foregroundPanel.add(filterLabel);
         filterTextField.setMinimumSize(new Dimension(240, 20));
         foregroundPanel.add(filterTextField, "span 3");
-        foregroundPanel.add(applyFilterButton, "wrap");
+        foregroundPanel.add(preprocessButton, "wrap");
         foregroundPanel.add(statisticsLabel, "span");
 
         JPanel backgroundPanel = new JPanel();
@@ -154,11 +154,11 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
             }
         });
 
-        applyFilterButton.addActionListener(new ActionListener() {
+        preprocessButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
-                    Ice.selectedCorpus.directory,
+                        Ice.selectedCorpus.directory,
                         Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
                         Ice.selectedCorpus.docListFileName,
                         filterTextField.getText(),
@@ -168,13 +168,12 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         "Preprocessing files",
                         "Processing files with Jet...",
                         0,
-                        Ice.selectedCorpus.getNumberOfDocs() + 5
+                        Ice.selectedCorpus.getNumberOfDocs() + 15
                 );
                 icePreprocessor.setProgressMonitor(progressMonitor);
                 try {
                     Thread.sleep(500);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 icePreprocessor.start();

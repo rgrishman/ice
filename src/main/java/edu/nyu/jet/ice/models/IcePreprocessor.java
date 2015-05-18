@@ -7,6 +7,9 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 
 import AceJet.*;
 import Jet.Control;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import Jet.JetTest;
 import Jet.Lex.Stemmer;
@@ -191,8 +194,7 @@ public class IcePreprocessor extends Thread {
                 if (relations == null) {
                     continue;
                 }
-                // relations.addInverses();
-                // start writing ENAMEX and Syntactic Relation Set cache
+
                 if (progressMonitor != null) {
                     progressMonitor.setProgress(docCount + 5);
                     progressMonitor.setNote(docCount + " files processed");
@@ -203,7 +205,30 @@ public class IcePreprocessor extends Thread {
                     }
                 }
             }
-
+            // Do word count now
+            String[] docFileNames = null;
+            try {
+                docFileNames = IceUtils.readLines(FileNameSchema.getDocListFileName(Ice.selectedCorpus.name));
+            }
+            catch (IOException e) {
+                e.printStackTrace(System.err);
+                return;
+            }
+            if (progressMonitor != null) {
+                progressMonitor.setNote("Counting words...");
+            }
+            String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
+            TermCounter counter = TermCounter.prepareRun("onomaprops",
+                    Arrays.asList(docFileNames),
+                    Ice.selectedCorpus.directory,
+                    Ice.selectedCorpus.filter,
+                    wordCountFileName,
+                    null);
+            counter.run();
+            if (progressMonitor != null && ! progressMonitor.isCanceled()) {
+                progressMonitor.setProgress(progressMonitor.getMaximum());
+            }
+            Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
         } catch (IOException e) {
             e.printStackTrace();
         }

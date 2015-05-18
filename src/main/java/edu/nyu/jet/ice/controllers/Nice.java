@@ -234,34 +234,6 @@ public class Nice implements IceController {
         mainFrame.setLocationRelativeTo(null); // center main window
 
         reassemble();
-//        Container contentPane = mainFrame.getContentPane();
-//        contentPane.setLayout(new MigLayout());
-//
-//        IceController niceController = new Nice();
-//        Nice.instance = (Nice)niceController;
-//        SwingCorpusPanel swingCorpusPanel = new SwingCorpusPanel(niceController);
-//        niceController.setCorpusPanel(swingCorpusPanel);
-//        SwingEntitiesPanel swingEntitiesPanel = null;
-//        SwingPathsPanel swingPathsPanel = null;
-//        SwingEntitySetPanel swingEntitySetPanel = null;
-//        SwingRelationsPanel swingRelationsPanel = null;
-//        if (Ice.corpora.size() > 0) {
-//            swingEntitiesPanel = new SwingEntitiesPanel();
-//            swingPathsPanel = new SwingPathsPanel();
-//            swingEntitySetPanel = new SwingEntitySetPanel();
-//            swingRelationsPanel = new SwingRelationsPanel();
-//        }
-//        assembleTabs(contentPane, swingCorpusPanel, swingEntitiesPanel, swingPathsPanel,
-//                swingEntitySetPanel, swingRelationsPanel);
-//        niceController.setEntitiesPanel(swingEntitiesPanel);
-//        niceController.setPathsPanel(swingPathsPanel);
-//
-//        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        mainFrame.setMinimumSize(new Dimension(560, 480));
-//        mainFrame.pack();
-//        mainFrame.setLocationRelativeTo(null); // center main window
-//        mainFrame.setVisible(true);
-//        niceController.refreshAll();
     }
 
     public static void reassemble() {

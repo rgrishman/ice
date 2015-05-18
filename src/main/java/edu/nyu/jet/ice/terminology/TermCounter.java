@@ -66,7 +66,9 @@ public class TermCounter extends Thread {
         }
         try {
             Thread.sleep(500);
-            progressMonitor.setProgress(2);
+            if (progressMonitor != null) {
+                progressMonitor.setProgress(2);
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
