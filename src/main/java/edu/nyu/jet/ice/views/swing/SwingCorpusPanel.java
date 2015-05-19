@@ -156,6 +156,20 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
 
         preprocessButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                Object[] options = {"No",
+                        "Yes"};
+                int n = JOptionPane.showOptionDialog(null,
+                        "Preprocessing is the (only) time consuming step in ICE\n" +
+                        "Do you wish to continue?",
+                        "Continue with preprocessing?",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]);
+                if (n == 0) {
+                    return;
+                }
                 SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                         Ice.selectedCorpus.directory,

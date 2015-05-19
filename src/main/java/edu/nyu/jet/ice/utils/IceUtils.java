@@ -10,6 +10,8 @@ import Jet.Parser.SyntacticRelationSet;
 import Jet.Tipster.Annotation;
 import Jet.Tipster.Document;
 import Jet.Tipster.Span;
+import edu.nyu.jet.ice.models.Corpus;
+import edu.nyu.jet.ice.uicomps.Ice;
 
 import java.io.*;
 import java.util.*;
@@ -197,6 +199,21 @@ public class IceUtils {
         // output.split();
         // return output.toString();
         return output.toString() + "\n";
+    }
+
+
+    /**
+     *
+     * @return The number of corpora that have been preprocssed and run word count
+     */
+    public static int numOfWordCountedCorpora() {
+        int count = 0;
+        for (Corpus corpus : Ice.corpora.values()) {
+            if (corpus.wordCountFileName != null) {
+                count++;
+            }
+        }
+        return count;
     }
 
 

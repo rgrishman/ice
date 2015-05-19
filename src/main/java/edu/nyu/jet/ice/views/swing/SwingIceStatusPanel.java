@@ -4,6 +4,7 @@ import edu.nyu.jet.ice.models.JetEngineBuilder;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.controllers.Nice;
+import edu.nyu.jet.ice.utils.IceUtils;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;

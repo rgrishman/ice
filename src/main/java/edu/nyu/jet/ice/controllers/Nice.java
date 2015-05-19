@@ -4,6 +4,7 @@ import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.JetEngineBuilder;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.relation.Bootstrap;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
 import edu.nyu.jet.ice.uicomps.Ice;
@@ -270,6 +271,12 @@ public class Nice implements IceController {
         mainFrame.validate();
         mainFrame.repaint();
         niceController.refreshAll();
+        if (IceUtils.numOfWordCountedCorpora() == 1) {
+            JOptionPane.showMessageDialog(null,
+                    "You just processed your first corpus. \n" +
+                            "We need a second corpus to use as background.\n"+
+                            "Please click [Add...] to add another corpus.");
+        }
     }
 
     public static void assembleTabs(Container container,
@@ -287,7 +294,7 @@ public class Nice implements IceController {
         corpusPanel.setMinimumSize(new Dimension(600, 420));
         tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 
-        if (Ice.corpora.size() > 0) {
+        if (IceUtils.numOfWordCountedCorpora() > 1) {
             tabbedPane.addTab("Entities", null, entitiesPanel,
                     "Collect entities in the corpus to support entity set construction");
             entitiesPanel.setMinimumSize(new Dimension(600, 420));
