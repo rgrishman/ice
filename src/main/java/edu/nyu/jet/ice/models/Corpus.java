@@ -123,18 +123,6 @@ public class Corpus {
         return relationTypeFileName;
     }
 
-    public void setRelationTypeFileName(String s) {
-        relationTypeFileName = s;
-    }
-
-    public String getRelationInstanceFileName() {
-        return relationInstanceFileName;
-    }
-
-    public void setRelationInstanceFileName(String s) {
-        relationInstanceFileName = s;
-    }
-
     ProgressMonitorI wordProgressMonitor;
 
     public Corpus(String name) {
@@ -696,64 +684,3 @@ class WordCounter extends Thread {
 }
 
 
-/**
- * count all dependency paths in corpus.
- */
-
-class RelationFinder extends Thread {
-
-    String[] args;
-    String types;
-    JTextArea area;
-    int numberOfDocs;
-    ProgressMonitorI relationProgressMonitor = null;
-
-    RelationFinder(String docListFileName, String directory, String filter,
-                   String instances, String types, JTextArea area, int numberOfDocs,
-                   ProgressMonitorI relationProgressMonitor) {
-        args = new String[7];
-        args[0] = "onomaprops";
-        args[1] = docListFileName;
-        args[2] = directory;
-        args[3] = filter;
-        args[4] = instances;
-        args[5] = "temp";
-        args[6] = "temp.source.dict";
-        this.types = types;
-        this.area = area;
-        this.numberOfDocs = numberOfDocs;
-        this.relationProgressMonitor = relationProgressMonitor;
-    }
-
-    public void run() {
-        try {
-            if (null == relationProgressMonitor) {
-                relationProgressMonitor = new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
-                        "Initializing Jet", 0, numberOfDocs);
-                ((SwingProgressMonitor)relationProgressMonitor).setMillisToDecideToPopup(1);
-            }
-            // force monitor to display during long initialization
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ignore) {
-            }
-            if (null != relationProgressMonitor) {
-                relationProgressMonitor.setProgress(2);
-            }
-            DepPathMap depPathMap = DepPathMap.getInstance();
-            depPathMap.unpersist();
-            DepPaths.progressMonitor = relationProgressMonitor;
-            DepPaths.main(args);
-            Corpus.sort("temp", types);
-            Corpus.sort("temp.source.dict", types + ".source.dict");
-
-			if(area != null) {
-				Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
-			}
-
-        } catch (IOException e) {
-            System.out.println("IOException in DepPaths " + e);
-            e.printStackTrace(System.err);
-        }
-    }
-}

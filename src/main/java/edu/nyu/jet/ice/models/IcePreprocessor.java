@@ -215,7 +215,7 @@ public class IcePreprocessor extends Thread {
                 return;
             }
             if (progressMonitor != null) {
-                progressMonitor.setNote("Counting words...");
+                progressMonitor.setNote("Counting words and relations...");
             }
             String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
             TermCounter counter = TermCounter.prepareRun("onomaprops",
@@ -225,10 +225,20 @@ public class IcePreprocessor extends Thread {
                     wordCountFileName,
                     null);
             counter.run();
+            Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
+
+            RelationFinder finder = new RelationFinder(
+                    Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
+                    Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),
+                    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
+                    Ice.selectedCorpus.numberOfDocs,
+                    null);
+            finder.run();
+            Ice.selectedCorpus.relationTypeFileName =
+                    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
             if (progressMonitor != null && ! progressMonitor.isCanceled()) {
                 progressMonitor.setProgress(progressMonitor.getMaximum());
             }
-            Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
         } catch (IOException e) {
             e.printStackTrace();
         }

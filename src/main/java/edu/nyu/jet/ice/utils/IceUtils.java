@@ -209,7 +209,9 @@ public class IceUtils {
     public static int numOfWordCountedCorpora() {
         int count = 0;
         for (Corpus corpus : Ice.corpora.values()) {
-            if (corpus.wordCountFileName != null) {
+            if (corpus.wordCountFileName != null &&
+                    (corpus.relationTypeFileName != null &&
+                            !corpus.relationTypeFileName.trim().equals("~"))) {
                 count++;
             }
         }

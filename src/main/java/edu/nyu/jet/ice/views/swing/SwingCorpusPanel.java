@@ -182,7 +182,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         "Preprocessing files",
                         "Processing files with Jet...",
                         0,
-                        Ice.selectedCorpus.getNumberOfDocs() + 15
+                        Ice.selectedCorpus.getNumberOfDocs() + 30
                 );
                 icePreprocessor.setProgressMonitor(progressMonitor);
                 try {

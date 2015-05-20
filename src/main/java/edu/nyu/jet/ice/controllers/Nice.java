@@ -250,18 +250,19 @@ public class Nice implements IceController {
         SwingPathsPanel swingPathsPanel = null;
         SwingEntitySetPanel swingEntitySetPanel = null;
         SwingRelationsPanel swingRelationsPanel = null;
-        if (Ice.corpora.size() > 0) {
+        if (IceUtils.numOfWordCountedCorpora() > 1) {
             swingEntitiesPanel = new SwingEntitiesPanel();
             swingPathsPanel = new SwingPathsPanel();
             swingEntitySetPanel = new SwingEntitySetPanel();
             swingRelationsPanel = new SwingRelationsPanel();
+            niceController.setEntitiesPanel(swingEntitiesPanel);
+            niceController.setPathsPanel(swingPathsPanel);
+            niceController.setEntitySetPanel(swingEntitySetPanel);
+            niceController.setRelationsPanel(swingRelationsPanel);
         }
         assembleTabs(contentPane, swingCorpusPanel, swingEntitiesPanel, swingPathsPanel,
                 swingEntitySetPanel, swingRelationsPanel);
-        niceController.setEntitiesPanel(swingEntitiesPanel);
-        niceController.setPathsPanel(swingPathsPanel);
-        niceController.setEntitySetPanel(swingEntitySetPanel);
-        niceController.setRelationsPanel(swingRelationsPanel);
+
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.addWindowListener(new SaveStatusWindowAdapter());
         mainFrame.setMinimumSize(new Dimension(640, 480));
@@ -275,7 +276,8 @@ public class Nice implements IceController {
             JOptionPane.showMessageDialog(null,
                     "You just processed your first corpus. \n" +
                             "We need a second corpus to use as background.\n"+
-                            "Please click [Add...] to add another corpus.");
+                            "Please click [Add...] to add another corpus and\n" +
+                            "then [Preprocess].");
         }
     }
 
