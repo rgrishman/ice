@@ -186,8 +186,8 @@ public class Nice implements IceController {
                 "     \\__\\/      \\  \\::/       \\  \\::/   \n" +
                 "                 \\__\\/         \\__\\/ v0.2\n\n";
         System.err.println(cover);
-        String unicodeMessage = "        \u76F8\u8207\u6795\u85C9\u4E4E\u821F\u4E2D " +
-                "\u4E0D\u77E5\u6771\u65B9\u4E4B\u65E2\u767D";
+        String unicodeMessage = "          寒雨連江夜入吳，平明送客楚山孤。 \n" +
+                "          洛陽親友如相問，一片冰心在玉壺。";
         System.err.println(unicodeMessage);
         File icePropFile = new File("iceprops");
         Properties iceProperties = new Properties();
