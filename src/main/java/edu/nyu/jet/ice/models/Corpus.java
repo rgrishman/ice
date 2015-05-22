@@ -360,17 +360,17 @@ public class Corpus {
         rankRelations(backgroundCorpus, ratioFileName);
     }
 
-    public List<String> rankRelations(String bgCorpus, String fileName) {
+    public static void rankRelations(String bgCorpus, String fileName) {
         try {
             String sortedRatioFileName = fileName + ".sorted";
             Ratio.main(new String[]{
-                    relationTypeFileName,
+                    Ice.selectedCorpus.relationTypeFileName,
                     Ice.corpora.get(bgCorpus).relationTypeFileName,
                     fileName
             });
             IceUtils.numsort(fileName, sortedRatioFileName);
 
-            return getTerms(sortedRatioFileName, 40, relationFilter);
+            // return getTerms(sortedRatioFileName, 40, relationFilter);
         }
         catch (Exception e) {
             JOptionPane.showMessageDialog(Ice.mainFrame,
@@ -379,7 +379,7 @@ public class Corpus {
                     JOptionPane.ERROR_MESSAGE);
             e.printStackTrace(System.err);
         }
-        return new ArrayList<String>();
+        //return new ArrayList<String>();
     }
 
     /**

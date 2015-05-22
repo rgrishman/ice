@@ -236,6 +236,8 @@ public class IcePreprocessor extends Thread {
             finder.run();
             Ice.selectedCorpus.relationTypeFileName =
                     FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
+            Ice.selectedCorpus.relationInstanceFileName =
+                    FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
             if (progressMonitor != null && ! progressMonitor.isCanceled()) {
                 progressMonitor.setProgress(progressMonitor.getMaximum());
             }

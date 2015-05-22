@@ -72,4 +72,8 @@ public class FileNameSchema {
     public static String getPatternRatioFileName(String corpusName, String bgCorpusName) {
         return CACHE_ROOT + File.separatorChar + corpusName + File.separator + bgCorpusName + "-Pattern-Ratio";
     }
+
+    public static String getSortedPatternRatioFileName(String corpusName, String bgCorpusName) {
+        return getPatternRatioFileName(corpusName, bgCorpusName) + ".sorted";
+    }
 }

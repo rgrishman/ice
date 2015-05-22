@@ -101,6 +101,44 @@ public class DepPathMap {
         }
     }
 
+    public boolean forceLoad() {
+        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+        File f = new File(fileName);
+        if (!f.exists() || f.isDirectory()) return false;
+        // if (previousFileName != null && previousFileName.equals(fileName)) return true; // use old data
+        pathExampleMap.clear();
+        pathReprMap.clear();
+        reprPathMap.clear();
+        try {
+            BufferedReader r = new BufferedReader(new FileReader(f));
+            String line = null;
+            while ((line = r.readLine()) != null) {
+                String[] parts = line.split(":::");
+                if (parts.length != 3) continue;
+                String path = parts[0];
+                String repr = parts[1];
+                String example = parts[2];
+//                if (repr.equals("PERSON sell DRUGS")) {
+//                    System.err.println(path + " <> " + repr);
+//                }
+                pathReprMap.put(path, repr);
+                String normalizedRepr = normalizeRepr(repr);
+                if (!reprPathMap.containsKey(normalizedRepr)) {
+                    reprPathMap.put(normalizedRepr, new ArrayList());
+                }
+                reprPathMap.get(normalizedRepr).add(path);
+                pathExampleMap.put(path, example);
+            }
+            r.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        previousFileName = fileName;
+        return true;
+    }
+
     public boolean load() {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);

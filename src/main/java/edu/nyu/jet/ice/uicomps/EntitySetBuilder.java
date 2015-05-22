@@ -138,7 +138,8 @@ public class EntitySetBuilder {
         //radioBox.add(nameButton);
         // nounButton.setSelected(true);
         catBox.add(nounButton);
-        catBox.add(nameButton);
+        // catBox.add(nameButton);
+
 
         indexBox.add(catBox);
 
@@ -147,6 +148,7 @@ public class EntitySetBuilder {
         JLabel cutoffLabel = new JLabel("Cutoff");
         final JTextField cutoffField = new JTextField();
         cutoffField.setColumns(5);
+        cutoffField.setText("3");
         //cutoffBox.add(cutoffLabel);
         //cutoffBox.add(cutoffField);
         //indexBox.add(cutoffBox);
@@ -379,6 +381,9 @@ public class EntitySetBuilder {
                 seedsArea.setText(result);
             }
         });
+
+        nounButton.setSelected(true);
+        type = "nn";
 
         return box;
     }
@@ -646,6 +651,7 @@ public class EntitySetBuilder {
                 seedsArea.setText(result);
             }
         });
+
 
         return box;
     }

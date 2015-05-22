@@ -19,7 +19,7 @@ public class RelationFinder extends Thread {
     int numberOfDocs;
     ProgressMonitorI relationProgressMonitor = null;
 
-    RelationFinder(String docListFileName, String directory, String filter,
+    public RelationFinder(String docListFileName, String directory, String filter,
                    String instances, String types, JTextArea area, int numberOfDocs,
                    ProgressMonitorI relationProgressMonitor) {
         args = new String[7];
@@ -57,7 +57,7 @@ public class RelationFinder extends Thread {
             DepPaths.main(args);
             Corpus.sort("temp", types);
             Corpus.sort("temp.source.dict", types + ".source.dict");
-
+            depPathMap.forceLoad();
 			if(area != null) {
 				Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
 			}

@@ -355,6 +355,7 @@ public class DepPaths {
             typeWriter.close();
             relationReprWriter.close();
             sourceDictWriter.close();
+
         }
 	}
 
