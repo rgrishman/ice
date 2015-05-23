@@ -2,24 +2,32 @@
 
 Licensed under the Apache 2.0 license.
 
-#Building Ice
+# Running Ice Using Binary Release
 
-##Using git
+Alternatively, download the binary distribution and unzip it. In *runice.sh*, point both $ICE\_HOME
+and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
 
-A [quick guide](http://rogerdudler.github.io/git-guide/).
+Then, from the working directory, run
 
-##Installing Maven
+    ./runice.sh
+    
+# Running the Ice Tagger
 
-[maven by example](http://books.sonatype.com/mvnex-book/reference/public-book.html)
+Ice bundles a relation tagger based on Jet, which tags mentions of relations in text files, using
+the models that you build with Ice. Note that before the Ice tagger can find the relations,
+you have to use *Export* in Ice to export them to the underlying Jet tagger.
 
-maven should come preinstalled on OS X, unless you run a version
-later than 10.9 Mavericks.
+To run the tagger, from the working directory, run
 
-run `mvn --version` to find if maven is installed, if it is not, you can
-find tarballs and install instructions here:
-<http://maven.apache.org/download.cgi>
+    ./runtagger.sh propertyFile txtFileList apfFileList
+    
+where propertyFile is the Jet properties file, usually it is parseprops; txtFileList are
+the list of text input files, and apfFileList is the list of output files in Ace apf
+format.
 
-We recommend version 3.0.5, or the latest 3.0.x version
+#Building and Running Ice from Source
+
+We assume that you have git and maven installed on your system.
 
 ## Build
 
@@ -30,8 +38,6 @@ Please run:
 If everything works, you should find
 ICE-0.2.0-jar-with-dependencies.jar (the fatjar), and ICE-0.2.0.jar in
 target/
-
-# Running Ice (Built from source)
 
 ## Preparing models
 
@@ -74,17 +80,8 @@ $ICE\_LIB\_HOME to the directory containing Jet-1.8.0.11-ICE-jar-with-dependenci
 Then, from the working directory, run
 
     ./runice.sh
-    
-# Running Ice (Binary release)
 
-Alternatively, download the binary distribution and unzip it. In *runice.sh*, point both $ICE\_HOME
-and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
-
-Then, from the working directory, run
-
-    ./runice.sh
-
-# Using Ice
+# User Manual
 
 Please refer to [Iceman](docs/iceman.html) for usage.
 

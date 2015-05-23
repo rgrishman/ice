@@ -120,7 +120,8 @@ You are now ready to build an entity set.  Select the *Add* button on the
 left side of the *Entity Set* panel and provide a name for the entity set.
 Next add at least two seeds to the set, using the *Add* button on the
 right side, under "Members". Click *Suggest* if you want Ice to suggest
-seeds for you.
+seeds for you. (Currently *Suggest* will always suggest the same seeds
+even if you click it multiple times.)
 
 Once you have entered your seeds, select *Expand*.  ICE will compute
 similarities as described above and display a list of terms, ranked
@@ -172,7 +173,8 @@ Building relations is just like building entity sets.  Select the *Add* button o
 left side of the *Relations* panel and provide a name for the relation.
 Next add at least one seed to the set, using the *Add* button on the
 right side, under "Members". Click *Suggest* if you want Ice to suggest a seed pattern
-for you.
+for you. (Currently *Suggest* will always suggest the same seeds
+ even if you click it multiple times.)
 
 Once you have entered your seeds, select *Expand*.  ICE will bootstrap
 patterns that distribute similarly to your seed pattern. You mark items as correct or
