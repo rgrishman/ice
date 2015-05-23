@@ -75,7 +75,6 @@ public class SwingEntitiesPanel extends JPanel implements Refreshable {
     }
 
     public static java.util.List<String> getTerms(String termFile, int limit) {
-        ListFilter tf = new TermFilter();
         java.util.List<String> topTerms = new ArrayList<String>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(termFile));

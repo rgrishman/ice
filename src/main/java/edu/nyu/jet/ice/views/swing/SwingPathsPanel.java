@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.views.swing;
 
 import edu.nyu.jet.ice.models.Corpus;
+import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.RelationFinder;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.uicomps.RelationFilter;
@@ -15,7 +16,10 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  * Created by yhe on 10/13/14.
@@ -54,7 +58,15 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
             public void actionPerformed(ActionEvent e) {
                 ProgressMonitorI progressMonitor = new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
                         "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
-                checkForAndFindRelations(progressMonitor);
+                checkForAndFindRelations(progressMonitor, false);
+            }
+        });
+
+        sententialPatternsButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ProgressMonitorI progressMonitor = new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
+                        "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
+                checkForAndFindRelations(progressMonitor, true);
             }
         });
 
@@ -72,7 +84,8 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
         iceStatusPanel.refresh();
     }
 
-    public void checkForAndFindRelations(ProgressMonitorI progressMonitor) {
+    public void checkForAndFindRelations(ProgressMonitorI progressMonitor,
+                                         boolean sententialOnly) {
         String relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
         String relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
         File file = new File(relationTypeFileName);
@@ -93,6 +106,35 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 //                return;
             }
         }
+        PathExtractionThread thread = new PathExtractionThread(shouldReuse,
+                sententialOnly, textArea, progressMonitor);
+        thread.start();
+
+        // findRelations(progressMonitor, "", relationTextArea);
+    }
+
+}
+
+class PathExtractionThread extends Thread {
+
+    private boolean shouldReuse;
+    private ProgressMonitorI progressMonitor;
+    private JTextArea textArea;
+    private boolean   sententialOnly;
+    private static final int SIZE_LIMIT = 100;
+
+    public PathExtractionThread(boolean shouldReuse,
+                                boolean sententialOnly,
+                                JTextArea textArea,
+                                ProgressMonitorI progressMonitor) {
+        this.shouldReuse = shouldReuse;
+        this.sententialOnly = sententialOnly;
+        this.textArea    = textArea;
+        this.progressMonitor = progressMonitor;
+    }
+
+    @Override
+    public void run() {
         if (!shouldReuse) {
             RelationFinder finder = new RelationFinder(
                     Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
@@ -100,21 +142,50 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
                     FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
                     Ice.selectedCorpus.numberOfDocs,
                     progressMonitor);
-            finder.start();
+            finder.run();
             Ice.selectedCorpus.relationTypeFileName =
                     FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
             Ice.selectedCorpus.relationInstanceFileName =
                     FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
         }
-
+        progressMonitor.setNote("Postprocessing...");
         // rank paths
         Corpus.rankRelations(Ice.selectedCorpus.backgroundCorpus,
                 FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
                         Ice.selectedCorpus.backgroundCorpus));
+        DepPathMap depPathMap = DepPathMap.getInstance();
+        depPathMap.load();
         // filter and show paths
-
-
-        // findRelations(progressMonitor, "", relationTextArea);
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(
+                    FileNameSchema.getSortedPatternRatioFileName(Ice.selectedCorpusName,
+                            Ice.selectedCorpus.backgroundCorpus)
+            ));
+            int k = 0;
+            StringBuilder b = new StringBuilder();
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) break;
+                if (sententialOnly && !line.matches(".*nsubj-1:.*:dobj.*")) {
+                    continue;
+                }
+                String[] parts = line.split("\\t");
+                if (parts.length < 2) {
+                    continue;
+                }
+                String repr = depPathMap.findRepr(parts[1]);
+                if (repr == null) {
+                    continue;
+                }
+                b.append(parts[0].trim()).append("\t")
+                        .append(repr).append("\n");
+                k++;
+                if (k > SIZE_LIMIT) break;
+            }
+            textArea.setText(b.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        progressMonitor.setProgress(progressMonitor.getMaximum());
     }
-
 }
