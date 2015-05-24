@@ -153,7 +153,7 @@ public class EntitySetIndexer {
 			// Indexing
 			if (!isCanceled) {
 				if (progressMonitor != null) {
-					progressMonitor.setNote("Start indexing features... Unable to cancel at this stage.");
+					progressMonitor.setNote("Start indexing features... Cannot cancel.");
 				}
 				PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("temp.events")));
 				for (Event event : allEvents) {
@@ -161,8 +161,15 @@ public class EntitySetIndexer {
 				}
 				pw.close();
 				DataIndexer indexer = new OnePassDataIndexer(new FileEventStream("temp.events"), 0);
+
+				if (progressMonitor != null) {
+					progressMonitor.setProgress(progressMonitor.getMaximum());
+					progressMonitor.setNote("Calculating features... Takes time...");
+				}
+
 				String[] contextLabels = indexer.getPredLabels();
 				TObjectIntHashMap contextMap = new TObjectIntHashMap();
+
 				for (int i = 0; i < contextLabels.length; i++) {
 					String contextLabel = contextLabels[i];
 					contextMap.put(contextLabel, i+1);          /* TObjectIntHashMap will return 0 for not found */
@@ -181,6 +188,10 @@ public class EntitySetIndexer {
 				}
                 updateContextWithPMI(counter);
 				// Write to index
+				if (progressMonitor != null) {
+					progressMonitor.setProgress(progressMonitor.getMaximum());
+					progressMonitor.setNote("Writing index...");
+				}
 				PrintWriter w = new PrintWriter(new FileWriter(outputFile));
 				PrintWriter wInverse = new PrintWriter(new FileWriter(outputFile + ".info"));
 				w.println(contextLabels.length + 1);
@@ -191,7 +202,7 @@ public class EntitySetIndexer {
 				w.close();
 				wInverse.close();
 				if (progressMonitor != null) {
-					progressMonitor.setProgress(docCount + 5);
+					progressMonitor.setProgress(progressMonitor.getMaximum());
 					progressMonitor.setNote("Start indexing features... done.");
 				}
 			}
