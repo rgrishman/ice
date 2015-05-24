@@ -114,7 +114,9 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         return;
                     }
                 }
-                SwingCorpusPanel.this.controller.addCorpus(corpusName);
+                if (corpusName != null) {
+                    SwingCorpusPanel.this.controller.addCorpus(corpusName);
+                }
             }
         });
 
