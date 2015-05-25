@@ -160,6 +160,20 @@ public class EntitySetIndexer {
 					pw.println(FileEventStream.toLine(event).trim());
 				}
 				pw.close();
+				// write file for word2vecf training
+				pw = new PrintWriter(new BufferedWriter(new FileWriter(
+						FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+                                + File.separator
+                                + "deps.context"
+				)));
+				for (Event event : allEvents) {
+                    for (String context : event.getContext()) {
+                        pw.println(event.getOutcome().replaceAll("\\s+", "_")
+                            + " " + context.replaceAll("\\s+", "_")
+                        );
+                    }
+				}
+				pw.close();
 				DataIndexer indexer = new OnePassDataIndexer(new FileEventStream("temp.events"), 0);
 
 				if (progressMonitor != null) {
@@ -272,23 +286,23 @@ public class EntitySetIndexer {
                 if (syn != null) {
                     if (!stopWords.contains(syn.sourceWord.trim())) {
 //                        contextList.add("wordFrom=" + stemmer.getStem(syn.sourceWord, "NULL"));
-                        contextList.add(String.format("from_%s_%s", syn.type, stemmer.getStem(syn.sourceWord.trim(), "NULL")));
+                        contextList.add(String.format("%s-1_%s", syn.type, stemmer.getStem(syn.sourceWord.trim(), "NULL")));
                     }
 //                    contextList.add("wordFromPOS=" + syn.sourcePos);
 //                    contextList.add("fromRelationName=" + syn.type);
                 }
-                List<Annotation>  posCands = doc.annotationsAt(termHead.start(), "tagger");
-                if (posCands != null) {
-                    String pos = (String)posCands.get(0).get("cat");
-                    contextList.add("pos=" + pos);
-                }
+//                List<Annotation>  posCands = doc.annotationsAt(termHead.start(), "tagger");
+//                if (posCands != null) {
+//                    String pos = (String)posCands.get(0).get("cat");
+//                    contextList.add("pos=" + pos);
+//                }
                 SyntacticRelationSet fromSet = s.getRelationsFrom(termHead.start());
                 if (fromSet != null) {
                     for (int j = 0; j < fromSet.size(); j++) {
                         SyntacticRelation r = fromSet.get(j);
                         if (!stopWords.contains(r.targetWord.trim())) {
 //                            contextList.add("wordTo=" + stemmer.getStem(r.targetWord, "NULL"));
-                            contextList.add(String.format("to_%s_%s", r.type, stemmer.getStem(r.targetWord.trim(), "NULL")));
+                            contextList.add(String.format("%s_%s", r.type, stemmer.getStem(r.targetWord.trim(), "NULL")));
                         }
 //                        contextList.add("wordToPOS=" + r.targetPos);
 //                        contextList.add("toRelationName=" + r.type);
