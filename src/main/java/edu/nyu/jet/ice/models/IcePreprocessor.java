@@ -142,7 +142,46 @@ public class IcePreprocessor extends Thread {
         }
         try {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
+            List<String> newFileNames = new ArrayList<String>();
+            String newDirName = FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+                    + File.separator + "sources";
+            File newDir = new File(newDirName);
+            newDir.mkdirs();
+            while ((docName = docListReader.readLine()) != null) {
+                String inputFile;
+                if ("*".equals(inputSuffix.trim())) {
+                    inputFile = docName;
+                } else {
+                    inputFile = docName + "." + inputSuffix;
+                }
+                String newInputFile = inputFile.replaceAll(File.separator, "_");
+                String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+                content = content.replaceAll(">", " ");
+                content = content.replaceAll("<", " ");
+                PrintWriter newFileWriter =
+                        new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
+                newFileWriter.print(content);
+                newFileWriter.close();
+                newFileNames.add(newInputFile);
+            }
+            Ice.selectedCorpus.directory = newDirName;
+            PrintWriter fileListWriter = new PrintWriter(new FileWriter(Ice.selectedCorpus.docListFileName));
+            for (String fileName : newFileNames) {
+                if (!"*".equals(inputSuffix.trim())) {
+                    if (fileName.length() - inputSuffix.length() - 1 < 0) {
+                        continue;
+                    }
+                    fileName =
+                            fileName.substring(0, fileName.length() - inputSuffix.length() - 1);
+                }
+                fileListWriter.println(fileName);
+            }
+            fileListWriter.close();
+            this.docList = Ice.selectedCorpus.docListFileName;
+            this.inputDir = Ice.selectedCorpus.directory;
+            docListReader = new BufferedReader(new FileReader(docList));
             boolean isCanceled = false;
+            docCount = 0;
             while ((docName = docListReader.readLine()) != null) {
                 docCount++;
                 String inputFile;
@@ -151,6 +190,13 @@ public class IcePreprocessor extends Thread {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
+//                String newInputFile = inputFile.replaceAll(File.separator, "_");
+//                String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+//                PrintWriter newFileWriter =
+//                        new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
+//                newFileWriter.print(content);
+//                newFileWriter.close();
+//                newFileNames.add(newInputFile);
                 System.out.println("\nProcessing document " + docCount + ": " + inputFile);
                 ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
                 doc.setAllTags(true);
@@ -205,6 +251,7 @@ public class IcePreprocessor extends Thread {
                     }
                 }
             }
+
             // Do word count now
             String[] docFileNames = null;
             try {
@@ -217,27 +264,30 @@ public class IcePreprocessor extends Thread {
             if (progressMonitor != null) {
                 progressMonitor.setNote("Counting words and relations...");
             }
-            String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
-            TermCounter counter = TermCounter.prepareRun("onomaprops",
-                    Arrays.asList(docFileNames),
-                    Ice.selectedCorpus.directory,
-                    Ice.selectedCorpus.filter,
-                    wordCountFileName,
-                    null);
-            counter.run();
-            Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
-
-            RelationFinder finder = new RelationFinder(
-                    Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
-                    Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),
-                    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
-                    Ice.selectedCorpus.numberOfDocs,
-                    null);
-            finder.run();
-            Ice.selectedCorpus.relationTypeFileName =
-                    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
-            Ice.selectedCorpus.relationInstanceFileName =
-                    FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
+            if (!isCanceled && ! progressMonitor.isCanceled()) {
+                String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
+                TermCounter counter = TermCounter.prepareRun("onomaprops",
+                        Arrays.asList(docFileNames),
+                        Ice.selectedCorpus.directory,
+                        Ice.selectedCorpus.filter,
+                        wordCountFileName,
+                        null);
+                counter.run();
+                Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
+            }
+            if (!isCanceled && ! progressMonitor.isCanceled()) {
+                RelationFinder finder = new RelationFinder(
+                        Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
+                        Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),
+                        FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
+                        Ice.selectedCorpus.numberOfDocs,
+                        null);
+                finder.run();
+                Ice.selectedCorpus.relationTypeFileName =
+                        FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
+                Ice.selectedCorpus.relationInstanceFileName =
+                        FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
+            }
             if (progressMonitor != null && ! progressMonitor.isCanceled()) {
                 progressMonitor.setProgress(progressMonitor.getMaximum());
             }

@@ -182,7 +182,9 @@ class PathExtractionThread extends Thread {
                 k++;
                 if (k > SIZE_LIMIT) break;
             }
-            textArea.setText(b.toString());
+            if (progressMonitor == null || !progressMonitor.isCanceled()) {
+                textArea.setText(b.toString());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
