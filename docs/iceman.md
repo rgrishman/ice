@@ -1,6 +1,6 @@
-# Using ICE
+# Ice Manual
 
-*Feburary 24, 2015*
+*May 26, 2015*
 
 ## Introduction
 
