@@ -138,11 +138,12 @@ public class IcePreprocessor extends Thread {
         String docName;
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
-            progressMonitor.setNote("Loading Jet models... done.");
+            progressMonitor.setNote("Copying files...");
         }
         try {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
             List<String> newFileNames = new ArrayList<String>();
+            Set<String>  newFileNameSet = new HashSet<String>();
             String newDirName = FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
                     + File.separator + "sources";
             File newDir = new File(newDirName);
@@ -154,7 +155,10 @@ public class IcePreprocessor extends Thread {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
-                String newInputFile = inputFile.replaceAll(File.separator, "_");
+                String newInputFile = UUID.randomUUID().toString() + ".txt";
+                while (newFileNameSet.contains(newInputFile)) {
+                    newInputFile = UUID.randomUUID().toString() + ".txt";
+                }
                 String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
                 content = content.replaceAll(">", " ");
                 content = content.replaceAll("<", " ");
@@ -163,9 +167,10 @@ public class IcePreprocessor extends Thread {
                 newFileWriter.print(content);
                 newFileWriter.close();
                 newFileNames.add(newInputFile);
+                newFileNameSet.add(newInputFile);
             }
             Ice.selectedCorpus.directory = newDirName;
-            PrintWriter fileListWriter = new PrintWriter(new FileWriter(Ice.selectedCorpus.docListFileName));
+            PrintWriter fileListWriter = new PrintWriter(new FileWriter(Ice.selectedCorpus.docListFileName + ".local"));
             for (String fileName : newFileNames) {
                 if (!"*".equals(inputSuffix.trim())) {
                     if (fileName.length() - inputSuffix.length() - 1 < 0) {
@@ -177,6 +182,7 @@ public class IcePreprocessor extends Thread {
                 fileListWriter.println(fileName);
             }
             fileListWriter.close();
+            Ice.selectedCorpus.docListFileName = Ice.selectedCorpus.docListFileName + ".local";
             this.docList = Ice.selectedCorpus.docListFileName;
             this.inputDir = Ice.selectedCorpus.directory;
             docListReader = new BufferedReader(new FileReader(docList));
@@ -262,7 +268,7 @@ public class IcePreprocessor extends Thread {
                 return;
             }
             if (progressMonitor != null) {
-                progressMonitor.setNote("Counting words and relations...");
+                progressMonitor.setNote("Postprocessing...");
             }
             if (!isCanceled && ! progressMonitor.isCanceled()) {
                 String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
