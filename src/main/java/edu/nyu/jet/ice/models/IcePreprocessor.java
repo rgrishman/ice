@@ -154,7 +154,11 @@ public class IcePreprocessor extends Thread {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
-                String newInputFile = inputFile.replaceAll(File.separator, "_");
+                String from  = File.separator;
+                if (from.equals("\\")) {
+                    from = "\\\\";
+                }
+                String newInputFile = inputFile.replaceAll(from, "_");
                 String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
                 content = content.replaceAll(">", " ");
                 content = content.replaceAll("<", " ");
