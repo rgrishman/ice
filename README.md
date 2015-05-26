@@ -4,7 +4,9 @@ Licensed under the Apache 2.0 license.
 
 # Running Ice Using Binary Release
 
-Alternatively, download the binary distribution and unzip it. In *runice.sh*, point both $ICE\_HOME
+The easiest way to use Ice is to use the binary distribution.
+
+To use the binary distribution, download the binary distribution and unzip the package. In *runice.sh*, point both $ICE\_HOME
 and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
 
 Then, from the working directory, run

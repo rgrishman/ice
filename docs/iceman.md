@@ -41,9 +41,13 @@ root directory of the corpus or click *browse* to select the directory where the
 files are located. You can apply a filter on the extension of the filename (e.g. sgm) 
 in the corresponding text filter;  You need to click "Apply" to apply the filter.
 
-Clicking "Apply" will start the preprocessing process, which is rather **slow**.
+Clicking "Preprocess" will start the preprocessing process, which is rather **slow**.
 This process will perform dependency parsing, name tagging, and coref resolution, and
 will save the result of these steps for use by the following components.
+
+As the first step of preprocessing, we remove characters not recognized by Ice and copy
+all documents to the cache directory. We process documents in the cache directory 
+in later steps. 
 
 __The background corpus__
 
@@ -72,13 +76,9 @@ __Finding salient terms__
 
 The first step in analyzing the corpus is to identify the salient terms --
 those which occur more frequently in this corpus than in a 'background 
-corpus'.  This is done in two steps.  First you *count words* in the
-corpus; this produces raw word counts.  Then you select a background 
-corpus to compare against and *find terms*.  The result will be a list of terms
+corpus'.  In the Entities panel, click *Find Entities*.  The result will be a list of terms
 ranked by their relative frequency in the two corpora (those with the 
 highest frequency appearing first).
-
-You can select to display nouns, names, verbs, or some combination.
 
 Note that, you can also index entities in this panel. This is necessary
 for building entity sets. Please refer to the next section for more information.
@@ -156,12 +156,10 @@ A pattern is a sequence of words connecting two entities of specified types. (Ac
 specifies the grammatical relation between these words, but this level of detail is hidden from the user.)  Because the
 pattern must connect two entities, defining new entity types can lead to new patterns connecting these entities.
 
-To find the most common patterns in a corpus, use the *Find common patterns* button. (
-If *Show only sentential patterns* is selected, only patterns of the subject - verb - object form
+To find the most common phrases in a corpus, use the *ALl phrases* button. (
+If *Sentential phrases* is clicked, only patterns of the subject - verb - object form
 are displayed.  This is useful for finding events.)
-
-To find the patterns that are most specific to a domain, use the *Rank patterns* button.
-This will rank the patterns based on the ratio between their frequency in the current
+Phrases will be ranked based on the ratio between their frequency in the current
 corpus and their frequency in the background corpus. This is similar to what the *Find entities*
 button does for entities.
 
@@ -191,7 +189,9 @@ Like building entity sets, you can choose whether you want to accept or reject a
 
  After returning to the Relations panel, click the *Save* button on the right of
   the entity set panel and then the *Save* button on the left of the entity set panel
-  to keep it in the Ice environment.
+  to keep it in the Ice environment. If you manually edit the relations, you will
+  also need to click the right *Save* to save it to the relations, and click left
+  *Save* to save the relation to the system.
 
  Finally, click *Persist* in the status panel to save the newly-built entities set to
  the ice.yml file, so that these entities will be available after Ice is closed and
