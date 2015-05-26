@@ -26,17 +26,17 @@ to the Corpus panel when started.
 
 Unzip the package and run:
 
-    java -Xmx4g -cp ICE-0.2.0-jar-with-dependencies.jar edu.nyu.jet.ice.controllers.Nice
+    ./runice.sh
 
 ![The corpus panel](ice1.png)
 
 ## The Corpus Panel
 
-__ Adding a new corpus__
+__Adding a new corpus__
 
  A corpus is defined by a directory and a file extension.  The set of non-directory files dominated by that directory and ending in the specified extension constitute an ICE corpus. 
 
-To add a new corpus, first click *add corpus* , then either enter the path of the
+To add a new corpus, first click *Add corpus* , then either enter the path of the
 root directory of the corpus or click *browse* to select the directory where the
 files are located. You can apply a filter on the extension of the filename (e.g. sgm) 
 in the corresponding text filter;  You need to click "Apply" to apply the filter.

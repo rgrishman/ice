@@ -2,7 +2,7 @@
 
 Licensed under the Apache 2.0 license.
 
-# Running Ice Using Binary Release
+# Running Ice
 
 The easiest way to use Ice is to use the binary distribution.
 
@@ -13,7 +13,7 @@ Then, from the working directory, run
 
     ./runice.sh
     
-# Running the Ice Tagger
+# Running Ice Tagger
 
 Ice bundles a relation tagger based on Jet, which tags mentions of relations in text files, using
 the models that you build with Ice. Note that before the Ice tagger can find the relations,
@@ -27,7 +27,7 @@ where propertyFile is the Jet properties file, usually it is parseprops; txtFile
 the list of text input files, and apfFileList is the list of output files in Ace apf
 format.
 
-#Building and Running Ice from Source
+# Building and Running Ice from Source
 
 We assume that you have git and maven installed on your system.
 
@@ -85,5 +85,5 @@ Then, from the working directory, run
 
 # User Manual
 
-Please refer to [Iceman](docs/iceman.html) for usage.
+Please refer to [Iceman](docs/iceman.md) for usage.
 
