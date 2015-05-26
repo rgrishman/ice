@@ -21,18 +21,22 @@ public class EntitySetExpander {
     public static final int    RECOMMENDATION_SIZE = 10;
     public static final int    SUGGEST_SEED_SAMPLE_SIZE = 20;
 
+    public EntitySetExpander() {
+
+    }
+
     public void setProgressMonitor(ProgressMonitorI progressMonitor) {
         EntitySetExpander.progressMonitor = progressMonitor;
     }
 
     protected static ProgressMonitorI progressMonitor;
 
-    private Map<String, Vector> entityFeatureDict;
-    private Vector centroid;
-    private Vector negativeCentroid;
-    private List<String> positives;
-    private List<String> negatives;
-    private Similarity sim = new Similarity();
+    protected Map<String, Vector> entityFeatureDict;
+    protected Vector centroid;
+    protected Vector negativeCentroid;
+    protected List<String> positives;
+    protected List<String> negatives;
+    protected Similarity sim = new Similarity();
     public List<Entity> rankedEntities = null;
     public Set<String> used = null;
 

@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.views.swing;
 
+import edu.nyu.jet.ice.entityset.EmbeddingEntitySetExpander;
 import edu.nyu.jet.ice.entityset.EntitySetExpander;
 import edu.nyu.jet.ice.entityset.EntitySetRankThread;
 import edu.nyu.jet.ice.models.IceEntitySet;
@@ -292,7 +293,11 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 for (Object seed : entriesListModel.toArray()) {
                     seedStrings.add(seed.toString());
                 }
-                EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
+//                EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
+//                        seedStrings);
+                EntitySetExpander expander = new EmbeddingEntitySetExpander(
+                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+                                + File.separator + "phrases.embedding.200",
                         seedStrings);
                 EntitySetRankerFrame entitySetWindow = new EntitySetRankerFrame("Expand entity set",
                         nameTextField.getText(),
