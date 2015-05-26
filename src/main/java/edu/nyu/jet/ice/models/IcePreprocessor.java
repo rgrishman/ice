@@ -30,6 +30,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * collect a list of all dependency paths connecting two named entity mentions
@@ -261,7 +262,7 @@ public class IcePreprocessor extends Thread {
             // Do word count now
             String[] docFileNames = null;
             try {
-                docFileNames = IceUtils.readLines(FileNameSchema.getDocListFileName(Ice.selectedCorpus.name));
+                docFileNames = IceUtils.readLines(Ice.selectedCorpus.getDocListFileName());
             }
             catch (IOException e) {
                 e.printStackTrace(System.err);
@@ -640,9 +641,13 @@ public class IcePreprocessor extends Thread {
     public static String cacheFileName(String cacheDir,
                                         String inputDir,
                                         String inputFile) {
+        String separator = File.separator;
+        if (separator.equals("\\")) {
+            separator = "\\\\";
+        }
         return cacheDir + File.separator
-                + inputDir.replaceAll("/", "_") + "_"
-                + inputFile.replaceAll("/", "_");
+                + inputDir.replaceAll(separator, "_") + "_"
+                + inputFile.replaceAll(separator, "_");
     }
 
 
