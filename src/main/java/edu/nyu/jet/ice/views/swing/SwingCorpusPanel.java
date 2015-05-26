@@ -1,8 +1,10 @@
 package edu.nyu.jet.ice.views.swing;
 
+import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.controllers.IceController;
 import edu.nyu.jet.ice.views.CorpusPanel;
@@ -15,6 +17,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -122,6 +125,10 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
 
         deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                if (Ice.selectedCorpus == null || Ice.selectedCorpusName == null
+                        || Ice.corpora.size() < 1) {
+                    return;
+                }
                 int input = JOptionPane.showConfirmDialog(null,
                         "Are you sure you want to delete corpus [" + Ice.selectedCorpusName + "]?",
                         "Confirm",
@@ -158,6 +165,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
 
         preprocessButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+
                 Object[] options = {"No",
                         "Yes"};
                 int n = JOptionPane.showOptionDialog(null,
@@ -173,6 +181,29 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                     return;
                 }
                 SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
+                try {
+                    if (Ice.selectedCorpus.docListFileName == null ||
+                            !(new File(Ice.selectedCorpus.docListFileName)).exists()) {
+                        JOptionPane.showMessageDialog(Nice.mainFrame,
+                                "Cannot find relevant documents. Please reset directory or filter.",
+                                "Corpus Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    String[] docArr = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
+                    if (docArr.length == 0) {
+                        JOptionPane.showMessageDialog(Nice.mainFrame,
+                                "Cannot find relevant documents. Please reset directory or filter.",
+                                "Corpus Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+                catch (IOException e) {
+                    System.err.println("Unable to read docList file...");
+                    e.printStackTrace();
+                    return;
+                }
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                         Ice.selectedCorpus.directory,
                         Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
