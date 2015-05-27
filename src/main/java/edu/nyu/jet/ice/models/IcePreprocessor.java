@@ -156,9 +156,10 @@ public class IcePreprocessor extends Thread {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
-                String newInputFile = UUID.randomUUID().toString() + ".txt";
+                String newSuffix = inputSuffix.equals("*") ? "" : "." + inputSuffix;
+                String newInputFile = UUID.randomUUID().toString() + newSuffix;
                 while (newFileNameSet.contains(newInputFile)) {
-                    newInputFile = UUID.randomUUID().toString() + ".txt";
+                    newInputFile = UUID.randomUUID().toString() + newSuffix;
                 }
                 String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
                 content = content.replaceAll(">", " ");
