@@ -223,6 +223,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
                 icePreprocessor.start();
             }
         });
