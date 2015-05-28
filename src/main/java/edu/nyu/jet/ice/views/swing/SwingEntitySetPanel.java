@@ -153,6 +153,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         suggestEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                refresh();
                 Timer timer = switchToBusyCursor(SwingEntitySetPanel.this);
                 String seedString = null;
                 List<String> seeds = null;
@@ -185,6 +186,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                             return;
                         }
                         IceEntitySet ies = new IceEntitySet(entitySetName);
+                        nameTextField.setText(ies.getType());
                         entityListModel.addElement(ies);
                         entitySetList.setSelectedValue(ies, true);
                         entriesListModel.addElement(seeds.get(0));
@@ -236,7 +238,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 if (n == 0) {
                     entityListModel.remove(idx);
                     entriesListModel.clear();
-                    entriesListModel = null;
+                    //entriesListModel = null;
                     nameTextField.setText("");
                     currentEntitySet = null;
                 }
@@ -258,6 +260,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         addEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                refresh();
                 String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
                 if (entitySetName == null) {
                     return;
@@ -273,6 +276,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     }
                 }
                 IceEntitySet ies = new IceEntitySet(entitySetName);
+                nameTextField.setText(ies.getType());
                 entityListModel.addElement(ies);
                 entitySetList.setSelectedValue(ies, true);
             }
@@ -318,6 +322,8 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         // add to UI
         //this.add(entitySetPanel);
+        entriesListModel = new DefaultListModel();
+        entriesList.setModel(entriesListModel);
     }
 
     public void refresh() {
