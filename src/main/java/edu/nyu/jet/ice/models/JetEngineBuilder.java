@@ -121,13 +121,18 @@ public class JetEngineBuilder {
 
     public static void buildRelationPatternFile(String fileName, List<IceRelation> relations) throws IOException {
         PrintWriter pw = new PrintWriter(new FileWriter(fileName));
+        Set<String> printedPaths = new HashSet<String>();
         for (IceRelation rs : relations) {
             List<String> paths = rs.getPaths();
             String type = rs.getName();
             for (String path : paths) {
                 String pattern = rs.arg1type + "--" + path +
                         "--" + rs.arg2type;
+                if (printedPaths.contains(pattern)) {
+                    continue;
+                }
                 pw.println(pattern + "\t" + type);
+                printedPaths.add(pattern);
             }
         }
         pw.close();
@@ -136,7 +141,7 @@ public class JetEngineBuilder {
             List<String> paths = rs.getNegPaths();
             String type = rs.getName();
             for (String path : paths) {
-                String pattern = path.replaceAll(" -- ", "--");
+                String pattern = path.replaceAll(" \\-\\- ", "--");
                 pw.println(pattern + "\t" + type);
             }
         }
