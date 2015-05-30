@@ -23,7 +23,7 @@ To run the tagger, from the working directory, run
 
     ./runtagger.sh propertyFile txtFileList apfFileList
     
-where *propertyFile* is the Jet properties file. We suggest that you use *parseprops* that is delivered
+where *propertyFile* is the Jet properties file. We suggest that you use *tagprops* that is delivered
  with this package. If you are familiar with Jet and Ice, you can use your own properties file too.
  *txtFileList* are the list of text input files, and *apfFileList* is the list of output files in Ace apf
  format. Both file lists assume the "one-file-name-per-line" format and should have the same length. The

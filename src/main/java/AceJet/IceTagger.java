@@ -191,9 +191,9 @@ public class IceTagger {
         }
         else {
 ////            // pathRelationExtractor.updateCost(0.8, 0.4, 1.2);
-//            pathRelationExtractor.updateCost(100, 100, 100);
-            pathRelationExtractor.updateCost(0.8, 0.3, 1.2);
-            pathRelationExtractor.setNegDiscount(1);
+            pathRelationExtractor.updateCost(100, 100, 100);
+//            pathRelationExtractor.updateCost(0.8, 0.3, 1.2);
+            pathRelationExtractor.setNegDiscount(100);
             for (int i = 0; i < txtFiles.length; i++) {
                 Resolve.ACE = true;
                 String fileName = txtFiles[i];
