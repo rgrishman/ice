@@ -22,6 +22,6 @@ Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
 Ace.RelationModel.fileName = ../acedata/iceRelationModel
 #################################
 #
-processDocument      =sentenceSplit, sentence:processSentence
-processSentence      = tokenize, lexLookup, pruneTags, tagNames, chunk, \
-                       pat(names), pat(othernames), depParse, resolve
+processDocument      = sentenceSplit, sentence:processSentence
+processSentence      = tokenize, lexLookup, pruneTags, tagNames, tagNamesFromOnoma, chunk, \
+                       pat(names), pat(othernames), resolve, depParse
