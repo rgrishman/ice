@@ -1,12 +1,12 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.ExpandEntitySet.EntitySetExpander;
-import Jet.ExpandEntitySet.EntitySetRankThread;
-import Jet.IceModels.IceEntitySet;
-import Jet.IceUI.EntitySetRankerFrame;
-import Jet.IceUI.Ice;
-import Jet.IceUtils.FileNameSchema;
-import Jet.IceUtils.SwingProgressMonitor;
+import edu.nyu.jet.ice.entityset.EntitySetExpander;
+import edu.nyu.jet.ice.entityset.EntitySetRankThread;
+import edu.nyu.jet.ice.models.IceEntitySet;
+import edu.nyu.jet.ice.uicomps.EntitySetRankerFrame;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 
@@ -153,6 +153,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         suggestEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                refresh();
                 Timer timer = switchToBusyCursor(SwingEntitySetPanel.this);
                 String seedString = null;
                 List<String> seeds = null;
@@ -181,7 +182,11 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                             JOptionPane.YES_NO_OPTION);
                     if (n == 0) {
                         String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
+                        if (entitySetName == null) {
+                            return;
+                        }
                         IceEntitySet ies = new IceEntitySet(entitySetName);
+                        nameTextField.setText(ies.getType());
                         entityListModel.addElement(ies);
                         entitySetList.setSelectedValue(ies, true);
                         entriesListModel.addElement(seeds.get(0));
@@ -233,7 +238,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 if (n == 0) {
                     entityListModel.remove(idx);
                     entriesListModel.clear();
-                    entriesListModel = null;
+                    //entriesListModel = null;
                     nameTextField.setText("");
                     currentEntitySet = null;
                 }
@@ -255,6 +260,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         addEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                refresh();
                 String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
                 if (entitySetName == null) {
                     return;
@@ -270,6 +276,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     }
                 }
                 IceEntitySet ies = new IceEntitySet(entitySetName);
+                nameTextField.setText(ies.getType());
                 entityListModel.addElement(ies);
                 entitySetList.setSelectedValue(ies, true);
             }
@@ -315,12 +322,14 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         // add to UI
         //this.add(entitySetPanel);
+        entriesListModel = new DefaultListModel();
+        entriesList.setModel(entriesListModel);
     }
 
     public void refresh() {
         iceStatusPanel.refresh();
         int idx = entitySetList.getSelectedIndex();
-        if (idx < 0) {
+        if (idx < 0 || Ice.entitySets.size() == 0) {
             return;
         }
         // System.err.println(idx);

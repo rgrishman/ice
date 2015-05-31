@@ -17,9 +17,9 @@ Chunker.fileName         = chunkModel.txt
 NameTags.ME.fileName = ../acedata/AceOntoMeneModel
 WordClusters.fileName = brownClusters10-2014.txt
 ##### ICE USER CONFIG FILES #####
-Onoma.fileName           = ../kddData/ice_onoma.dict
-Ace.EDTtype.auxFileName  = ../kddData/EDTypesFromUser.dict
-Ace.RelationModel.fileName = ../kddData/iceRelationModel
+Onoma.fileName           = ../acedata/ice_onoma.dict
+Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
+Ace.RelationModel.fileName = ../acedata/iceRelationModel
 #################################
 #
 processDocument      = sentenceSplit, sentence:processSentence

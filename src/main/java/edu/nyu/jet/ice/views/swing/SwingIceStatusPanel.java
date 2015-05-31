@@ -1,9 +1,10 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.IceModels.JetEngineBuilder;
-import Jet.IceUI.Ice;
-import Jet.IceUtils.FileNameSchema;
+import edu.nyu.jet.ice.models.JetEngineBuilder;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.controllers.Nice;
+import edu.nyu.jet.ice.utils.IceUtils;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;

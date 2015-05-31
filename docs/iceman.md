@@ -1,6 +1,6 @@
-# Using ICE
+# Ice Manual
 
-*Feburary 24, 2015*
+*May 26, 2015*
 
 ## Introduction
 
@@ -26,19 +26,28 @@ to the Corpus panel when started.
 
 Unzip the package and run:
 
-    java -Xmx4g -cp ICE-0.2.0-jar-with-dependencies.jar edu.nyu.jet.ice.controllers.Nice
+    ./runice.sh
 
 ![The corpus panel](ice1.png)
 
 ## The Corpus Panel
 
-__ Adding a new corpus__
+__Adding a new corpus__
 
  A corpus is defined by a directory and a file extension.  The set of non-directory files dominated by that directory and ending in the specified extension constitute an ICE corpus. 
 
-To add a new corpus, first click *add corpus* , then either enter the path of the
+To add a new corpus, first click *Add corpus* , then either enter the path of the
 root directory of the corpus or click *browse* to select the directory where the
-files are located. You can apply a filter on the extension of the filename (e.g. sgm) in the corresponding text filter;  You need to hit Enter key to apply the filter.
+files are located. You can apply a filter on the extension of the filename (e.g. sgm) 
+in the corresponding text filter;  You need to click "Apply" to apply the filter.
+
+Clicking "Preprocess" will start the preprocessing process, which is rather **slow**.
+This process will perform dependency parsing, name tagging, and coref resolution, and
+will save the result of these steps for use by the following components.
+
+As the first step of preprocessing, we remove characters not recognized by Ice and copy
+all documents to the cache directory. We process documents in the cache directory 
+in later steps. 
 
 __The background corpus__
 
@@ -67,13 +76,9 @@ __Finding salient terms__
 
 The first step in analyzing the corpus is to identify the salient terms --
 those which occur more frequently in this corpus than in a 'background 
-corpus'.  This is done in two steps.  First you *count words* in the
-corpus; this produces raw word counts.  Then you select a background 
-corpus to compare against and *find terms*.  The result will be a list of terms
+corpus'.  In the Entities panel, click *Find Entities*.  The result will be a list of terms
 ranked by their relative frequency in the two corpora (those with the 
 highest frequency appearing first).
-
-You can select to display nouns, names, verbs, or some combination.
 
 Note that, you can also index entities in this panel. This is necessary
 for building entity sets. Please refer to the next section for more information.
@@ -115,7 +120,8 @@ You are now ready to build an entity set.  Select the *Add* button on the
 left side of the *Entity Set* panel and provide a name for the entity set.
 Next add at least two seeds to the set, using the *Add* button on the
 right side, under "Members". Click *Suggest* if you want Ice to suggest
-seeds for you.
+seeds for you. (Currently *Suggest* will always suggest the same seeds
+even if you click it multiple times.)
 
 Once you have entered your seeds, select *Expand*.  ICE will compute
 similarities as described above and display a list of terms, ranked
@@ -150,12 +156,10 @@ A pattern is a sequence of words connecting two entities of specified types. (Ac
 specifies the grammatical relation between these words, but this level of detail is hidden from the user.)  Because the
 pattern must connect two entities, defining new entity types can lead to new patterns connecting these entities.
 
-To find the most common patterns in a corpus, use the *Find common patterns* button. (
-If *Show only sentential patterns* is selected, only patterns of the subject - verb - object form
+To find the most common phrases in a corpus, use the *ALl phrases* button. (
+If *Sentential phrases* is clicked, only patterns of the subject - verb - object form
 are displayed.  This is useful for finding events.)
-
-To find the patterns that are most specific to a domain, use the *Rank patterns* button.
-This will rank the patterns based on the ratio between their frequency in the current
+Phrases will be ranked based on the ratio between their frequency in the current
 corpus and their frequency in the background corpus. This is similar to what the *Find entities*
 button does for entities.
 
@@ -167,7 +171,8 @@ Building relations is just like building entity sets.  Select the *Add* button o
 left side of the *Relations* panel and provide a name for the relation.
 Next add at least one seed to the set, using the *Add* button on the
 right side, under "Members". Click *Suggest* if you want Ice to suggest a seed pattern
-for you.
+for you. (Currently *Suggest* will always suggest the same seeds
+ even if you click it multiple times.)
 
 Once you have entered your seeds, select *Expand*.  ICE will bootstrap
 patterns that distribute similarly to your seed pattern. You mark items as correct or
@@ -184,7 +189,9 @@ Like building entity sets, you can choose whether you want to accept or reject a
 
  After returning to the Relations panel, click the *Save* button on the right of
   the entity set panel and then the *Save* button on the left of the entity set panel
-  to keep it in the Ice environment.
+  to keep it in the Ice environment. If you manually edit the relations, you will
+  also need to click the right *Save* to save it to the relations, and click left
+  *Save* to save the relation to the system.
 
  Finally, click *Persist* in the status panel to save the newly-built entities set to
  the ice.yml file, so that these entities will be available after Ice is closed and

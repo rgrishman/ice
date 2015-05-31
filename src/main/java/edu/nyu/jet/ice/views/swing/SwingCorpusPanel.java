@@ -1,11 +1,12 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.IceModels.IcePreprocessor;
-import Jet.IceUI.Ice;
-import Jet.IceUtils.FileNameSchema;
-import Jet.IceUtils.SwingProgressMonitor;
-import edu.nyu.jet.ice.controllers.IceController;
 import edu.nyu.jet.ice.controllers.Nice;
+import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.IceUtils;
+import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.controllers.IceController;
 import edu.nyu.jet.ice.views.CorpusPanel;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
@@ -16,6 +17,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -35,7 +37,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
     private JTextField directoryTextField = new JTextField();
     private JLabel filterLabel = new JLabel("Filter");
     private JTextField filterTextField = new JTextField();
-    private JButton applyFilterButton = new JButton("Apply");
+    private JButton preprocessButton = new JButton("Preprocess");
     private JLabel statisticsLabel = new JLabel("Current corpus has 0 documents.");
     private JButton saveProgressButton = new JButton("Save progress");
     private JButton exportButton = new JButton("Export to Jet");
@@ -69,7 +71,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         foregroundPanel.add(filterLabel);
         filterTextField.setMinimumSize(new Dimension(240, 20));
         foregroundPanel.add(filterTextField, "span 3");
-        foregroundPanel.add(applyFilterButton, "wrap");
+        foregroundPanel.add(preprocessButton, "wrap");
         foregroundPanel.add(statisticsLabel, "span");
 
         JPanel backgroundPanel = new JPanel();
@@ -115,12 +117,18 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         return;
                     }
                 }
-                SwingCorpusPanel.this.controller.addCorpus(corpusName);
+                if (corpusName != null) {
+                    SwingCorpusPanel.this.controller.addCorpus(corpusName);
+                }
             }
         });
 
         deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                if (Ice.selectedCorpus == null || Ice.selectedCorpusName == null
+                        || Ice.corpora.size() < 1) {
+                    return;
+                }
                 int input = JOptionPane.showConfirmDialog(null,
                         "Are you sure you want to delete corpus [" + Ice.selectedCorpusName + "]?",
                         "Confirm",
@@ -155,12 +163,50 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
             }
         });
 
-        applyFilterButton.addActionListener(new ActionListener() {
+        preprocessButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+
+                Object[] options = {"No",
+                        "Yes"};
+                int n = JOptionPane.showOptionDialog(null,
+                        "Preprocessing is the (only) time consuming step in ICE\n" +
+                        "Do you wish to continue?",
+                        "Continue with preprocessing?",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]);
+                if (n == 0) {
+                    return;
+                }
                 SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
+                try {
+                    if (Ice.selectedCorpus.docListFileName == null ||
+                            !(new File(Ice.selectedCorpus.docListFileName)).exists()) {
+                        JOptionPane.showMessageDialog(Nice.mainFrame,
+                                "Cannot find relevant documents. Please reset directory or filter.",
+                                "Corpus Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    String[] docArr = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
+                    if (docArr.length == 0) {
+                        JOptionPane.showMessageDialog(Nice.mainFrame,
+                                "Cannot find relevant documents. Please reset directory or filter.",
+                                "Corpus Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+                catch (IOException e) {
+                    System.err.println("Unable to read docList file...");
+                    e.printStackTrace();
+                    return;
+                }
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
-                    Ice.selectedCorpus.directory,
-                        "parseprops",
+                        Ice.selectedCorpus.directory,
+                        Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
                         Ice.selectedCorpus.docListFileName,
                         filterTextField.getText(),
                         FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
@@ -169,15 +215,15 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         "Preprocessing files",
                         "Processing files with Jet...",
                         0,
-                        Ice.selectedCorpus.getNumberOfDocs() + 5
+                        Ice.selectedCorpus.getNumberOfDocs() + 30
                 );
                 icePreprocessor.setProgressMonitor(progressMonitor);
                 try {
                     Thread.sleep(500);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
+
                 icePreprocessor.start();
             }
         });

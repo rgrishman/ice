@@ -1,12 +1,13 @@
 package edu.nyu.jet.ice.controllers;
 
-import Jet.IceModels.Corpus;
-import Jet.IceModels.JetEngineBuilder;
-import Jet.IceModels.PathMatcher;
-import Jet.RelationAL.Bootstrap;
+import edu.nyu.jet.ice.models.Corpus;
+import edu.nyu.jet.ice.models.JetEngineBuilder;
+import edu.nyu.jet.ice.models.PathMatcher;
+import edu.nyu.jet.ice.relation.Bootstrap;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
-import Jet.IceUI.Ice;
+import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.views.CorpusPanel;
 import net.miginfocom.swing.MigLayout;
 import org.ho.yaml.YamlDecoder;
@@ -185,8 +186,7 @@ public class Nice implements IceController {
                 "     \\__\\/      \\  \\::/       \\  \\::/   \n" +
                 "                 \\__\\/         \\__\\/ v0.2\n\n";
         System.err.println(cover);
-        String unicodeMessage = "        \u76F8\u8207\u6795\u85C9\u4E4E\u821F\u4E2D " +
-                "\u4E0D\u77E5\u6771\u65B9\u4E4B\u65E2\u767D";
+        String unicodeMessage = "          \u5BD2\u96E8\u9023\u6C5F\u591C\u5165\u5433 \u5E73\u660E\u9001\u5BA2\u695A\u5C71\u5B64\n";
         System.err.println(unicodeMessage);
         File icePropFile = new File("iceprops");
         Properties iceProperties = new Properties();
@@ -234,34 +234,6 @@ public class Nice implements IceController {
         mainFrame.setLocationRelativeTo(null); // center main window
 
         reassemble();
-//        Container contentPane = mainFrame.getContentPane();
-//        contentPane.setLayout(new MigLayout());
-//
-//        IceController niceController = new Nice();
-//        Nice.instance = (Nice)niceController;
-//        SwingCorpusPanel swingCorpusPanel = new SwingCorpusPanel(niceController);
-//        niceController.setCorpusPanel(swingCorpusPanel);
-//        SwingEntitiesPanel swingEntitiesPanel = null;
-//        SwingPathsPanel swingPathsPanel = null;
-//        SwingEntitySetPanel swingEntitySetPanel = null;
-//        SwingRelationsPanel swingRelationsPanel = null;
-//        if (Ice.corpora.size() > 0) {
-//            swingEntitiesPanel = new SwingEntitiesPanel();
-//            swingPathsPanel = new SwingPathsPanel();
-//            swingEntitySetPanel = new SwingEntitySetPanel();
-//            swingRelationsPanel = new SwingRelationsPanel();
-//        }
-//        assembleTabs(contentPane, swingCorpusPanel, swingEntitiesPanel, swingPathsPanel,
-//                swingEntitySetPanel, swingRelationsPanel);
-//        niceController.setEntitiesPanel(swingEntitiesPanel);
-//        niceController.setPathsPanel(swingPathsPanel);
-//
-//        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        mainFrame.setMinimumSize(new Dimension(560, 480));
-//        mainFrame.pack();
-//        mainFrame.setLocationRelativeTo(null); // center main window
-//        mainFrame.setVisible(true);
-//        niceController.refreshAll();
     }
 
     public static void reassemble() {
@@ -277,18 +249,19 @@ public class Nice implements IceController {
         SwingPathsPanel swingPathsPanel = null;
         SwingEntitySetPanel swingEntitySetPanel = null;
         SwingRelationsPanel swingRelationsPanel = null;
-        if (Ice.corpora.size() > 0) {
+        if (IceUtils.numOfWordCountedCorpora() > 1) {
             swingEntitiesPanel = new SwingEntitiesPanel();
             swingPathsPanel = new SwingPathsPanel();
             swingEntitySetPanel = new SwingEntitySetPanel();
             swingRelationsPanel = new SwingRelationsPanel();
+            niceController.setEntitiesPanel(swingEntitiesPanel);
+            niceController.setPathsPanel(swingPathsPanel);
+            niceController.setEntitySetPanel(swingEntitySetPanel);
+            niceController.setRelationsPanel(swingRelationsPanel);
         }
         assembleTabs(contentPane, swingCorpusPanel, swingEntitiesPanel, swingPathsPanel,
                 swingEntitySetPanel, swingRelationsPanel);
-        niceController.setEntitiesPanel(swingEntitiesPanel);
-        niceController.setPathsPanel(swingPathsPanel);
-        niceController.setEntitySetPanel(swingEntitySetPanel);
-        niceController.setRelationsPanel(swingRelationsPanel);
+
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.addWindowListener(new SaveStatusWindowAdapter());
         mainFrame.setMinimumSize(new Dimension(640, 480));
@@ -298,6 +271,13 @@ public class Nice implements IceController {
         mainFrame.validate();
         mainFrame.repaint();
         niceController.refreshAll();
+        if (IceUtils.numOfWordCountedCorpora() == 1) {
+            JOptionPane.showMessageDialog(null,
+                    "You just processed your first corpus. \n" +
+                            "We need a second corpus to use as background.\n"+
+                            "Please click [Add...] to add another corpus and\n" +
+                            "then [Preprocess].");
+        }
     }
 
     public static void assembleTabs(Container container,
@@ -315,7 +295,7 @@ public class Nice implements IceController {
         corpusPanel.setMinimumSize(new Dimension(600, 420));
         tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 
-        if (Ice.corpora.size() > 0) {
+        if (IceUtils.numOfWordCountedCorpora() > 1) {
             tabbedPane.addTab("Entities", null, entitiesPanel,
                     "Collect entities in the corpus to support entity set construction");
             entitiesPanel.setMinimumSize(new Dimension(600, 420));

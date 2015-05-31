@@ -2,24 +2,36 @@
 
 Licensed under the Apache 2.0 license.
 
-#Building Ice
+# Running Ice
 
-##Using git
+The easiest way to use Ice is to use the binary distribution.
 
-A [quick guide](http://rogerdudler.github.io/git-guide/).
+To use the binary distribution, download the binary distribution and unzip the package. In *runice.sh*, point both $ICE\_HOME
+and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
 
-##Installing Maven
+Then, from the working directory, run
 
-[maven by example](http://books.sonatype.com/mvnex-book/reference/public-book.html)
+    ./runice.sh
+    
+# Running Ice Tagger
 
-maven should come preinstalled on OS X, unless you run a version
-later than 10.9 Mavericks.
+Ice bundles a relation tagger based on Jet, which tags mentions of relations in text files, using
+the models that you build with Ice. Note that before the Ice tagger can find the relations,
+you have to use *Export* in Ice to export them to the underlying Jet tagger.
 
-run `mvn --version` to find if maven is installed, if it is not, you can
-find tarballs and install instructions here:
-<http://maven.apache.org/download.cgi>
+To run the tagger, from the working directory, run
 
-We recommend version 3.0.5, or the latest 3.0.x version
+    ./runtagger.sh propertyFile txtFileList apfFileList
+    
+where *propertyFile* is the Jet properties file. We suggest that you use *tagprops* that is delivered
+ with this package. If you are familiar with Jet and Ice, you can use your own properties file too.
+ *txtFileList* are the list of text input files, and *apfFileList* is the list of output files in Ace apf
+ format. Both file lists assume the "one-file-name-per-line" format and should have the same length. The
+ output file corresponds to the input file at the same line number.
+
+# Building and Running Ice from Source
+
+We assume that you have git and maven installed on your system.
 
 ## Build
 
@@ -31,8 +43,6 @@ If everything works, you should find
 ICE-0.2.0-jar-with-dependencies.jar (the fatjar), and ICE-0.2.0.jar in
 target/
 
-# Running Ice (Built from source)
-
 ## Preparing models
 
 Ice relies on Jet and its models. We provide the Jet binary and necessary models in the
@@ -41,8 +51,8 @@ obtain Jet from: <http://cs.nyu.edu/grishman/jet/jet.html>
 
 The current version of Ice assumes that it is run from a "working directory", where three 
 Jet property files are located: *props*, *parseprops*, and *onomaprops*. These three files 
-tell Ice where models for Jet are located. These two files are released together with the 
-Java source code: `src/props`.
+tell Ice where models for Jet are located. These files are released together with the 
+Java source code in the `src/props` directory.
 
 In theory, Jet model files can sit anywhere. However, to use the property files directly, 
 you can copy `data/` and `acedata/` directories from Jet into the working directory.
@@ -74,17 +84,8 @@ $ICE\_LIB\_HOME to the directory containing Jet-1.8.0.11-ICE-jar-with-dependenci
 Then, from the working directory, run
 
     ./runice.sh
-    
-# Running Ice (Binary release)
 
-Alternatively, download the binary distribution and unzip it. In *runice.sh*, point both $ICE\_HOME
-and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
+# User Manual
 
-Then, from the working directory, run
-
-    ./runice.sh
-
-# Using Ice
-
-Please refer to docs/iceman.html for usage.
+Please refer to [iceman](docs/iceman.md) for usage.
 

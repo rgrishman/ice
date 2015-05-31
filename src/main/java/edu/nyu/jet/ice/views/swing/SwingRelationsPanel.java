@@ -1,14 +1,14 @@
 package edu.nyu.jet.ice.views.swing;
 
-import Jet.IceModels.DepPathMap;
-import Jet.IceModels.IceRelation;
-import Jet.IceUI.Ice;
-import Jet.IceUI.RelationBuilderFrame;
-import Jet.IceUI.RelationBuilderThread;
-import Jet.IceUtils.FileNameSchema;
-import Jet.IceUtils.IceUtils;
-import Jet.IceUtils.SwingProgressMonitor;
-import Jet.RelationAL.Bootstrap;
+import edu.nyu.jet.ice.models.DepPathMap;
+import edu.nyu.jet.ice.models.IceRelation;
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.uicomps.RelationBuilderFrame;
+import edu.nyu.jet.ice.uicomps.RelationBuilderThread;
+import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.IceUtils;
+import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 
