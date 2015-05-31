@@ -1,6 +1,6 @@
-# ATTENTION: This is a pre-release version of Ice. Use at your own risk.
+This is the README file for Ice, a rapid information extraction customizer.
 
-Licensed under the Apache 2.0 license.
+Ice is licensed under the Apache 2.0 license.
 
 # Running Ice
 
