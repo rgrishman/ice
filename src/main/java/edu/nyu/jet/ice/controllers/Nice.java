@@ -230,7 +230,7 @@ public class Nice implements IceController {
         }
         mainFrame = new JFrame();
         mainFrame.setLayout(new MigLayout());
-        mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2s");
+        mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2demo");
         mainFrame.setLocationRelativeTo(null); // center main window
 
         reassemble();

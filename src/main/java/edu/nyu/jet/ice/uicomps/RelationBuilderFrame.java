@@ -16,6 +16,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Describe the code here
@@ -165,6 +167,7 @@ public class RelationBuilderFrame extends JFrame {
                 bootstrap.addPathsToSeedSet(rejectedPaths, bootstrap.getRejects());
                 DepPathMap depPathMap = DepPathMap.getInstance();
                 StringBuilder text = new StringBuilder();
+                Set<String> usedRepr = new HashSet<String>();
                 for (String path : bootstrap.getSeedPaths()) {
                     StringBuilder t = new StringBuilder();
                     t.append(bootstrap.getArg1Type())
@@ -173,8 +176,9 @@ public class RelationBuilderFrame extends JFrame {
                             .append(" -- ")
                             .append(bootstrap.getArg2Type());
                     String repr = depPathMap.findRepr(t.toString());
-                    if (repr != null) {
+                    if (repr != null && !usedRepr.contains(repr)) {
                         text.append(repr).append("\n");
+                        usedRepr.add(repr);
                     }
                 }
                 if (relationBuilder != null) {

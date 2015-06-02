@@ -143,7 +143,7 @@ public class DepPathMap {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
-        if (previousFileName != null && previousFileName.equals(fileName)) return true; // use old data
+        if (previousFileName != null && previousFileName.equals(fileName) && pathExampleMap.size() > 0) return true; // use old data
         pathExampleMap.clear();
         pathReprMap.clear();
         reprPathMap.clear();

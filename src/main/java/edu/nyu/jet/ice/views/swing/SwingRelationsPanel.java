@@ -490,6 +490,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
             String[] lines =
                     IceUtils.readLines(FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName));
             DepPathMap depPathMap = DepPathMap.getInstance();
+            depPathMap.load();
             for (String line : lines) {
                 String[] parts = line.split("\t");
                 String path = parts[1];
