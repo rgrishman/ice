@@ -63,10 +63,9 @@ put in the working directory as well.
 After these steps, the working directory we have prepared will look like this:
 
     working_dir/
-        props - Jet property file 1
-        parseprops - Jet property file 2
-        onomaprops - Jet property file 3
-        tagprops - Jet property file 4
+        parseprops - Jet property file 1
+        onomaprops - Jet property file 2
+        tagprops - Jet property file 3
         ice.yml - Ice configuration file 1
         iceprops - Ice configuration file 2
         data/ - model files, including parseModel.gz
