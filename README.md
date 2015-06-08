@@ -50,7 +50,7 @@ binary distribution. However, if you are building from source, you might also wa
 obtain Jet from: <http://cs.nyu.edu/grishman/jet/jet.html>
 
 The current version of Ice assumes that it is run from a "working directory", where three 
-Jet property files are located: *props*, *parseprops*, and *onomaprops*. These three files 
+Jet property files are located: *parseprops*, *onomaprops*, and *tagprops*. These three files 
 tell Ice where models for Jet are located. These files are released together with the 
 Java source code in the `src/props` directory.
 
