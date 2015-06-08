@@ -193,6 +193,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     return;
                 }
                 DepPathMap depPathMap = DepPathMap.getInstance();
+                depPathMap.load();
                 List<String> paths = depPathMap.findPath(relationInstance);
                 if (paths == null) {
                     JOptionPane.showMessageDialog(SwingRelationsPanel.this,
@@ -490,6 +491,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
             String[] lines =
                     IceUtils.readLines(FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName));
             DepPathMap depPathMap = DepPathMap.getInstance();
+            depPathMap.load();
             for (String line : lines) {
                 String[] parts = line.split("\t");
                 String path = parts[1];

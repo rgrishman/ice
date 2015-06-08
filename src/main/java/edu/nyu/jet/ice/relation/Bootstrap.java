@@ -28,7 +28,7 @@ import javax.swing.*;
 public class Bootstrap {
     public static boolean DEBUG     = true;
 
-    public static boolean DIVERSIFY = true;
+    public static boolean DIVERSIFY = false;
 
     public static PathMatcher pathMatcher = null;
 
@@ -279,6 +279,9 @@ public class Bootstrap {
             }
             tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
             IcePath icePath = new IcePath(p, pRepr, tooltip, confusionScore);
+            if (pRepr.equals(arg1Type + " " + arg2Type)) {
+                continue;
+            }
             scoreList.add(icePath);
         }
 
