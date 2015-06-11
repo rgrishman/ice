@@ -168,7 +168,8 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     return;
                 }
                 try {
-                    seeds = suggestSeeds();
+                    Set<String> excludedEntities = Ice.getExclusionEntities();
+                    seeds = suggestSeeds(excludedEntities);
                     seedString = "[" + seeds.get(0) + "] and [" + seeds.get(1) + "]";
                 }
                 finally {
@@ -191,6 +192,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                         entitySetList.setSelectedValue(ies, true);
                         entriesListModel.addElement(seeds.get(0));
                         entriesListModel.addElement(seeds.get(1));
+                        //currentEntitySet = new IceEntitySet();
                     }
                 }
             }
@@ -207,6 +209,9 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         saveEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                if (entitySetList.getSelectedValue() != null) {
+                    currentEntitySet = (IceEntitySet)entitySetList.getSelectedValue();
+                }
                 if (currentEntitySet == null ||
                         nameTextField.getText().trim().length() == 0 ||
                         entriesListModel == null ||
@@ -300,7 +305,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     seedStrings.add(seed.toString());
                 }
                 EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
-                        seedStrings);
+                        seedStrings, Ice.getExclusionEntities());
                 EntitySetRankerFrame entitySetWindow = new EntitySetRankerFrame("Expand entity set",
                         nameTextField.getText(),
                         expander);
@@ -354,7 +359,12 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
     public java.util.List<String> suggestSeeds() {
         return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpus.name, "nn"),
-                Ice.selectedCorpus.termFileName, "nn");
+                Ice.selectedCorpus.termFileName, "nn", new HashSet());
+    }
+
+    public java.util.List<String> suggestSeeds(Set<String> excludedEntities) {
+        return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpus.name, "nn"),
+                Ice.selectedCorpus.termFileName, "nn", excludedEntities);
     }
 
     public static java.util.Timer switchToBusyCursor(final javax.swing.JPanel frame) {

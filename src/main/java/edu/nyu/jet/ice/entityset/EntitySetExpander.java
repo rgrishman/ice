@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.entityset;
 
+import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
@@ -36,7 +37,8 @@ public class EntitySetExpander {
     public List<Entity> rankedEntities = null;
     public Set<String> used = null;
 
-    public static List<String> recommendSeeds(String indexFileName, String termFileName, String type) {
+    public static List<String> recommendSeeds(String indexFileName, String termFileName, String type,
+                                              Set<String> excludedEntities) {
         Map<String, Vector> entityFeatureDict = new HashMap<String, Vector>();
         String line;
         try {
@@ -45,6 +47,9 @@ public class EntitySetExpander {
             while ((line = br.readLine()) != null) {
                 StringTokenizer tok = new StringTokenizer(line, "\t");
                 String word = tok.nextToken();
+                if (excludedEntities.contains(word)) {
+                    continue;
+                }
                 Vector v    = new CompressedVector(featureSize);
                 while (tok.hasMoreTokens()) {
                     String[] parts = tok.nextToken().split(":");
@@ -178,7 +183,7 @@ public class EntitySetExpander {
         return false;
     }
 
-    public EntitySetExpander(String indexFileName, List<String> seeds) {
+    public EntitySetExpander(String indexFileName, List<String> seeds, Set<String> excludedEntities) {
         used = new HashSet<String>();
         entityFeatureDict = new HashMap<String, Vector>();
         String line;
@@ -194,6 +199,9 @@ public class EntitySetExpander {
                 while (tok.hasMoreTokens()) {
                     String[] parts = tok.nextToken().split(":");
                     v.set(Integer.valueOf(parts[0]), Double.valueOf(parts[1]));
+                }
+                if (excludedEntities.contains(word) && !seeds.contains(word)) {
+                    continue;
                 }
                 entityFeatureDict.put(word, v);
             }
@@ -394,7 +402,8 @@ public class EntitySetExpander {
             System.out.println("Input seeds separated by comma:");
             String[] seedsArr = br.readLine().split(",");
             List<String> seeds = Arrays.asList(seedsArr);
-            EntitySetExpander expander = new EntitySetExpander(indexFile, seeds);
+            EntitySetExpander expander = new EntitySetExpander(indexFile, seeds,
+                    Ice.getExclusionEntities());
             int maxIteration = 5;
             for (int i = 0; i < maxIteration; i++) {
                 expander.recommend();

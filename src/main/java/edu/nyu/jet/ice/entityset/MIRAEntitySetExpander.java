@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.entityset;
 
+import edu.nyu.jet.ice.uicomps.Ice;
 import org.la4j.vector.Vector;
 import org.la4j.vector.sparse.CompressedVector;
 
@@ -21,7 +22,7 @@ public class MIRAEntitySetExpander extends EntitySetExpander {
     public static final int EPOCHS = 50;
 
     public MIRAEntitySetExpander(String indexFileName, List<String> seeds) {
-        super(indexFileName, seeds);
+        super(indexFileName, seeds, Ice.getExclusionEntities());
         parameters = new CompressedVector(this.getFeatureSize());
     }
 

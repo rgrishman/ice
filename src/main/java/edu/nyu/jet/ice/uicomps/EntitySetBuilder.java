@@ -61,7 +61,7 @@ public class EntitySetBuilder {
 
     public List<String> suggestSeeds() {
         return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpus.name, type),
-                Ice.selectedCorpus.termFileName, type);
+                Ice.selectedCorpus.termFileName, type, new HashSet<String>());
     }
 
     private List<String> splitSeedString(String seedString) {
@@ -81,7 +81,7 @@ public class EntitySetBuilder {
         List<String> seedStrings = splitSeedString(seedString);
 
         EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + type,
-                seedStrings);
+                seedStrings, Ice.getExclusionEntities());
 
         expander.rank();
         return expander.rankedEntities;
@@ -275,7 +275,7 @@ public class EntitySetBuilder {
                     }
                 }
                 EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + catTextField.getText(),
-                        seedStrings);
+                        seedStrings, Ice.getExclusionEntities());
                 expander.setProgressMonitor(new SwingProgressMonitor(
                         Ice.mainFrame,
                         "Expanding entity set",
@@ -345,7 +345,7 @@ public class EntitySetBuilder {
 //                EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + type,
 //                        seedStrings);
                 EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
-                        seedStrings);
+                        seedStrings, Ice.getExclusionEntities());
                 expander.setProgressMonitor(new SwingProgressMonitor(
                         Ice.mainFrame,
                         "Expanding entity set",
@@ -545,7 +545,7 @@ public class EntitySetBuilder {
                     }
                 }
                 EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + catTextField.getText(),
-                        seedStrings);
+                        seedStrings, Ice.getExclusionEntities());
                 expander.setProgressMonitor(new SwingProgressMonitor(
 						Ice.mainFrame,
 						"Expanding entity set",
@@ -615,7 +615,7 @@ public class EntitySetBuilder {
 //                EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + type,
 //                        seedStrings);
                 EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
-                        seedStrings);
+                        seedStrings, Ice.getExclusionEntities());
                 expander.setProgressMonitor(new SwingProgressMonitor(
                         Ice.mainFrame,
                         "Expanding entity set",

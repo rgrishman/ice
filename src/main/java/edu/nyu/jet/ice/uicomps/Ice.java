@@ -103,6 +103,16 @@ public class Ice {
 		mainFrame.repaint();
 	}
 
+	public static Set<String> getExclusionEntities() {
+        Set<String> result = new HashSet<String>();
+        for (IceEntitySet entitySet : entitySets.values()) {
+            for (String entity : entitySet.getNouns()) {
+                result.add(entity);
+            }
+        }
+        return result;
+    }
+
 	public static Box corporaBox () {
 
 		Box box = Box.createVerticalBox();

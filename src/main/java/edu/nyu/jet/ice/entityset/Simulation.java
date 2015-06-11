@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.entityset;
 
+import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.IceUtils;
 
 import java.io.FileWriter;
@@ -75,7 +76,7 @@ public class Simulation {
                 List<String> positives = new ArrayList<String>();
                 List<String> negatives = new ArrayList<String>();
                 EntitySetExpander expander = new EntitySetExpander("kdddeaEntitySetIndex_nn",
-                        seedStrings);
+                        seedStrings, Ice.getExclusionEntities());
                 expander.rank();
                 System.out.println("Iteration 1");
                 //List<String> proposed = extractTopN(expander.rankedEntities, size);
