@@ -55,6 +55,11 @@ Some of the corpus analysis you will perform compares the corpus you are
 analyzing against a reference corpus, referred to as the *background corpus*.  
 The background corpus is selected here.
 
+A background corpus is necessary to complete most of the steps in Ice. We provide
+a background corpus based on WikiNews: [Download](https://github.com/ivanhe/ice/releases/download/v0.2.0beta2/wikinews.zip)
+
+This corpus is released under the [CC-BY-2.5](https://creativecommons.org/licenses/by/2.5/) License, following [WikiNews](http://en.wikinews.org).
+
 __The status monitor__
 
 The status monitor provides status information on the corpus you are
