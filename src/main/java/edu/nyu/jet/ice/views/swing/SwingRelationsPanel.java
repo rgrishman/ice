@@ -193,6 +193,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     return;
                 }
                 DepPathMap depPathMap = DepPathMap.getInstance();
+                depPathMap.load();
                 List<String> paths = depPathMap.findPath(relationInstance);
                 if (paths == null) {
                     JOptionPane.showMessageDialog(SwingRelationsPanel.this,
