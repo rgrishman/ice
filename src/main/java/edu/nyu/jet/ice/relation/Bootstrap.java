@@ -8,6 +8,7 @@ package edu.nyu.jet.ice.relation;// -*- tab-width: 4 -*-
 
 import AceJet.AnchoredPath;
 import AceJet.AnchoredPathSet;
+import AceJet.SimAnchoredPathSet;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.PathMatcher;
@@ -105,7 +106,9 @@ public class Bootstrap {
             //seedPaths.add(args[0]);
             //seedPaths.add(firstSeedPath);
             seedPaths.addAll(allPaths);
-            pathSet = new AnchoredPathSet(patternFileName);
+            // Using SimAchoredPathSet
+            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
+//            pathSet = new AnchoredPathSet(patternFileName);
             bootstrap(arg1Type, arg2Type);
         }
         catch (IOException e) {
@@ -148,10 +151,12 @@ public class Bootstrap {
                 PathRelationExtractor.minThreshold * PathRelationExtractor.negDiscount * SCREEN_DIVERSITY_DISCOUNT;
         pathMatcher.updateCost(0.8, 0.3, 1.2);
         List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
+
         for (String sp : seedPaths) {
             List<AnchoredPath> posPaths = pathSet.getByPath(sp);
             for (AnchoredPath p : posPaths) {
                 seedPathInstances.add(new BootstrapAnchoredPath(p,
+                        sp,
                         BootstrapAnchoredPathType.POSITIVE));
             }
             for (String rp : rejects) {
@@ -162,6 +167,7 @@ public class Bootstrap {
                     List<AnchoredPath> negPaths = pathSet.getByPath(rp);
                     for (AnchoredPath np : negPaths) {
                         seedPathInstances.add(new BootstrapAnchoredPath(np,
+                                rp,
                                 BootstrapAnchoredPathType.NEGATIVE));
                     }
                 }
@@ -195,6 +201,22 @@ public class Bootstrap {
                 new HashMap<String, BootstrapAnchoredPathType>();
         for (BootstrapAnchoredPath seed : seedPathInstances) {
             for (AnchoredPath p : pathSet.getByArgs(seed.argPair())) {
+                String pp = p.path;
+                if (seedPaths.contains(pp)) continue;
+                if (rejects.contains(pp)) continue;
+                if (shared.get(pp) == null) {
+                    shared.put(pp, new HashSet<String>());
+                }
+                shared.get(pp).add(seed.argPair());
+                if (pathSourceMap.containsKey(pp) && pathSourceMap.get(pp) != seed.type) {
+                    pathSourceMap.put(pp, BootstrapAnchoredPathType.BOTH);
+                }
+                else {
+                    pathSourceMap.put(pp, seed.type);
+                }
+            }
+            List<AnchoredPath> simPaths = ((SimAnchoredPathSet)pathSet).similarPaths(seed.path);
+            for (AnchoredPath p : simPaths) {
                 String pp = p.path;
                 if (seedPaths.contains(pp)) continue;
                 if (rejects.contains(pp)) continue;
@@ -381,14 +403,18 @@ public class Bootstrap {
 
         BootstrapAnchoredPathType type;
 
+        String typedPath;
+
         public String argPair() {
             return String.format("%s:%s", arg1, arg2);
         }
 
         public BootstrapAnchoredPath(AnchoredPath path,
+                                     String typedPath,
                                      BootstrapAnchoredPathType type) {
             super(path.arg1, path.path, path.arg2, path.source, -1, -1);
             this.type = type;
+            this.typedPath = typedPath;
         }
     }
 

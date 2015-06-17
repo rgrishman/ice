@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.models;
 
+import AceJet.AnchoredPath;
 import Jet.Lex.Stemmer;
 
 import java.util.ArrayList;
@@ -20,6 +21,24 @@ public class MatcherPath {
 
     public MatcherPath(String pathString) {
         nodes.clear();
+        String[] parts = pathString.split("--");
+        if (parts.length == 3) {
+            arg1Type = parts[0].trim();
+            arg2Type = parts[2].trim();
+            parts = parts[1].split(":");
+            for (int i = 0; i < (parts.length - 1) / 2; i++) {
+                MatcherNode node = new MatcherNode(parts[2*i], stemmer.getStem(parts[2*i + 1],
+                        "UNK"));
+                nodes.add(node);
+            }
+            MatcherNode node = new MatcherNode(parts[parts.length - 1], "SYS_PATH_END");
+            nodes.add(node);
+        }
+    }
+
+    public MatcherPath(AnchoredPath path) {
+        nodes.clear();
+        String pathString = path.toString();
         String[] parts = pathString.split("--");
         if (parts.length == 3) {
             arg1Type = parts[0].trim();
