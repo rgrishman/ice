@@ -7,6 +7,7 @@ import edu.nyu.jet.ice.uicomps.RelationBuilderFrame;
 import edu.nyu.jet.ice.uicomps.RelationBuilderThread;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
+import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.Refreshable;
@@ -406,12 +407,16 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         String name = inName;
 
         String pathListFileName = "";  // not used anyway
-        Bootstrap bootstrap = new Bootstrap(new SwingProgressMonitor(
+        ProgressMonitorI  progressMonitorI = new SwingProgressMonitor(
                 Ice.mainFrame, "Initializing Relation Builder",
                 "Collecting seeds...",
                 0,
                 5
-        ));
+        );
+        String bootstrapperName =
+                Ice.iceProperties.getProperty("Ice.Bootstrapper.name") != null ?
+                        Ice.iceProperties.getProperty("Ice.Bootstrapper.name") : "Bootstrap";
+        Bootstrap bootstrap = Bootstrap.makeBootstrap(bootstrapperName, progressMonitorI);
         RelationBuilderFrame frame = new RelationBuilderFrame("Bootstrap relations",
                 null,
                 bootstrap,

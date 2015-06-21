@@ -629,6 +629,7 @@ public class IcePreprocessor extends Thread {
                                                                 String inputFile) throws IOException {
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
         SyntacticRelationSet relations = new SyntacticRelationSet();
+
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         relations.read(br);
         br.close();

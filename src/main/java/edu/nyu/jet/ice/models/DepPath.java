@@ -118,7 +118,7 @@ public class DepPath {
             }
             sb.append(relations.get(i).type);
             if (i < relations.size() - 1) {
-                sb.append(":").append(relations.get(i).targetWord);
+                sb.append(":").append(relations.get(i).targetWord.replaceAll(":", "_"));
             }
         }
         return AnchoredPath.lemmatizePath(sb.toString());

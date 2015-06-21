@@ -23,6 +23,7 @@ import Jet.Tipster.Annotation;
 import Jet.Tipster.Document;
 import Jet.Tipster.ExternalDocument;
 import Jet.Tipster.Span;
+import opennlp.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ public class DepPaths {
     static Map<String, String> linearizationDict = new TreeMap<String, String>();
 
 	static Map<String, String> pathRelations = new TreeMap<String, String>();
+	static List<Event>         depPathEvents = new ArrayList<Event>();
 
     static PrintWriter writer;
     static PrintWriter typeWriter;
@@ -469,30 +471,6 @@ public class DepPaths {
         }
 	}
 
-	static void recordPath (Document doc, Annotation sentence, SyntacticRelationSet relations,
-							Annotation mention1, String path, Annotation mention2) {
-		if (path == null) return;
-		int pathLength = 0;
-		for (int i=0; i < path.length(); i++)
-			if (path.charAt(i) == ':')
-				pathLength++;
-		if (pathLength > 5) return;
-		String m1 = doc.text(mention1).replaceAll("\\s+", " ").trim();
-		String m2 = doc.text(mention2).replaceAll("\\s+", " ").trim();
-
-		// String source = inputDir + "/" + inputFile + " | " + start + " | " + end;
-		String source = pathText(doc, sentence, mention1, mention2);
-
-		count (relationInstanceCounts, m1 + " -- " + path + " -- " + m2);
-
-		String type1 = mention1.get("TYPE") != null ? (String)mention1.get("TYPE") : "OTHER";
-		String type2 = mention2.get("TYPE") != null ? (String)mention2.get("TYPE") : "OTHER";
-		count (relationTypeCounts, type1 + " -- " + path + " -- " + type2);
-		if (!sourceDict.containsKey(type1 + " -- " + path + " -- " + type2)) {
-			sourceDict.put(type1 + " -- " + path + " -- " + type2, source);
-		}
-	}
-
     static void recordPath (Document doc, Annotation sentence, SyntacticRelationSet relations,
                             Annotation mention1, DepPath path, Annotation mention2) {
 
@@ -523,6 +501,19 @@ public class DepPaths {
         String type2 = mention2.get("TYPE") != null ? (String)mention2.get("TYPE") : "OTHER";
         String fullPath = type1 + " -- " + regularizedPath + " -- " + type2;
         count (relationTypeCounts, fullPath);
+		// collect events
+		// In EntitySetIndexer:
+		// Event event = new Event(tokenString, contextList.toArray(new String[contextList.size()]));
+		String[] regularizedSegments = regularizedPath.toString().split(":");
+		List<String> contextList = new ArrayList<String>();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; regularizedSegments.length % 2 == 1 && i + 2 < regularizedSegments.length; i += 2) {
+			sb.setLength(0);
+			sb.append(regularizedSegments[i].trim()).append(":"+regularizedSegments[i+1].trim()).append(":"+regularizedSegments[i+2].trim());
+			contextList.add(sb.toString());
+			Event event = new Event(regularizedPath.toString(), contextList.toArray(new String[contextList.size()]));
+			depPathEvents.add(event);
+		}
         if (!sourceDict.containsKey(fullPath)) {
             sourceDict.put(fullPath, source);
         }

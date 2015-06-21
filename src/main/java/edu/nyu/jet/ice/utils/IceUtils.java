@@ -202,6 +202,25 @@ public class IceUtils {
     }
 
 
+    public static double innerProduct(double[] v1, double[] v2) {
+        double innerProduct = 0.00000001;
+        for (int i = 0; i < v1.length; i++) {
+            innerProduct += v1[i] * v2[i];
+        }
+        return innerProduct;
+    }
+
+    public static void l2norm(double[] v) {
+        double l2sum = 0;
+        for (int i = 0; i < v.length; i++) {
+            l2sum += v[i] * v[i];
+        }
+        l2sum = Math.sqrt(l2sum);
+        for (int i = 0; i < v.length; i++) {
+            v[i] /= l2sum;
+        }
+    }
+
     /**
      *
      * @return The number of corpora that have been preprocssed and run word count

@@ -1,4 +1,4 @@
-package edu.nyu.jet.ice.relation;// -*- tab-width: 4 -*-
+package edu.nyu.jet.ice.relation;
 
 import AceJet.AnchoredPath;
 import AceJet.AnchoredPathSet;
@@ -11,74 +11,39 @@ import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import gnu.trove.TObjectDoubleHashMap;
 
-import java.util.*;
-import java.io.*;
 import javax.swing.*;
+import java.io.IOException;
+import java.util.*;
 
 /**
- * a simple bootstrapping learner for relations.
- * Assumes a relation is defined by a set of dependency paths.
+ * A Bootstrapping learner for relations.
+ * New dependency paths are extracted using 1) identical arguments and 2) lexical similarity
+ * between dependency path using PathMatcher
+ *
+ * @see edu.nyu.jet.ice.models.PathMatcher PathMatcher)
  */
 
-public class Bootstrap {
-    public static boolean DEBUG     = true;
+public class LexicalSimilarityBootstrap extends Bootstrap {
 
-    public static boolean DIVERSIFY = false;
-
-    public static PathMatcher pathMatcher = null;
-
-    public static final int MIN_RELATION_COUNT = 1;
-
-    public static final double MIN_BOOTSTRAP_SCORE = 0.05;
-
-    public static final int    MAX_BOOTSTRAPPED_ITEM = 200;
-
-    public static final double SCREEN_DIVERSITY_DISCOUNT = 0.7;
-
-    public static final int    SCREEN_LINES = 20;
-
-    public List<IcePath> foundPatterns = new ArrayList<IcePath>();
-
+    @Override
     public Set<String> getSeedPaths() {
         return seedPaths;
     }
 
+    @Override
     public Set<String> getRejects() {return rejects; }
 
     private ProgressMonitorI progressMonitor = null;
 
-    Set<String> seedPaths = new HashSet<String>();
-    Set<String> rejects = new HashSet<String>();
-    AnchoredPathSet pathSet;
-    String arg1Type = "";
-    String arg2Type = "";
-
-    public Bootstrap() {
-
+    public LexicalSimilarityBootstrap() {
+        super();
     }
 
-    public Bootstrap(ProgressMonitorI progressMonitor) {
-        this.progressMonitor = progressMonitor;
+    public LexicalSimilarityBootstrap(ProgressMonitorI progressMonitor) {
+        super(progressMonitor);
     }
 
-    public String getArg2Type() {
-        return arg2Type;
-    }
-
-    public String getArg1Type() {
-        return arg1Type;
-    }
-
-    public static Bootstrap makeBootstrap(String name, ProgressMonitorI progressMonitor) {
-        if (name.equals("ArgEmbeddingBootstrap")) {
-            return new ArgEmbeddingBootstrap(progressMonitor);
-        }
-        if (name.equals("LexicalSimilarityBootstrap")) {
-            return new LexicalSimilarityBootstrap(progressMonitor);
-        }
-        return new Bootstrap(progressMonitor);
-    }
-
+    @Override
     public List<IcePath> initialize(String seedPath, String patternFileName) {
         try {
             DepPathMap depPathMap = DepPathMap.getInstance();
@@ -129,18 +94,6 @@ public class Bootstrap {
         return foundPatterns;
     }
 
-    public void addPathsToSeedSet(List<IcePath> approvedPaths, Set<String> pathSet) {
-        for (IcePath approvedPath : approvedPaths) {
-            pathSet.add(approvedPath.getPath());
-        }
-    }
-
-
-
-    public void setProgressMonitor(ProgressMonitorI progressMonitor) {
-        this.progressMonitor = progressMonitor;
-    }
-
     private void bootstrap(String arg1Type, String arg2Type) {
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
             DEBUG = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.debug"));
@@ -177,7 +130,7 @@ public class Bootstrap {
                 }
             }
         }
-        if (seedPathInstances == null) {
+        if (seedPathInstances == null || seedPathInstances.size() == 0) {
             System.out.println("No examples of this path.");
             return;
         }
@@ -187,11 +140,6 @@ public class Bootstrap {
             progressMonitor.setNote("Collecting argument pairs");
             progressMonitor.setProgress(1);
         }
-        // collect set of argument pairs from these instances
-//        Set<String> argPairs = new HashSet<String>();
-//        for (AnchoredPath path : seedPathInstances) {
-//            argPairs.add(path.arg1 + ":" + path.arg2);
-//        }
 
         if (progressMonitor != null) {
             progressMonitor.setNote("Collecting new paths");
@@ -205,6 +153,22 @@ public class Bootstrap {
                 new HashMap<String, BootstrapAnchoredPathType>();
         for (BootstrapAnchoredPath seed : seedPathInstances) {
             for (AnchoredPath p : pathSet.getByArgs(seed.argPair())) {
+                String pp = p.path;
+                if (seedPaths.contains(pp)) continue;
+                if (rejects.contains(pp)) continue;
+                if (shared.get(pp) == null) {
+                    shared.put(pp, new HashSet<String>());
+                }
+                shared.get(pp).add(seed.argPair());
+                if (pathSourceMap.containsKey(pp) && pathSourceMap.get(pp) != seed.type) {
+                    pathSourceMap.put(pp, BootstrapAnchoredPathType.BOTH);
+                }
+                else {
+                    pathSourceMap.put(pp, seed.type);
+                }
+            }
+            List<AnchoredPath> simPaths = ((SimAnchoredPathSet)pathSet).similarPaths(seed.path);
+            for (AnchoredPath p : simPaths) {
                 String pp = p.path;
                 if (seedPaths.contains(pp)) continue;
                 if (rejects.contains(pp)) continue;
@@ -327,83 +291,15 @@ public class Bootstrap {
             }
         }
 
-        // print paths, best path last
-//        for (int scr = 10000; scr >= 5; scr--) {
-//            for (String p : score.keySet()) {
-//                if (score.get(p) == scr) {
-//                    String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
-//                    String pRepr = depPathMap.findRepr(fullp);
-//                    if (pRepr == null) continue;
-//                    foundPatterns.add(new IcePath(p, pRepr, depPathMap.findExample(fullp), scr));
-//                }
-//            }
-//        }
 
         if (progressMonitor != null) {
-            progressMonitor.setProgress(5);
+            progressMonitor.setProgress(progressMonitor.getMaximum());
         }
 
-    }
-
-    public double minDistanceToSet(String path, Set<String> pathSet) {
-        double result = 1;
-        for (String pathInSet : pathSet) {
-            double score =
-                    pathMatcher.matchPaths("T1--" + path + "--T2", "T1--" + pathInSet + "--T2") /
-                            (pathInSet.split(":").length + 1);
-            if (score < result) {
-                result = score;
-            }
-        }
-        return result;
     }
 
     public static void main(String[] args) throws IOException {
 
-    }
-
-    static boolean query(String p) {
-        int result =
-                JOptionPane.showConfirmDialog(null, p, " Keep?", JOptionPane.YES_NO_OPTION);
-        return result == JOptionPane.YES_OPTION;
-    }
-
-    static int exitableQuery(String p) {
-        Object[] options = {"Exit",
-                "No",
-                "Yes"};
-        return JOptionPane.showOptionDialog(Ice.mainFrame,
-                p,
-                "Keep?",
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[1]);
-
-    }
-
-    public enum BootstrapAnchoredPathType {
-        POSITIVE, NEGATIVE, BOTH
-    }
-
-    public class BootstrapAnchoredPath extends AnchoredPath {
-
-        BootstrapAnchoredPathType type;
-
-        String typedPath;
-
-        public String argPair() {
-            return String.format("%s:%s", arg1, arg2);
-        }
-
-        public BootstrapAnchoredPath(AnchoredPath path,
-                                     String typedPath,
-                                     BootstrapAnchoredPathType type) {
-            super(path.arg1, path.path, path.arg2, path.source, -1, -1);
-            this.type = type;
-            this.typedPath = typedPath;
-        }
     }
 
 }
