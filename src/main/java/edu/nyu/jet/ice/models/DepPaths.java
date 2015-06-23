@@ -7,6 +7,7 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 
 import AceJet.*;
 import Jet.Control;
+import Jet.Parser.DepTransformer;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
@@ -248,7 +249,7 @@ public class DepPaths {
 		relationInstanceCounts.clear();
 		sourceDict.clear();
         linearizationDict.clear();
-
+		DepTransformer transformer = new DepTransformer("trace");
 		if (args.length != 7) {
 			System.err.println ("DepCounter requires 7 arguments:");
 			System.err.println ("  propsFile docList inputDir inputSuffix outputFile");
@@ -323,6 +324,8 @@ public class DepPaths {
 			SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
 					cacheDir, inputDir, inputFile
 			);
+			SyntacticRelationSet transformedRelations = transformer.transform(relations);
+
 			relations.addInverses();
 			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
             IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
