@@ -64,12 +64,13 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         foregroundPanel.add(directoryLabel);
         directoryTextField.setMinimumSize(new Dimension(240, 20));
         directoryTextField.setMaximumSize(new Dimension(240, 20));
-
+        directoryTextField.setName("directoryTextField");
         directoryTextField.setEditable(false);
         foregroundPanel.add(directoryTextField, "span 3");
         foregroundPanel.add(directoryBrowseButton, "wrap");
         foregroundPanel.add(filterLabel);
         filterTextField.setMinimumSize(new Dimension(240, 20));
+        filterTextField.setName("filterTextField");
         foregroundPanel.add(filterTextField, "span 3");
         foregroundPanel.add(preprocessButton, "wrap");
         foregroundPanel.add(statisticsLabel, "span");
