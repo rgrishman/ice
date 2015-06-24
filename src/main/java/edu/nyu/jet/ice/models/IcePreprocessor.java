@@ -346,9 +346,45 @@ public class IcePreprocessor extends Thread {
     }
 
     public static Annotation findTermHead(Document doc, Annotation term, SyntacticRelationSet relations) {
-        List<Annotation> tokens = doc.annotationsOfType("token", term.span());
+        return findTermHead(doc, term.span(), relations);
+//        List<Annotation> tokens = doc.annotationsOfType("token", term.span());
+//        if (tokens == null || tokens.size() == 0) {
+//            return null;
+//        }
+//        int chosen = -1;
+//        for (int i = tokens.size() - 1; i > -1; i--) {
+//            List<Annotation> posAnn = doc.annotationsOfType("tagger", tokens.get(i).span());
+//            if (posAnn != null && posAnn.size() > 0 && posAnn.get(0).get("cat") != null &&
+//                    ((String)posAnn.get(0).get("cat")).startsWith("NN")) {
+//                SyntacticRelation sourceRelation = relations.getRelationTo(tokens.get(i).start());
+//                if (sourceRelation == null ||
+//                        sourceRelation.type.endsWith("-1") ||
+//                                sourceRelation.sourcePosn < term.start() &&
+//                                sourceRelation.sourcePosn > term.end()) {
+//                    chosen = i;
+//                    break;
+//                }
+//            }
+//        }
+//        if (chosen < 0) {
+//            chosen = tokens.size() - 1;
+//        }
+//        // Debug only
+//        // System.err.println(doc.text(term) + "=> " + doc.text(tokens.get(chosen)));
+
+        //return tokens.get(chosen);
+    }
+
+    public static Annotation findTermHead(Document doc, Span term, SyntacticRelationSet relations) {
+        List<Annotation> tokens = doc.annotationsOfType("token", term);
         if (tokens == null || tokens.size() == 0) {
-            return null;
+            List<Annotation> startAtAnn = doc.annotationsAt(term.start(), "token");
+            if (startAtAnn == null || startAtAnn.size() == 0) {
+                return null;
+            }
+            else {
+                return startAtAnn.get(0);
+            }
         }
         int chosen = -1;
         for (int i = tokens.size() - 1; i > -1; i--) {
@@ -358,7 +394,7 @@ public class IcePreprocessor extends Thread {
                 SyntacticRelation sourceRelation = relations.getRelationTo(tokens.get(i).start());
                 if (sourceRelation == null ||
                         sourceRelation.type.endsWith("-1") ||
-                                sourceRelation.sourcePosn < term.start() &&
+                        sourceRelation.sourcePosn < term.start() &&
                                 sourceRelation.sourcePosn > term.end()) {
                     chosen = i;
                     break;
