@@ -7,7 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.la4j:la4j:0.4.9" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
@@ -21,7 +21,9 @@
           <root url="jar://$MODULE_DIR$/lib/Jet-1.8.2-depfix-jar-with-dependencies.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/lib/Jet-1.8.2-depfix-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>

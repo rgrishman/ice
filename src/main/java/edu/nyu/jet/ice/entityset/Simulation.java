@@ -7,12 +7,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by yhe on 5/29/14.
  */
 public class Simulation {
+
+    public static Scorer scorer;
 
     public static void score(List<String> entities, List<String> goldEntities) {
         int correct = 0;
@@ -54,11 +57,13 @@ public class Simulation {
         int tp = 0;
         for (int i = 0; i < entities.size(); i++) {
             String entity = entities.get(i);
-            if (goldEntities.contains(entity)) {
-                tp++;
-            }
+//            if (goldEntities.contains(entity)) {
+//                tp++;
+//            }
+            tp += scorer.getWeight(entity);
         }
-        double tpr = (double)tp/goldEntities.size(); // true positive rate = recall
+//        double tpr = (double)tp/goldEntities.size(); // true positive rate = recall
+        double tpr = (double)tp/scorer.getTotal();
         System.out.println(String.format("%.4f @ %d", tpr, entities.size()));
     }
 
@@ -66,15 +71,20 @@ public class Simulation {
         try {
             int[] sizes = new int[]{20};
             List<String> seedStrings = new ArrayList<String>();
-            List<String> gold = Arrays.asList(IceUtils.readLines("agents_gold.txt"));
-            seedStrings.add("special agents");
-            seedStrings.add("law enforcement officers");
+            scorer = new Scorer("drugs_gold.weighted.txt");
+            List<String> gold = Arrays.asList(IceUtils.readLines("drugs_gold.txt"));
+//            seedStrings.add("enforcement partners");
+//            seedStrings.add("local law enforcement agencies");
+            seedStrings.add("methamphetamine");
+            seedStrings.add("oxycodone");
 
             for (int size : sizes) {
                 System.out.println("\n\n\nSize " + size);
                 List<String> positives = new ArrayList<String>();
                 List<String> negatives = new ArrayList<String>();
-                EntitySetExpander expander = new EntitySetExpander("kdddeaEntitySetIndex_nn",
+//                EntitySetExpander expander = new EmbeddingEntitySetExpander("cache/DEA/phrases.embedding.200",
+//                        seedStrings);
+                EntitySetExpander expander = new EntitySetExpander("cache/DEA/EntitySetIndex_nn",
                         seedStrings);
                 expander.rank();
                 System.out.println("Iteration 1");
@@ -149,6 +159,40 @@ public class Simulation {
         }
         expander.updateSeeds(positives, negatives);
         expander.updateParameters();
+    }
+
+    public static class Scorer {
+        private HashMap<String, Integer> map = new HashMap<String, Integer>();
+        private int total = 0;
+
+        public Scorer(String fileName) throws IOException {
+            List<String> lines = Arrays.asList(IceUtils.readLines(fileName));
+            for (String line : lines) {
+                String[] parts = line.split("\\t");
+                map.put(parts[0], Integer.valueOf(parts[1]));
+                total += Integer.valueOf(parts[1]);
+            }
+        }
+
+        public Scorer(String fileName, int init) throws IOException {
+            List<String> lines = Arrays.asList(IceUtils.readLines(fileName));
+            for (String line : lines) {
+                String[] parts = line.split("\\t");
+                map.put(parts[0], init);
+                total += init;
+            }
+        }
+
+        public int getWeight(String w) {
+            if (map.containsKey(w)) {
+                return map.get(w);
+            }
+            return 0;
+        }
+
+        public int getTotal() {
+            return total;
+        }
     }
 
 }
