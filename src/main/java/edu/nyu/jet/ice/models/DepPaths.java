@@ -324,7 +324,7 @@ public class DepPaths {
 			SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
 					cacheDir, inputDir, inputFile
 			);
-			SyntacticRelationSet transformedRelations = transformer.transform(relations);
+			// SyntacticRelationSet transformedRelations = transformer.transform(relations);
 
 			relations.addInverses();
 			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);

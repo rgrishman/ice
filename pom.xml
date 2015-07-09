@@ -75,12 +75,17 @@
         <scope>system</scope>
         <systemPath>${project.basedir}/lib/jet-all.jar</systemPath>
     </dependency -->
-    <dependency>
+    <!-- dependency>
         <groupId>edu.nyu.cs.proteus</groupId>
         <artifactId>Jet</artifactId>
         <version>1.8.2-depfix</version>
         <scope>system</scope>
         <systemPath>${project.basedir}/lib/Jet-1.8.2-depfix-jar-with-dependencies.jar</systemPath>
+    </dependency-->
+    <dependency>
+        <groupId>edu.nyu.cs.proteus</groupId>
+        <artifactId>Jet</artifactId>
+        <version>1.8.2-depfix-2</version>
     </dependency>
 </dependencies>
 

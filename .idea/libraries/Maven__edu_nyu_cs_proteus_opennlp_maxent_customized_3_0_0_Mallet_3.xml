@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: edu.nyu.cs.proteus:opennlp-maxent-customized:3.0.0.Mallet.3">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/edu/nyu/cs/proteus/opennlp-maxent-customized/3.0.0.Mallet.3/opennlp-maxent-customized-3.0.0.Mallet.3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/edu/nyu/cs/proteus/opennlp-maxent-customized/3.0.0.Mallet.3/opennlp-maxent-customized-3.0.0.Mallet.3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/edu/nyu/cs/proteus/opennlp-maxent-customized/3.0.0.Mallet.3/opennlp-maxent-customized-3.0.0.Mallet.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
