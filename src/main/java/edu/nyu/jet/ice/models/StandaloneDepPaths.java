@@ -244,7 +244,7 @@ public class StandaloneDepPaths {
 		DepTransformer transformer = new DepTransformer("trace");
 		if (args.length != 7) {
 			System.err.println ("DepCounter requires 7 arguments:");
-			System.err.println ("  propsFile docList inputDir inputSuffix outputFile");
+			System.err.println ("  propsFile docList inputDir inputSuffix outputFile typeOutputFile sourceDictFile");
 			System.exit (1);
 		}
 		String propsFile = args[0];
