@@ -85,7 +85,7 @@
     <dependency>
         <groupId>edu.nyu.cs.proteus</groupId>
         <artifactId>Jet</artifactId>
-        <version>1.8.2-depfix-2</version>
+        <version>1.8.2-depfix-3</version>
     </dependency>
 </dependencies>
 

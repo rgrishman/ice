@@ -23,7 +23,7 @@ import javax.swing.*;
 public class Bootstrap {
     public static boolean DEBUG     = true;
 
-    public static boolean DIVERSIFY = false;
+    public static boolean DIVERSIFY = true;
 
     public static PathMatcher pathMatcher = null;
 
@@ -36,6 +36,8 @@ public class Bootstrap {
     public static final double SCREEN_DIVERSITY_DISCOUNT = 0.7;
 
     public static final int    SCREEN_LINES = 20;
+
+    public static final boolean USE_NEGATIVE = false; //TODO: configurable in props
 
     public List<IcePath> foundPatterns = new ArrayList<IcePath>();
 
@@ -163,16 +165,18 @@ public class Bootstrap {
                         sp,
                         BootstrapAnchoredPathType.POSITIVE));
             }
-            for (String rp : rejects) {
-                double sim = pathMatcher.matchPaths(arg1Type + "--" + sp + "--" + arg2Type,
-                        arg1Type + "--" + rp + "--" + arg2Type) / sp.split(":").length;
-                if (sim < minAllowedSimilarity) {
-                    System.err.println("Bootstrapping negative path:" + rp);
-                    List<AnchoredPath> negPaths = pathSet.getByPath(rp);
-                    for (AnchoredPath np : negPaths) {
-                        seedPathInstances.add(new BootstrapAnchoredPath(np,
-                                rp,
-                                BootstrapAnchoredPathType.NEGATIVE));
+            if (USE_NEGATIVE) {
+                for (String rp : rejects) {
+                    double sim = pathMatcher.matchPaths(arg1Type + "--" + sp + "--" + arg2Type,
+                            arg1Type + "--" + rp + "--" + arg2Type) / sp.split(":").length;
+                    if (sim < minAllowedSimilarity) {
+                        System.err.println("Bootstrapping negative path:" + rp);
+                        List<AnchoredPath> negPaths = pathSet.getByPath(rp);
+                        for (AnchoredPath np : negPaths) {
+                            seedPathInstances.add(new BootstrapAnchoredPath(np,
+                                    rp,
+                                    BootstrapAnchoredPathType.NEGATIVE));
+                        }
                     }
                 }
             }
