@@ -266,7 +266,7 @@ public class Bootstrap {
             double confusionScore  = Math.max(Math.max(nearestNeighborConfusion, borderConfusion), argConfusion);
             if (!USE_NEGATIVE) {
                 // confusionScore = argConfusion;
-                confusionScore = posScore;
+                confusionScore = 1/posScore;
             }
 //            System.err.println("[Bootstrap score]\t" + p + "\t" + (int)Math.round(confusionScore * 100) +
 //                    "\tnnConfusion:" + nearestNeighborConfusion +
