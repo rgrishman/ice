@@ -293,12 +293,12 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 for (Object seed : entriesListModel.toArray()) {
                     seedStrings.add(seed.toString());
                 }
-//                EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
-//                        seedStrings);
-                EntitySetExpander expander = new EmbeddingEntitySetExpander(
-                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
-                                + File.separator + "phrases.embedding.200",
+                EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
                         seedStrings);
+//                EntitySetExpander expander = new EmbeddingEntitySetExpander(
+//                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+//                                + File.separator + "phrases.embedding.200",
+//                        seedStrings);
                 EntitySetRankerFrame entitySetWindow = new EntitySetRankerFrame("Expand entity set",
                         nameTextField.getText(),
                         expander);

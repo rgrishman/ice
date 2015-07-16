@@ -78,8 +78,8 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
             //seedPaths.add(firstSeedPath);
             seedPaths.addAll(allPaths);
             // Using SimAchoredPathSet
-            loadEmbeddings(FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
-                    + File.separator +"deps.context.complete.vec.dim200");
+//            loadEmbeddings(FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+//                    + File.separator +"deps.context.complete.vec.dim200");
             pathSet = new ArgEmbeddingAnchoredPathSet(patternFileName, normalizedPhraseEmbeddings, 0.8);
 //            pathSet = new AnchoredPathSet(patternFileName);
             bootstrap(arg1Type, arg2Type);
