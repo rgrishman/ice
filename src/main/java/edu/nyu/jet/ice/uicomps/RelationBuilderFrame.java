@@ -189,11 +189,15 @@ public class RelationBuilderFrame extends JFrame {
                     java.util.List<String> paths = Arrays.asList(reprs);
                     swingRelationsPanel.updateEntriesListModel(paths);
                 }
-                swingRelationsPanel.negPaths.clear();
+                // swingRelationsPanel.negPaths.clear();
+                java.util.List<String> paths = new ArrayList<String>();
                 for (String negPath : bootstrap.getRejects()) {
-                    swingRelationsPanel.negPaths.add(bootstrap.getArg1Type() + " -- " +
+                    // swingRelationsPanel.negPaths
+                    paths.add(bootstrap.getArg1Type() + " -- " +
                         negPath + " -- " + bootstrap.getArg2Type());
                 }
+                swingRelationsPanel.negPaths.put(bootstrap.getRelationName(),
+                        paths);
                 RelationBuilderFrame.this.dispose();
             }
         });

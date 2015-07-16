@@ -39,7 +39,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
     JTextField arg2TextField;
     IceRelation currentRelation;
     SwingIceStatusPanel iceStatusPanel;
-    public List<String> negPaths = new ArrayList<String>();
+    // public List<String> negPaths = new ArrayList<String>();
+    public Map<String, List<String>> negPaths = new TreeMap<String, List<String>>();
     private static final int DELAY_MS = 250;
     static final Set<String> ACE_TYPES = new HashSet<String>();
     {
@@ -59,6 +60,14 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         //entitySetPanel.setSize(800, 520);
         this.setLayout(new MigLayout());
         this.setOpaque(false);
+
+        negPaths.clear();
+        for (String relationName : Ice.relations.keySet()) {
+            IceRelation r = Ice.relations.get(relationName);
+            List<String> paths = new ArrayList<String>();
+            paths.addAll(r.getNegPaths());
+            negPaths.put(relationName, paths);
+        }
 
         JPanel leftPanel = new JPanel(new MigLayout());
         leftPanel.setOpaque(false);
@@ -337,7 +346,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     }
                 }
                 currentRelation.setPaths(relationPaths);
-                currentRelation.setNegPaths(negPaths);
+                currentRelation.setNegPaths(negPaths.get(currentRelation.getName()));
                 relationList.revalidate();
                 relationList.repaint();
             }
@@ -416,7 +425,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         String bootstrapperName =
                 Ice.iceProperties.getProperty("Ice.Bootstrapper.name") != null ?
                         Ice.iceProperties.getProperty("Ice.Bootstrapper.name") : "Bootstrap";
-        Bootstrap bootstrap = Bootstrap.makeBootstrap(bootstrapperName, progressMonitorI);
+        Bootstrap bootstrap = Bootstrap.makeBootstrap(bootstrapperName, progressMonitorI, name);
         RelationBuilderFrame frame = new RelationBuilderFrame("Bootstrap relations",
                 null,
                 bootstrap,

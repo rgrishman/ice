@@ -49,6 +49,16 @@ public class Bootstrap {
 
     private ProgressMonitorI progressMonitor = null;
 
+    private String relationName = "";
+
+    public String getRelationName() {
+        return relationName;
+    }
+
+    public void setRelationName(String relationName) {
+        this.relationName = relationName;
+    }
+
     Set<String> seedPaths = new HashSet<String>();
     Set<String> rejects = new HashSet<String>();
     AnchoredPathSet pathSet;
@@ -71,14 +81,20 @@ public class Bootstrap {
         return arg1Type;
     }
 
-    public static Bootstrap makeBootstrap(String name, ProgressMonitorI progressMonitor) {
+    public static Bootstrap makeBootstrap(String name, ProgressMonitorI progressMonitor, String relationName) {
         if (name.equals("ArgEmbeddingBootstrap")) {
-            return new ArgEmbeddingBootstrap(progressMonitor);
+            Bootstrap instance =  new ArgEmbeddingBootstrap(progressMonitor);
+            instance.relationName = relationName;
+            return instance;
         }
         if (name.equals("LexicalSimilarityBootstrap")) {
-            return new LexicalSimilarityBootstrap(progressMonitor);
+            Bootstrap instance =  new LexicalSimilarityBootstrap(progressMonitor);
+            instance.relationName = relationName;
+            return instance;
         }
-        return new Bootstrap(progressMonitor);
+        Bootstrap instance = new Bootstrap(progressMonitor);
+        instance.relationName = relationName;
+        return instance;
     }
 
     public List<IcePath> initialize(String seedPath, String patternFileName) {
