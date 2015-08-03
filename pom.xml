@@ -8,6 +8,13 @@
     <artifactId>ICE</artifactId>
     <version>0.2.0</version>
 
+    <repositories>
+        <repository>
+            <id>yifans-repo</id>
+            <name>Yifan's private repository</name>
+            <url>http://mvn.yifanhe.org:8081/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>
