@@ -330,7 +330,7 @@ public class DepPaths {
 			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
             IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
 			IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
-            collectPaths(doc, relations);
+            collectPaths(doc, relations, transformedRelations);
 			if (progressMonitor != null) {
 				progressMonitor.setProgress(docCount);
 				progressMonitor.setNote(docCount + " files processed");
@@ -397,7 +397,8 @@ public class DepPaths {
 	}
 
     static void collectPaths (Document doc,
-							  SyntacticRelationSet relations) {
+							  SyntacticRelationSet relations,
+							  SyntacticRelationSet transformedRelations) {
 
         List<Annotation> jetSentences = doc.annotationsOfType("sentence");
         if (jetSentences == null) return;
@@ -532,7 +533,9 @@ public class DepPaths {
      *  one of localMentions is on the path (but not at the beginning or end of the path)
      */
     public static DepPath buildSyntacticPathOnSpans
-    (int fromPosn, int toPosn, SyntacticRelationSet relations, List<Span> localSpans) {
+    (int fromPosn, int toPosn,
+	 SyntacticRelationSet relations,
+	 List<Span> localSpans) {
         Map<Integer, DepPath> path = new HashMap<Integer, DepPath>();
         DepPath p = new DepPath(fromPosn, toPosn);
         int variable = 0;

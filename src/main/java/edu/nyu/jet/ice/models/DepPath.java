@@ -18,6 +18,8 @@ import java.util.*;
  */
 public class DepPath {
 
+    String path = null;
+
     List<SyntacticRelation> relations = new ArrayList<SyntacticRelation>();
 
     static Stemmer stemmer = Stemmer.getDefaultStemmer();
@@ -34,6 +36,10 @@ public class DepPath {
         super();
         this.start = start;
         this.end   = end;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public static String lexicalContent(String role) {
@@ -111,17 +117,22 @@ public class DepPath {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < relations.size(); i++) {
-            if (i > 0) {
-                sb.append(":");
+        if (path == null) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < relations.size(); i++) {
+                if (i > 0) {
+                    sb.append(":");
+                }
+                sb.append(relations.get(i).type);
+                if (i < relations.size() - 1) {
+                    sb.append(":").append(relations.get(i).targetWord.replaceAll(":", "_"));
+                }
             }
-            sb.append(relations.get(i).type);
-            if (i < relations.size() - 1) {
-                sb.append(":").append(relations.get(i).targetWord.replaceAll(":", "_"));
-            }
+            return AnchoredPath.lemmatizePath(sb.toString());
         }
-        return AnchoredPath.lemmatizePath(sb.toString());
+        else {
+            return AnchoredPath.lemmatizePath(path);
+        }
     }
 
     public String linearize(Document doc, SyntacticRelationSet relations,
