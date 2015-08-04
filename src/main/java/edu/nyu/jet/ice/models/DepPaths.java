@@ -434,6 +434,8 @@ public class DepPaths {
 //                    if (!sentences.inSameSentence(h1, h2)) continue;
                     // find and record dep path from head of m1 to head of m2
                     DepPath path = buildSyntacticPathOnSpans(h1, h2, relations, localHeadSpans);
+                    String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
+                    path.setPath(pathText);
                     recordPath(doc, sentence, relations, localNames.get(i), path, localNames.get(j));
                 }
             }
@@ -448,31 +450,6 @@ public class DepPaths {
 	public static boolean annotationInSentence(Annotation mention, Annotation sentence) {
 		return mention.start() >= sentence.start() &&
 				mention.end() <= sentence.end();
-	}
-	
-	static void recordPath (Document doc, Annotation sentence, SyntacticRelationSet relations,
-		                AceEntityMention mention1, String path, AceEntityMention mention2) {
-		if (path == null) return;
-		int pathLength = 0;
-		for (int i=0; i < path.length(); i++)
-			if (path.charAt(i) == ':')
-				pathLength++;
-		if (pathLength > 5) return;
-		String m1 = mention1.getHeadText();
-		String m2 = mention2.getHeadText();
-		String mm1 = m1.replaceAll(" ", "_").replaceAll("\n", "_");
-		String mm2 = m2.replaceAll(" ", "_").replaceAll("\n", "_");
-		// String source = inputDir + "/" + inputFile + " | " + start + " | " + end;
-		String source = pathText(doc, sentence, mention1, mention2);
-
-		count (relationInstanceCounts, mm1 + " -- " + path + " -- " + mm2);
-
-		String type1 = mention1.entity.type;
-		String type2 = mention2.entity.type;
-		count (relationTypeCounts, type1 + " -- " + path + " -- " + type2);
-        if (!sourceDict.containsKey(type1 + " -- " + path + " -- " + type2)) {
-            sourceDict.put(type1 + " -- " + path + " -- " + type2, source);
-        }
 	}
 
     static void recordPath (Document doc, Annotation sentence, SyntacticRelationSet relations,
@@ -574,6 +551,41 @@ public class DepPaths {
         }
         return null;
     }
+
+	public static String buildPathStringOnSpans(int fromPosn, int toPosn,
+												SyntacticRelationSet relations,
+												List<Span> localSpans) {
+		HashMap path = new HashMap();
+		boolean variable = false;
+		LinkedList todo = new LinkedList();
+		todo.add(new Integer(fromPosn));
+		path.put(new Integer(fromPosn), "");
+
+		while(todo.size() > 0) {
+			Integer from = (Integer)todo.removeFirst();
+			logger.trace("from = " + from);
+			SyntacticRelationSet fromSet = relations.getRelationsFrom(from.intValue());
+			logger.trace("fromSet = " + fromSet);
+
+			for(int ifrom = 0; ifrom < fromSet.size(); ++ifrom) {
+				SyntacticRelation r = fromSet.get(ifrom);
+				Integer to = new Integer(r.targetPosn);
+				if(path.get(to) == null &&
+						(to.intValue() == toPosn || !IceUtils.matchSpan(to.intValue(), localSpans))) {
+					logger.trace("to = " + to);
+					if(to.intValue() == toPosn) {
+						logger.trace("TO is an argument");
+						return ((String)path.get(from) + ":" + r.type).substring(1);
+					}
+
+					path.put(to, (String)path.get(from) + ":" + r.type + ":" + r.targetWord);
+					todo.add(to);
+				}
+			}
+		}
+
+		return null;
+	}
 
 
 	static void count (Map<String, Integer> map, String s) {
