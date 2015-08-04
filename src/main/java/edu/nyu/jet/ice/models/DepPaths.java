@@ -250,7 +250,7 @@ public class DepPaths {
 		sourceDict.clear();
         linearizationDict.clear();
 		DepTransformer transformer = new DepTransformer("trace");
-		if (args.length != 7) {
+		if (args.length != 7 && args.length != 8) {
 			System.err.println ("DepCounter requires 7 arguments:");
 			System.err.println ("  propsFile docList inputDir inputSuffix outputFile");
 			System.exit (1);
@@ -262,6 +262,8 @@ public class DepPaths {
 		String outputFile = args[4];
 		String typeOutputFile = args[5];
         String sourceDictFile = args[6];
+        String cacheDir = args.length == 8 ? args[7] :
+                FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
 
 		// initialize Jet
 
@@ -316,7 +318,7 @@ public class DepPaths {
 //			Ace.buildAceEntities (doc, docId, aceDoc);
 			// ---------------
 			// invoke parser on 'doc' and accumulate counts
-			String cacheDir = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
+			// String cacheDir = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
 //			AceDocument aceDoc = new AceDocument(inputFile,
 //					IcePreprocessor.cacheFileName(cacheDir, inputDir, inputFile) + ".ace");
 //			Map<String, Span> mentionSpanMap = IcePreprocessor.loadJetExtents(
