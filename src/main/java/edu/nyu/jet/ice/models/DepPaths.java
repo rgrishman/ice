@@ -437,7 +437,9 @@ public class DepPaths {
                     // find and record dep path from head of m1 to head of m2
                     DepPath path = buildSyntacticPathOnSpans(h1, h2, relations, localHeadSpans);
                     String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
-                    path.setPath(pathText);
+                    if (path != null) {
+                        path.setPath(pathText);
+                    }
                     recordPath(doc, sentence, relations, localNames.get(i), path, localNames.get(j));
                 }
             }
