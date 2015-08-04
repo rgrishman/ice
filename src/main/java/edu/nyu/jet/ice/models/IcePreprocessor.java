@@ -577,7 +577,11 @@ public class IcePreprocessor extends Thread {
                                       String inputFile) throws IOException {
         String aceFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".ace";
         String txtFileName = inputDir + File.separator + inputFile;
-        // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
+        if (!(new File(aceFileName)).exists()) {
+            return;
+        }
+
+            // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
         Map<String, Span> jetExtentsMap = loadJetExtents(cacheDir, inputDir, inputFile);
         AceDocument aceDocument = new AceDocument(txtFileName, aceFileName);
         if (aceDocument.entities != null) {
@@ -684,7 +688,9 @@ public class IcePreprocessor extends Thread {
                                                                 String inputFile) throws IOException {
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
         SyntacticRelationSet relations = new SyntacticRelationSet();
-
+        if (!(new File(inputFileName).exists())) {
+            return relations;
+        }
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         relations.read(br);
         br.close();
