@@ -32,7 +32,16 @@ import java.io.*;
 import java.util.*;
 
 /**
- * collect a list of all dependency paths connecting two named entity mentions
+ *  computes and saves a variety of NLP features of a corpus.
+ *  Invoked whenever a new corpus is added to ICE. Saves <ul>
+ *  <li> ENAMEX tags for each document </li>
+ *  <li> POS tags for each document </li>
+ *  <li> the extent of each entity mention in a document </li>
+ *  <li> the count of each possible term in each document </li>
+ *  <li> dependency parse of each document </li>
+ *  <li> aggregate term counts over the corpus </li>
+ *  <li> dependency paths over the corpus </li>
+ *  </ul>
  */
 
 public class IcePreprocessor extends Thread {
@@ -64,6 +73,16 @@ public class IcePreprocessor extends Thread {
 
     ProgressMonitorI progressMonitor = null;
 
+
+    /**
+     * creates an IcePreprocessor.
+     *
+     * @param  inputDir      directory containing files to be processed
+     * @param  propsFile     Jet properties file
+     * @param  docList       file containing list of documents to be processed, 1 per line
+     * @param  inputSuffix   file extension to be added to document name to obtain name of input file
+     * @param  cacheDir
+     */
     public IcePreprocessor(String inputDir, String propsFile, String docList, String inputSuffix, String cacheDir) {
         this.inputDir = inputDir;
         this.propsFile = propsFile;
@@ -107,6 +126,10 @@ public class IcePreprocessor extends Thread {
                 docList.split(File.separator)[0].split("\\.")[0]);
     }
 
+
+    /**
+     *  preprocess all the files in a corpus.
+     */
     private void processFiles(String selectedCorpusDir, String selectedCorpusName) {
         System.out.println("Starting Jet Preprocessor ...");
         if (progressMonitor != null) {
@@ -302,6 +325,7 @@ public class IcePreprocessor extends Thread {
         }
     }
 
+
     private void createNewFileList(List<String> newFileNames, String newDirName, String docListFileName) throws IOException {
         //Ice.selectedCorpus.directory = newDirName;
         PrintWriter fileListWriter = new PrintWriter(new FileWriter(docListFileName));
@@ -326,6 +350,12 @@ public class IcePreprocessor extends Thread {
         return pc.getPatternSet("quantifiers");
     }
 
+    /**
+     *  part of preprocessing:  compute the local count of each potential term
+     *  (head of NP with preceding nouns and adjectives) in document <CODE>doc</CODE>
+     *  and save the result in file <CODE>fileName</CODE>.  File format:
+     *  one term per line.
+     */
     public static void saveNPs(Document doc, String fileName) throws IOException {
         List<Annotation> nps = doc.annotationsOfType("ng");
         Map<String, Integer> localCount = new HashMap<String, Integer>();
@@ -429,6 +459,11 @@ public class IcePreprocessor extends Thread {
         return tokens.get(chosen);
     }
 
+    /**
+     *  part of preprocessing:  save every Ace entity mention in <CODE>aceDocument</CODE>
+     *  along with its extent.  Format:  one mention per line, mention id + start + end.
+     */
+
     public static void saveJetExtents(AceDocument aceDocument, String fileName) throws IOException {
         PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
         List<AceEntity> entities = aceDocument.entities;
@@ -459,6 +494,13 @@ public class IcePreprocessor extends Thread {
         return jetExtentsMap;
     }
 
+
+    /**
+     *  part of preprocessing:  save each name (ENAMEX annotation) in document
+     *  <CODE>doc</CODE> to file <CODE>fileName</CODE>.  File format:
+     *  one name per line:  type + start + end
+     */
+
     public static void saveENAMEX(Document doc, String fileName) throws IOException {
         PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
         List<Annotation> names = doc.annotationsOfType("ENAMEX");
@@ -469,6 +511,11 @@ public class IcePreprocessor extends Thread {
         }
         pw.close();
     }
+
+    /**
+     *  regenerate <CODE>ENAMEX</CODE> and generate <CODE>enamex</CODE> annotations from
+     *  file saved by saveENAMEX.
+     */
 
     public static void loadENAMEX(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".names";
@@ -644,6 +691,10 @@ public class IcePreprocessor extends Thread {
         return false;
     }
 
+    /**
+     *  part of preprocessing:  save part-of-speech information for <CODE>doc</CODE>
+     *  to file <CODE>fileName</CODE>.  Format:  one token per line, POS + start + end.
+     */
     public static void savePOS(Document doc, String fileName) throws IOException {
         PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
         List<Annotation> names = doc.annotationsOfType("tagger");
@@ -655,6 +706,9 @@ public class IcePreprocessor extends Thread {
         pw.close();
     }
 
+    /**
+     *  regenerate <CODE>tagger</CODE> annotations from cache file produced by savePOS.
+     */
     public static void loadPOS(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".pos";
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
