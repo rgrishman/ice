@@ -15,6 +15,8 @@ import java.io.IOException;
 public class FileNameSchema {
     private static String CACHE_ROOT = "cache";
 
+    private static String workingDirectory = "";
+
     static {
         File cacheFile = new File(CACHE_ROOT);
 
@@ -26,6 +28,17 @@ public class FileNameSchema {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static String getWD() {
+	String wd = workingDirectory;
+	if (wd.length() > 0) { wd += "/"; }
+	return wd;
+    }
+
+    public static void setWD(String wd) {
+	workingDirectory = wd;
+	CACHE_ROOT = wd + File.separator + "cache";
     }
 
 
@@ -65,8 +78,32 @@ public class FileNameSchema {
         return CACHE_ROOT + File.separatorChar + corpusName;
     }
 
-    public static String getEntitySetIndexFileName(String corpusName, String inType) {
-        return CACHE_ROOT + File.separatorChar + corpusName + File.separator + "EntitySetIndex_" + inType;
+    public static String getEntitySetIndexFileName(String corpusName, String inType, Double cutoff) {
+	String cutoffStr = String.valueOf(cutoff).replace('.', 'p');
+        return CACHE_ROOT + File.separatorChar + corpusName + File.separator + "EntitySetIndex_" + inType + "_" + cutoffStr;
+    }
+
+   public static String getEntitySetIndexFileNameAlone (String corpusName, String inType, double cutoff) {
+	String cutoffStr = String.valueOf(cutoff).replace('.', 'p');
+        return "EntitySetIndex_" + inType + "_" + cutoffStr;
+    }
+
+    public static String getEntitySetIndexType (String indexFileName) {
+	String type = "";
+	String[] indexInfoStr = indexFileName.split("-");
+	if (indexInfoStr.length > 2) {
+	    type = indexInfoStr[1];
+	}
+	return type;
+    }
+
+    public static double getEntitySetIndexCutoff (String indexFileName) {
+	double cutoff = 0.0;
+	String[] indexInfoStr = indexFileName.split("-");
+	if (indexInfoStr.length > 2) {
+	    cutoff = Double.parseDouble(indexInfoStr[2].replace('p', '.'));
+	}
+	return cutoff;
     }
 
     public static String getPatternRatioFileName(String corpusName, String bgCorpusName) {

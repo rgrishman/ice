@@ -123,6 +123,10 @@ public class Corpus {
         return relationTypeFileName;
     }
 
+	public void setRelationTypeFileName(String fileName) {
+		relationTypeFileName = fileName;
+	}
+
     ProgressMonitorI wordProgressMonitor;
 
     public Corpus(String name) {

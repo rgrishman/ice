@@ -17,6 +17,7 @@ import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.IceEntitySet;
 import edu.nyu.jet.ice.models.IceRelation;
 import edu.nyu.jet.ice.models.JetEngineBuilder;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import org.ho.yaml.*;
 
 /**
@@ -32,6 +33,8 @@ public class Ice {
 	public static Corpus selectedCorpus = null;
 	public static String selectedCorpusName = null;
 
+	private static String configFile = "ice.yml";
+
 	static JTextField directoryField;
 	static JTextField filterField;
 	public static JFrame mainFrame;
@@ -39,19 +42,12 @@ public class Ice {
     public static Properties iceProperties = new Properties();
 
 	public static void main (String[] args) {
-		try {
-            ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
-            toolTipManager.setDismissDelay(7500);
-			File yamlFile = new File("ice.yml");
-			InputStream yamlInputStream = new FileInputStream(yamlFile);
-			YamlDecoder dec = new YamlDecoder(yamlInputStream);
-			corpora = new TreeMap((Map) dec.readObject());
-			entitySets = new TreeMap((Map) dec.readObject());
-			relations = new TreeMap((Map) dec.readObject());
-			dec.close();
-		} catch (IOException e) {
-			System.out.println("Did not load ice.yml.");
+		if (null != args[0] && args[0].length() > 0) {
+			configFile = args[0];
 		}
+		ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+		toolTipManager.setDismissDelay(7500);
+		loadConfig(configFile);
 		if (!corpora.isEmpty())
 			selectCorpus (corpora.firstKey());
 		mainFrame = new JFrame();
@@ -62,6 +58,21 @@ public class Ice {
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.pack();
 		mainFrame.setVisible(true);
+	}
+
+    public static void loadConfig(String configFile) {
+		try {
+			File yamlFile = new File(configFile);
+			InputStream yamlInputStream = new FileInputStream(yamlFile);
+			YamlDecoder dec = new YamlDecoder(yamlInputStream);
+			FileNameSchema.setWD(new String ((String) dec.readObject()));
+			corpora = new TreeMap((Map) dec.readObject());
+			entitySets = new TreeMap((Map) dec.readObject());
+			relations = new TreeMap((Map) dec.readObject());
+			dec.close();
+		} catch (IOException e) {
+			System.out.println("Did not load config file " + configFile);
+		}
 	}
 
 	static void assembleFrame (Container contentPane) {
@@ -295,19 +306,9 @@ public class Ice {
 
 		saveButton.addActionListener (new ActionListener() {
 			public void actionPerformed (ActionEvent ev) {
-				try {
-					File yamlFile = new File("ice.yml");
-					OutputStream yamlOutputStream = new FileOutputStream(yamlFile);
-					YamlEncoder enc = new YamlEncoder(yamlOutputStream);
-					enc.writeObject(corpora);
-					enc.writeObject(entitySets);
-					enc.writeObject(relations);
-					enc.close();
-				} catch (IOException e) {
-					System.out.println("Error writing ice.yml.");
-				}
+				saveConfig(configFile);
 			}
-		});
+			});
 
         for (JRadioButton b : backgroundCorpusButtons) {
             b.addActionListener(new ActionListener() {
@@ -319,4 +320,21 @@ public class Ice {
 
 		return box;
 	}
+
+	protected static void saveConfig(String configFile) {
+		try {
+			File yamlFile = new File(configFile);
+			OutputStream yamlOutputStream = new FileOutputStream(yamlFile);
+			YamlEncoder enc = new YamlEncoder(yamlOutputStream);
+			enc.writeObject(FileNameSchema.getWD());
+			enc.writeObject(corpora);
+			enc.writeObject(entitySets);
+			enc.writeObject(relations);
+			enc.close();
+		} catch (IOException e) {
+			System.out.println("Error writing config file " + configFile);
+		}
+	}
+
+
 }
