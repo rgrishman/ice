@@ -170,7 +170,7 @@ public class Corpus {
             e.printStackTrace(System.err);
             return;
         }
-        TermCounter counter = TermCounter.prepareRun("onomaprops",
+        TermCounter counter = TermCounter.prepareRun(FileNameSchema.getWD() + "onomaprops",
                 Arrays.asList(docFileNames),
                 directory,
                 filter,
@@ -321,6 +321,17 @@ public class Corpus {
         return box;
     }
 
+	public List<String> checkRelations(String filterName) {
+        relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
+        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
+		if (filterName.equals("sentential")) {
+			relationFilter.onlySententialPatterns = true;
+		} else {
+			relationFilter.onlySententialPatterns = false;
+		}
+		findRelations(null, docListFileName, null);
+        return getTerms(termFileName, 40, relationFilter);
+	}
 
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor, RelationFilter relationFilter) {
         relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
@@ -358,6 +369,14 @@ public class Corpus {
                 progressMonitor);
         finder.start();
     }
+
+	public List<String> rank () {
+		rankRelations();
+		String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
+		String sortedRatioFileName = ratioFileName + ".sorted";
+		return getTerms(sortedRatioFileName, 40, relationFilter);
+		
+	}
 
     public void rankRelations() {
         String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
@@ -499,7 +518,7 @@ public class Corpus {
         IceUtils.numsort(infile, outfile);
     }
 
-    String[] buildDocumentList() {
+    public String[] buildDocumentList() {
         if (directory.equals("?") || filter.equals("?")) return null;
         //File dir = new File(directory);
         //String[] docs = dir.list(new Jet.IceModels.CorpusFileFilter(filter));
@@ -671,7 +690,7 @@ class WordCounter extends Thread {
     WordCounter(String docListFileName, String directory, String filter,
                 String wordCountFileName) {
         args = new String[5];
-        args[0] = "onomaprops";
+        args[0] = FileNameSchema.getWD() + "onomaprops";
         args[1] = docListFileName;
         args[2] = directory;
         args[3] = filter;

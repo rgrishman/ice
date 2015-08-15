@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.models;
 
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 
 import java.util.*;
 import java.io.*;
@@ -8,7 +9,6 @@ import java.io.*;
 public class JetEngineBuilder {
 
     static Properties props;
-    static String dataDirectory;
     private static final boolean RECORD_NOUNS_AS_ENAMEX = true;
 
     /**
@@ -16,20 +16,26 @@ public class JetEngineBuilder {
      * entity sets and relations.
      */
 
-    public static void build() {
+    public static void load() {
         try {
-            String jetHome = System.getProperty("jetHome");
-            if (jetHome == null)
-                jetHome = "";
-            else
-                jetHome += "/";
-            props = new Properties();
-            props.load(new FileReader("parseprops"));
-            dataDirectory = jetHome + props.getProperty("Jet.dataPath") + "/";
-
+	    props = new Properties();
+	    props.load(new FileReader(FileNameSchema.getWD() + "parseprops"));
+	    String dataPath = props.getProperty("Jet.dataPath");
+	    if (dataPath.substring(0,1).equals("/")) {
+		FileNameSchema.setDD(dataPath);
+	    } else {
+		FileNameSchema.setDD(FileNameSchema.getWD() + dataPath);
+	    }
             if (!RECORD_NOUNS_AS_ENAMEX) {
                 buildEDTtypeFile();
             }
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+        }
+    }
+    public static void build() {
+	load();
+	try {
             buildOnoma();
             buildRelationPatternFile();
         } catch (IOException e) {
@@ -43,7 +49,7 @@ public class JetEngineBuilder {
      */
 
     public static void buildEDTtypeFile() throws IOException {
-        String fileName = dataDirectory +
+        String fileName = FileNameSchema.getDD() +
                 props.getProperty("Ace.EDTtype.auxFileName");
         PrintWriter pw = new PrintWriter(new FileWriter(fileName));
         for (String type : Ice.entitySets.keySet()) {
@@ -62,7 +68,7 @@ public class JetEngineBuilder {
      */
 
     public static void buildOnoma() throws IOException {
-        String fileName = dataDirectory +
+        String fileName = FileNameSchema.getDD() +
                 props.getProperty("Onoma.fileName");
         buildOnomaFromNames(fileName, new ArrayList<String>(Ice.entitySets.keySet()));
     }
@@ -102,10 +108,13 @@ public class JetEngineBuilder {
      * writes file with patterns for new relations.
      */
 
-    public static void buildRelationPatternFile() throws IOException {
-        String fileName = dataDirectory +
+    public static String getRelationPatternFileName() {
+	return FileNameSchema.getDD() +
                 props.getProperty("Ace.RelationModel.fileName");
-        buildRelationPatternFileFromNames(fileName, new ArrayList<String>(Ice.relations.keySet()));
+    }
+
+    public static void buildRelationPatternFile() throws IOException {
+	buildRelationPatternFileFromNames(getRelationPatternFileName(), new ArrayList<String>(Ice.relations.keySet()));
     }
 
     public static void buildRelationPatternFileFromNames(String fileName, List<String> relationNames) throws IOException {

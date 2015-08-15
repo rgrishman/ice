@@ -42,7 +42,7 @@ public class Ice {
     public static Properties iceProperties = new Properties();
 
 	public static void main (String[] args) {
-		if (null != args[0] && args[0].length() > 0) {
+		if (args.length > 0 && null != args[0] && args[0].length() > 0) {
 			configFile = args[0];
 		}
 		ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
@@ -63,9 +63,10 @@ public class Ice {
     public static void loadConfig(String configFile) {
 		try {
 			File yamlFile = new File(configFile);
+			System.out.println("Loading configuration from " + yamlFile.getAbsolutePath());
 			InputStream yamlInputStream = new FileInputStream(yamlFile);
 			YamlDecoder dec = new YamlDecoder(yamlInputStream);
-			FileNameSchema.setWD(new String ((String) dec.readObject()));
+			FileNameSchema.setWD(new String ((String)dec.readObject()));
 			corpora = new TreeMap((Map) dec.readObject());
 			entitySets = new TreeMap((Map) dec.readObject());
 			relations = new TreeMap((Map) dec.readObject());

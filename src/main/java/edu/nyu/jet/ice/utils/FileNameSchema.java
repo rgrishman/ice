@@ -16,6 +16,7 @@ public class FileNameSchema {
     private static String CACHE_ROOT = "cache";
 
     private static String workingDirectory = "";
+    private static String dataDirectory = "";
 
     static {
         File cacheFile = new File(CACHE_ROOT);
@@ -41,6 +42,17 @@ public class FileNameSchema {
 	CACHE_ROOT = wd + File.separator + "cache";
     }
 
+    public static void setDD (String dd) {
+	dataDirectory = dd;
+    }
+
+    public static String getDD() {
+	String dd = dataDirectory;
+	if (dd.length() > 0) {
+	    dd += File.separator;
+	}
+	return dd;
+    }
 
     public static String getCacheRoot() {
         return CACHE_ROOT;

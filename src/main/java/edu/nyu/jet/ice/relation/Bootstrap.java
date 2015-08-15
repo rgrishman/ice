@@ -75,10 +75,12 @@ public class Bootstrap {
     }
 
     public List<IcePath> initialize(String seedPath, String patternFileName) {
+		String[] splitPaths = seedPath.split(":::");
+		return initMulti(splitPaths, patternFileName);
+	} 
+	public List<IcePath> initMulti(String[] splitPaths, String patternFileName) {
         try {
-            DepPathMap depPathMap = DepPathMap.getInstance();
-            String[] splitPaths = seedPath.split(":::");
-//            String firstSeedPath = null;
+			DepPathMap depPathMap = DepPathMap.getInstance();
             List<String> allPaths = new ArrayList<String>();
             for (String p : splitPaths) {
 //                if (firstSeedPath == null) {
