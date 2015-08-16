@@ -13,9 +13,9 @@ public interface ProgressMonitorI {
 
     void setProgress(int docCount);
 
-	void setMaximum(int maximum);
+    void setMaximum(int maximum);
 
-	int getMaximum();
+    int getMaximum();
 
     void setNote(String s);
 }

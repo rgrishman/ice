@@ -60,6 +60,7 @@ public class TermCounter extends Thread {
                       String inputDir,
                       String inputSuffix,
                       String outputFile) throws IOException {
+	System.out.println("TermCounter.Count(" + propsFile + ", docList, " + inputDir + ", " + inputSuffix + ", " + outputFile + ")");
         if (progressMonitor != null) {
             progressMonitor.setNote("Loading Jet models...");
             progressMonitor.setProgress(1);
@@ -110,6 +111,7 @@ public class TermCounter extends Thread {
                 progressMonitor.setNote(docCount + " files processed");
             }
         }
+	System.out.println("Writing word counts to " + outputFile);
         writeOutputFile(outputFile, docCount);
     }
 

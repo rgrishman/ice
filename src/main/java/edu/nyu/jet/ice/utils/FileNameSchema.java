@@ -37,6 +37,10 @@ public class FileNameSchema {
 	return wd;
     }
 
+    public static String getWDnoSep() {
+	return workingDirectory;
+    }
+
     public static void setWD(String wd) {
 	workingDirectory = wd;
 	CACHE_ROOT = wd + File.separator + "cache";

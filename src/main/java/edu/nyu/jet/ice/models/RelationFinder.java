@@ -2,6 +2,7 @@ package edu.nyu.jet.ice.models;
 
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 
 import javax.swing.*;
@@ -23,13 +24,13 @@ public class RelationFinder extends Thread {
                    String instances, String types, JTextArea area, int numberOfDocs,
                    ProgressMonitorI relationProgressMonitor) {
         args = new String[7];
-        args[0] = "onomaprops";
+        args[0] = FileNameSchema.getWD() + "onomaprops";
         args[1] = docListFileName;
         args[2] = directory;
         args[3] = filter;
         args[4] = instances;
-        args[5] = "temp";
-        args[6] = "temp.source.dict";
+        args[5] = FileNameSchema.getWD() + "temp";
+        args[6] = FileNameSchema.getWD() + "temp.source.dict";
         this.types = types;
         this.area = area;
         this.numberOfDocs = numberOfDocs;
@@ -55,8 +56,8 @@ public class RelationFinder extends Thread {
             depPathMap.unpersist();
             DepPaths.progressMonitor = relationProgressMonitor;
             DepPaths.main(args);
-            Corpus.sort("temp", types);
-            Corpus.sort("temp.source.dict", types + ".source.dict");
+            Corpus.sort(FileNameSchema.getWD() + "temp", types);
+            Corpus.sort(FileNameSchema.getWD() + "temp.source.dict", types + ".source.dict");
             depPathMap.forceLoad();
 			if(area != null) {
 				Corpus.displayTerms(types, 40, area, Corpus.relationFilter);

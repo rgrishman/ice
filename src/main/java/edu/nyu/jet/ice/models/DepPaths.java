@@ -68,7 +68,7 @@ public class DepPaths {
 		PrintWriter pw = new PrintWriter(outputFile);
 		Properties props = new Properties();
 		props.load(new FileReader(propsFile));
-		loadPathRelations("data" + File.separator + props.getProperty("Ace.RelationModel.fileName"));
+		loadPathRelations(FileNameSchema.getWD() + "data" + File.separator + props.getProperty("Ace.RelationModel.fileName"));
 		for (String pathRelation : pathRelations.keySet()) {
 			System.err.println(pathRelation + "->" + pathRelations.get(pathRelation));
 		}
@@ -265,7 +265,7 @@ public class DepPaths {
 		System.out.println("Starting Jet DepCounter ...");
 		JetTest.initializeFromConfig(propsFile);
         PatternSet patternSet = IcePreprocessor.loadPatternSet(
-                JetTest.getConfig("Jet.dataPath") + File.separator +
+		   FileNameSchema.getWD() +  JetTest.getConfig("Jet.dataPath") + File.separator +
                         JetTest.getConfig("Pattern.quantifierFileName"));
 		// load ACE type dictionary
 		EDTtype.readTypeDict();

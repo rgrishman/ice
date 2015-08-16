@@ -10,3 +10,4 @@ target/
 *.save
 tmp/
 .DS_Store/
+*~
