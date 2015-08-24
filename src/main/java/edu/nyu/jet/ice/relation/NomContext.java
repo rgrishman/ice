@@ -116,6 +116,7 @@ public class NomContext {
                     nomToNC.put(nom, NC);
                 }
             }
+	    reader.close();
         }
 
         ArrayList<String> ary = new ArrayList<String>();

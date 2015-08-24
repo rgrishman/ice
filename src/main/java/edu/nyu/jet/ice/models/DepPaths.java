@@ -100,7 +100,7 @@ public class DepPaths {
 			} else {
 				inputFile = docName + "." + inputSuffix;
 			}
-			System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
+			System.out.println ("DepPaths: Processing document " + docCount + ": " + inputFile);
 			ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
 			doc.setAllTags(true);
 			doc.open();
@@ -247,9 +247,9 @@ public class DepPaths {
 		sourceDict.clear();
         linearizationDict.clear();
 
-		if (args.length != 7) {
+		if (args.length != 8) {
 			System.err.println ("DepCounter requires 7 arguments:");
-			System.err.println ("  propsFile docList inputDir inputSuffix outputFile");
+			System.err.println ("  propsFile docList inputDir inputSuffix outputFile cacheDir");
 			System.exit (1);
 		}
 		String propsFile = args[0];
@@ -259,6 +259,7 @@ public class DepPaths {
 		String outputFile = args[4];
 		String typeOutputFile = args[5];
         String sourceDictFile = args[6];
+		String cacheDir = args[7];
 
 		// initialize Jet
 
@@ -313,7 +314,8 @@ public class DepPaths {
 //			Ace.buildAceEntities (doc, docId, aceDoc);
 			// ---------------
 			// invoke parser on 'doc' and accumulate counts
-			String cacheDir = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
+
+			// ABG TODO: load this in args
 //			AceDocument aceDoc = new AceDocument(inputFile,
 //					IcePreprocessor.cacheFileName(cacheDir, inputDir, inputFile) + ".ace");
 //			Map<String, Span> mentionSpanMap = IcePreprocessor.loadJetExtents(
@@ -336,6 +338,7 @@ public class DepPaths {
                 }
 			}
 		}
+		docListReader.close();
 		// *** write counts
         if (!isCanceled) {
             writer = new PrintWriter (new FileWriter (outputFile));

@@ -56,7 +56,6 @@ public class IcePreprocessor extends Thread {
     String inputDir;
     String propsFile;
     String docList;
-    String inputSuffix;
     String cacheDir;
 
     private static final int MAX_MENTIONS_IN_SENTENCE = 50;
@@ -67,13 +66,12 @@ public class IcePreprocessor extends Thread {
 
     ProgressMonitorI progressMonitor = null;
 
-    public IcePreprocessor(String corpusName, String propsFile, String inputSuffix) {
+    public IcePreprocessor(String corpusName) {
 		this.corpusName = corpusName;
 		this.corpus = Ice.corpora.get(corpusName);
         this.inputDir = corpus.getDirectory();
-        this.propsFile = propsFile;
+        this.propsFile = FileNameSchema.getWD() + "parseprops";
         this.docList = FileNameSchema.getDocListFileName(corpusName);
-        this.inputSuffix = inputSuffix;
         this.cacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
 
     }
@@ -81,7 +79,7 @@ public class IcePreprocessor extends Thread {
     /**
      * counts the number of instances of each dependency triple in a set
      * of files.  Invoked by <br>
-     * DepCounter  propsFile docList inputDir inputSuffix outputFile
+     * DepCounter  propsFile docList inputDir outputFile
      * <p/>
      * propsFile     Jet properties file
      * docList       file containing list of documents to be processed, 1 per line
@@ -94,15 +92,13 @@ public class IcePreprocessor extends Thread {
     public static void main(String[] args) throws IOException {
 
         if (args.length != 3) {
-            System.err.println("IcePreprocessor requires 3 arguments:");
-            System.err.println("  corpusName propsFile inputSuffix");
+            System.err.println("IcePreprocessor requires 2 arguments:");
+            System.err.println("  corpusName propsFile");
             System.exit(-1);
         }
         String corpusName = args[0];
 		String propsFile = args[1];
-        String inputSuffix = args[2];
-        IcePreprocessor icePreprocessor = new IcePreprocessor(corpusName,
-                propsFile, inputSuffix);
+        IcePreprocessor icePreprocessor = new IcePreprocessor(corpusName);
 
         icePreprocessor.processFiles();
     }
@@ -110,6 +106,7 @@ public class IcePreprocessor extends Thread {
     private void processFiles() {
         System.out.println("Starting Jet Preprocessor ...");
         if (progressMonitor != null) {
+			progressMonitor.setAlive(true);
             progressMonitor.setProgress(1);
             progressMonitor.setNote("Loading Jet models...");
         }
@@ -117,8 +114,7 @@ public class IcePreprocessor extends Thread {
         File cacheDirFile = new File(cacheDir);
         cacheDirFile.mkdirs();
 
-        //String cacheRepository = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
-        // initialize Jet
+         // initialize Jet
 		System.out.println("Initializing Jet with props file " + propsFile);
         JetTest.initializeFromConfig(propsFile);
         try {
@@ -161,10 +157,10 @@ public class IcePreprocessor extends Thread {
                 }
                 docCount++;
                 String inputFile;
-                if ("*".equals(inputSuffix.trim())) {
+                if ("*".equals(corpus.getFilter().trim())) {
                     inputFile = docName;
                 } else {
-                    inputFile = docName + "." + inputSuffix;
+                    inputFile = docName + "." + corpus.getFilter();
                 }
 //                String newInputFile = inputFile.replaceAll(File.separator, "_");
 //                String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
@@ -214,7 +210,7 @@ public class IcePreprocessor extends Thread {
                     e.printStackTrace();
                 }
                 if (relations == null) {
-					System.out.println("Relations are null");
+					System.out.println("Relations in this document are null");
                     continue;
                 }
 
@@ -239,6 +235,7 @@ public class IcePreprocessor extends Thread {
                 e.printStackTrace(System.err);
                 return;
             }
+			System.err.println("corpus.filter = " + corpus.filter);
             if (progressMonitor != null) {
                 progressMonitor.setNote("Postprocessing...");
             }
@@ -246,33 +243,29 @@ public class IcePreprocessor extends Thread {
                 if (progressMonitor != null && progressMonitor.isCanceled()) {
                     return;
                 }
-                String wordCountFileName = FileNameSchema.getWordCountFileName(corpusName);
-                TermCounter counter = TermCounter.prepareRun(FileNameSchema.getWD() + "onomaprops",
-                        Arrays.asList(docFileNames),
-                        corpus.directory,
-                        corpus.filter,
-                        wordCountFileName,
-                        null);
+				System.err.println("Calling TermCounter(" + FileNameSchema.getWD() + "onomaprops, " + corpusName + ")");
+                TermCounter counter = TermCounter.prepareRun(
+				   FileNameSchema.getWD() + "onomaprops",
+				   corpusName, progressMonitor);
                 counter.run();
                 corpus.wordCountFileName = FileNameSchema.getWordCountFileName(corpus.name);
             }
 			System.out.println("Finished counting words.");
+			System.err.println("corpus.filter = " + corpus.filter);
+			// find relations
             if (!isCanceled) {
                 if (progressMonitor != null && progressMonitor.isCanceled()) {
                     return;
                 }
-				System.out.println("Calling relationFinder(" + corpus.docListFileName + ", " + corpus.directory + ", " + corpus.filter + FileNameSchema.getRelationsFileName(corpusName) + ", " + FileNameSchema.getRelationTypesFileName(corpusName) + ", null, " + Integer.toString(corpus.numberOfDocs) + ", null)");
-                RelationFinder finder = new RelationFinder(
-						corpus.docListFileName, corpus.directory,
-                        corpus.filter, FileNameSchema.getRelationsFileName(corpusName),
-                        FileNameSchema.getRelationTypesFileName(corpusName), null,
-                        corpus.numberOfDocs,
-                        null);
+				System.err.println("Calling RelationFinder(" + corpusName + ")");
+                RelationFinder finder = new RelationFinder(corpusName);
                 finder.run();
                 corpus.relationTypeFileName =
                         FileNameSchema.getRelationTypesFileName(corpus.name);
                 corpus.relationInstanceFileName =
                         FileNameSchema.getRelationsFileName(corpusName);
+				DepPathMap depPathMap = DepPathMap.getInstance();
+				depPathMap.forceLoad();
             }
 			System.out.println("Finished finding relations.");
             if (progressMonitor != null && ! progressMonitor.isCanceled()) {
@@ -281,7 +274,11 @@ public class IcePreprocessor extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
+			progressMonitor.setAlive(false);
         }
+		if (progressMonitor != null) {
+			progressMonitor.setAlive(false);
+		}
     }
 
     private void deleteDir(File file){
@@ -299,8 +296,7 @@ public class IcePreprocessor extends Thread {
 		BufferedReader docListReader = new BufferedReader(new FileReader(docList));
         List<String> newFileNames = new ArrayList<String>();
         Set<String> newFileNameSet = new HashSet<String>();
-        String newDirName = FileNameSchema.getCorpusInfoDirectory(corpusName)
-                + File.separator + "sources";
+        String newDirName = FileNameSchema.getSourceCacheDir(corpusName);
 		System.out.println("Copying corpus files to working directory" + newDirName);
         File newDir = new File(newDirName);
         if (newDir.exists() && newDir.isDirectory()) {
@@ -309,12 +305,12 @@ public class IcePreprocessor extends Thread {
         newDir.mkdirs();
         while ((docName = docListReader.readLine()) != null) {
             String inputFile;
-            if ("*".equals(inputSuffix.trim())) {
+            if ("*".equals(corpus.getFilter().trim())) {
                 inputFile = docName;
             } else {
-                inputFile = docName + "." + inputSuffix;
+                inputFile = docName + "." + corpus.getFilter();
             }
-            String newSuffix = inputSuffix.equals("*") ? "" : "." + inputSuffix;
+            String newSuffix = corpus.getFilter().equals("*") ? "" : "." + corpus.getFilter();
             String newInputFile = UUID.randomUUID().toString() + newSuffix;
             while (newFileNameSet.contains(newInputFile)) {
                 newInputFile = UUID.randomUUID().toString() + newSuffix;
@@ -330,20 +326,22 @@ public class IcePreprocessor extends Thread {
             newFileNames.add(newInputFile);
             newFileNameSet.add(newInputFile);
         }
+		docListReader.close();
         corpus.directory = newDirName;
-        PrintWriter fileListWriter = new PrintWriter(new FileWriter(corpus.docListFileName + ".local"));
+		String ppDocListFileName = FileNameSchema.getPreprocessedDocListFileName(corpusName);
+        PrintWriter fileListWriter = new PrintWriter(new FileWriter(ppDocListFileName));
         for (String fileName : newFileNames) {
-            if (!"*".equals(inputSuffix.trim())) {
-                if (fileName.length() - inputSuffix.length() - 1 < 0) {
+            if (!"*".equals(corpus.getFilter().trim())) {
+                if (fileName.length() - corpus.getFilter().length() - 1 < 0) {
                     continue;
                 }
                 fileName =
-                        fileName.substring(0, fileName.length() - inputSuffix.length() - 1);
+                        fileName.substring(0, fileName.length() - corpus.getFilter().length() - 1);
             }
             fileListWriter.println(fileName);
         }
         fileListWriter.close();
-        corpus.docListFileName = corpus.docListFileName + ".local";
+        corpus.docListFileName = ppDocListFileName;
         this.docList = corpus.docListFileName;
         this.inputDir = corpus.directory;
     }
@@ -377,7 +375,7 @@ public class IcePreprocessor extends Thread {
     }
 
     public static Map<String, Integer> loadNPs(String cacheDir, String inputDir, String inputFile) throws IOException {
-		System.out.println("loadNPs(" + cacheDir + ", " + inputDir + ", " + inputFile + ")");
+		// System.out.println("loadNPs(" + cacheDir + ", " + inputDir + ", " + inputFile + ")");
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".nps";
         Map<String, Integer> localCount = new HashMap<String, Integer>();
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
@@ -678,7 +676,7 @@ public class IcePreprocessor extends Thread {
 	   String inputDir,
 	   String inputFile) throws IOException {
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
-		System.out.println("loadSyntacticRelationSet(" + cacheDir + ", " + inputDir + ", " + inputFile + ")");
+		//		System.out.println("loadSyntacticRelationSet(" + cacheDir + ", " + inputDir + ", " + inputFile + ")");
         SyntacticRelationSet relations = new SyntacticRelationSet();
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         relations.read(br);

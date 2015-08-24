@@ -10,6 +10,15 @@ public class DummyMonitor implements ProgressMonitorI {
     }
 
     @Override
+	public boolean isAlive() {
+	return true;
+    }
+    @Override
+    public void setAlive (boolean a) {
+
+    }
+
+    @Override
 	public void setProgress(int docCount) {
 
     }

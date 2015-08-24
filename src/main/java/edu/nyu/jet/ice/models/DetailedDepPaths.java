@@ -130,6 +130,7 @@ public class DetailedDepPaths {
 			relations.addInverses();
 			collectPaths (doc, aceDoc, relations);
 		}
+		docListReader.close();
         writer.close();
 		sententialWriter.close();
 	}

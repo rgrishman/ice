@@ -3,6 +3,7 @@ package edu.nyu.jet.ice.terminology;
 import AceJet.Ace;
 import Jet.Control;
 import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.AnnotationStartComparator;
 import edu.nyu.jet.ice.utils.FileNameSchema;
@@ -29,6 +30,7 @@ public class TermCounter extends Thread {
     private Map<String, Integer> freqCount = new HashMap<String, Integer>();
     private Map<String, List<Integer>> rawCount = new HashMap<String, List<Integer>>();
     private ProgressMonitorI progressMonitor = null;
+    private Corpus corpus;
     private static String[] stopWordsArr = new String[]{
             "a", "an", "and", "are", "as", "at", "be", "but", "by",
             "for", "if", "in", "into", "is", "it",
@@ -56,11 +58,17 @@ public class TermCounter extends Thread {
     }
 
     public void count(String propsFile,
-                      List<String> docList,
-                      String inputDir,
-                      String inputSuffix,
-                      String outputFile) throws IOException {
-	System.out.println("TermCounter.Count(" + propsFile + ", docList, " + inputDir + ", " + inputSuffix + ", " + outputFile + ")");
+                      String corpusName) throws IOException {
+	System.out.println("TermCounter.Count(" + propsFile + ", " + corpusName + ")");
+
+	corpus = Ice.corpora.get(corpusName);
+	String inputDir = corpus.getDirectory();
+	String inputSuffix = corpus.getFilter();
+	String outputFile = FileNameSchema.getWordCountFileName(corpusName);
+	String docListFileName = corpus.getDocListFileName();
+
+	BufferedReader docListReader;
+	docListReader = new BufferedReader(new FileReader(docListFileName));
         if (progressMonitor != null) {
             progressMonitor.setNote("Loading Jet models...");
             progressMonitor.setProgress(1);
@@ -86,7 +94,9 @@ public class TermCounter extends Thread {
         int docCount = 0;
         //        DictionaryBasedNamedEntityPostprocessor nePostprocessor =
         //                new DictionaryBasedNamedEntityPostprocessor(propsFile);
-        for (String docName : docList) {
+	String docName;
+	while ((docName = docListReader.readLine()) != null) {
+	    //       for (String docName : docList) {
             if (progressMonitor != null && progressMonitor.isCanceled()) {
                 System.err.println("Term counter canceled.");
                 break;
@@ -105,7 +115,7 @@ public class TermCounter extends Thread {
             // process document
             Ace.monocase = Ace.allLowerCase(doc);
             Control.processDocument(doc, null, false, docCount);
-            addDocument(doc, FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName), inputDir, inputFile);
+            addDocument(doc, FileNameSchema.getPreprocessCacheDir(corpusName), inputDir, inputFile);
             if (progressMonitor != null) {
                 progressMonitor.setProgress(docCount);
                 progressMonitor.setNote(docCount + " files processed");
@@ -113,6 +123,7 @@ public class TermCounter extends Thread {
         }
 	System.out.println("Writing word counts to " + outputFile);
         writeOutputFile(outputFile, docCount);
+	docListReader.close();
     }
 
     public void writeOutputFile(String outputFile, int docCount) throws IOException{
@@ -266,13 +277,10 @@ public class TermCounter extends Thread {
     }
 
     public static TermCounter prepareRun(String propsFile,
-                           List<String> docList,
-                           String inputDir,
-                           String inputSuffix,
-                           String outputFile,
+                           String corpusName,
                            ProgressMonitorI progressMonitor) {
         TermCounter result = new TermCounter(progressMonitor);
-        result.setRunnerProperties(new RunnerProperties(propsFile, docList, inputDir, inputSuffix, outputFile));
+        result.setRunnerProperties(new RunnerProperties(propsFile, corpusName));
         return result;
     }
 
@@ -281,10 +289,7 @@ public class TermCounter extends Thread {
         if (runnerProperties != null) {
             try {
                 count(runnerProperties.propsFile,
-                        runnerProperties.docList,
-                        runnerProperties.inputDir,
-                        runnerProperties.inputSuffix,
-                        runnerProperties.outputFile);
+                        runnerProperties.corpusName);
             }
             catch (IOException e) {
                 e.printStackTrace(System.err);
@@ -298,20 +303,11 @@ public class TermCounter extends Thread {
 
 class RunnerProperties {
     String propsFile;
-    List<String> docList;
-    String inputDir;
-    String inputSuffix;
-    String outputFile;
+    String corpusName;
 
     RunnerProperties(String propsFile,
-                     List<String> docList,
-                     String inputDir,
-                     String inputSuffix,
-                     String outputFile) {
+                     String corpusName) {
         this.propsFile = propsFile;
-        this.docList = docList;
-        this.inputDir = inputDir;
-        this.inputSuffix = inputSuffix;
-        this.outputFile = outputFile;
+	this.corpusName = corpusName;
     }
 }

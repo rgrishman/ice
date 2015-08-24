@@ -19,6 +19,7 @@ import gnu.trove.TObjectDoubleHashMap;
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
+import java.awt.GraphicsEnvironment;
 
 /**
  * a simple bootstrapping learner for relations.
@@ -79,10 +80,12 @@ public class Bootstrap {
 		return initMulti(splitPaths, patternFileName);
 	} 
 	public List<IcePath> initMulti(String[] splitPaths, String patternFileName) {
+		pathMatcher = new PathMatcher();
         try {
 			DepPathMap depPathMap = DepPathMap.getInstance();
             List<String> allPaths = new ArrayList<String>();
             for (String p : splitPaths) {
+				System.out.println(p);
 //                if (firstSeedPath == null) {
 //                    firstSeedPath = depPathMap.findPath(seedPath);
 //                }
@@ -95,14 +98,20 @@ public class Bootstrap {
                         arg1Type = parts[0].trim();
                         arg2Type = parts[2].trim();
                     }
-                }
+                } else {
+					System.err.println("Seed '" + p + "' has no current paths!");
+				}
             }
             if (allPaths.size() == 0) {
-                JOptionPane.showMessageDialog(Ice.mainFrame,
+				if (!GraphicsEnvironment.isHeadless()) {
+					JOptionPane.showMessageDialog(Ice.mainFrame,
                         "Seed is invalid. Choose another seed or run [find common patterns].",
                         "Unable to proceed",
                         JOptionPane.WARNING_MESSAGE);
-                return foundPatterns;
+				} else {
+					System.err.println("Seed is invalid (no paths). Choose another seed or run [find common patterns].");
+				}
+				return foundPatterns;
             }
             //seedPaths.add(args[0]);
             //seedPaths.add(firstSeedPath);

@@ -10,6 +10,9 @@ package edu.nyu.jet.ice.utils;
 public interface ProgressMonitorI {
 
     boolean isCanceled();
+    boolean isAlive();
+
+    void setAlive(boolean a);
 
     void setProgress(int docCount);
 

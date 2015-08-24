@@ -17,6 +17,8 @@ public class FileNameSchema {
 
     private static String workingDirectory = "";
     private static String dataDirectory = "";
+    private static String entitySetIndexPrefix = "EntitySetIndex_";
+    private static String infoSuffix = ".info";
 
     static {
         File cacheFile = new File(CACHE_ROOT);
@@ -66,12 +68,20 @@ public class FileNameSchema {
         return CACHE_ROOT + File.separator + corpusName + File.separator + "preprocess";
     }
 
+    public static String getSourceCacheDir(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "sources";
+    }
+
     public static String getWordCountFileName(String corpusName) {
         return CACHE_ROOT + File.separator + corpusName + File.separator + "counts";
     }
 
     public static String getDocListFileName(String corpusName) {
         return CACHE_ROOT + File.separator + corpusName + File.separator + "docList";
+    }
+
+    public static String getPreprocessedDocListFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "docList.local";
     }
 
     public static String getTermsFileName(String corpusName) {
@@ -90,23 +100,31 @@ public class FileNameSchema {
         return CACHE_ROOT + File.separator + corpusName + File.separator + "RelationRepr";
     }
 
+    public static String getRelationPathListFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "RelationPathList";
+    }
+
     public static String getCorpusInfoDirectory(String corpusName) {
         return CACHE_ROOT + File.separatorChar + corpusName;
     }
 
     public static String getEntitySetIndexFileName(String corpusName, String inType, Double cutoff) {
 	String cutoffStr = String.valueOf(cutoff).replace('.', 'p');
-        return CACHE_ROOT + File.separatorChar + corpusName + File.separator + "EntitySetIndex_" + inType + "_" + cutoffStr;
+        return CACHE_ROOT + File.separatorChar + corpusName + File.separator + entitySetIndexPrefix + inType + "_" + cutoffStr;
     }
 
-   public static String getEntitySetIndexFileNameAlone (String corpusName, String inType, double cutoff) {
+    public static boolean isEntitySetIndexFileName (String fileName) {
+	return (fileName.startsWith(entitySetIndexPrefix) && !fileName.endsWith(infoSuffix));
+    }
+
+   public static String getEntitySetIndexFileNameAlone (String inType, double cutoff) {
 	String cutoffStr = String.valueOf(cutoff).replace('.', 'p');
-        return "EntitySetIndex_" + inType + "_" + cutoffStr;
+        return entitySetIndexPrefix + inType + "_" + cutoffStr;
     }
 
     public static String getEntitySetIndexType (String indexFileName) {
 	String type = "";
-	String[] indexInfoStr = indexFileName.split("-");
+	String[] indexInfoStr = indexFileName.split("_");
 	if (indexInfoStr.length > 2) {
 	    type = indexInfoStr[1];
 	}
@@ -115,7 +133,7 @@ public class FileNameSchema {
 
     public static double getEntitySetIndexCutoff (String indexFileName) {
 	double cutoff = 0.0;
-	String[] indexInfoStr = indexFileName.split("-");
+	String[] indexInfoStr = indexFileName.split("_");
 	if (indexInfoStr.length > 2) {
 	    cutoff = Double.parseDouble(indexInfoStr[2].replace('p', '.'));
 	}
@@ -124,6 +142,10 @@ public class FileNameSchema {
 
     public static String getPatternRatioFileName(String corpusName, String bgCorpusName) {
         return CACHE_ROOT + File.separatorChar + corpusName + File.separator + bgCorpusName + "-Pattern-Ratio";
+    }
+
+    public static String getTermsRatioFileName(String corpusName, String bgCorpusName) {
+        return CACHE_ROOT + File.separatorChar + corpusName + File.separator + bgCorpusName + "-Ratio";
     }
 
     public static String getSortedPatternRatioFileName(String corpusName, String bgCorpusName) {

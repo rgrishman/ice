@@ -4,6 +4,7 @@ import AceJet.Ace;
 import AceJet.Gazetteer;
 import Jet.Control;
 import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
@@ -42,6 +43,8 @@ public class EntitySetIndexer {
             "that", "the", "their", "then", "there", "these",
             "they", "this", "to", "was", "will", "with"
     };
+
+    private String cacheDir = "";
     private static final Set<String> stopWords = new HashSet<String>();
     {
         for (String word : stopWordsArr) {
@@ -54,26 +57,34 @@ public class EntitySetIndexer {
         EntitySetIndexer.defaultProgressMonitor = progressMonitor;
     }
 
-	private ProgressMonitorI progressMonitor;
-	private Set<String> words = new HashSet<String>();
+    private ProgressMonitorI progressMonitor;
+    private Set<String> words = new HashSet<String>();
 
-	public EntitySetIndexer() {}
+    public EntitySetIndexer() {}
 
-	public ProgressMonitorI getProgressMonitor() {
-		return progressMonitor;
-	}
-
-	public void setProgressMonitor(ProgressMonitorI progressMonitor) {
-		this.progressMonitor = progressMonitor;
-	}
-
-	public static void main(String[] args) {
-		EntitySetIndexer indexer = new EntitySetIndexer();
-		indexer.setProgressMonitor(defaultProgressMonitor);
-		indexer.run(args[0], args[1], Double.valueOf(args[2]), args[3], args[4], args[5], args[6], args[7]);
+    public ProgressMonitorI getProgressMonitor() {
+	return progressMonitor;
+    }
+    
+    public void setProgressMonitor(ProgressMonitorI progressMonitor) {
+	this.progressMonitor = progressMonitor;
     }
 
-	public void run(String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
+    public static void main(String[] args) {
+	EntitySetIndexer indexer = new EntitySetIndexer();
+	indexer.setProgressMonitor(defaultProgressMonitor);
+	indexer.run(args[0], args[1], Double.valueOf(args[2]), args[3]);
+    }
+
+    //	public void run(String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
+    public void run(String corpusName, String type, double cutoff, String propsFile) {
+	Corpus corpus = Ice.corpora.get(corpusName);
+	String termFile = FileNameSchema.getTermsFileName(corpusName);
+	String docList = FileNameSchema.getPreprocessedDocListFileName(corpusName);
+	String inputDir = corpus.getDirectory();
+	String inputSuffix = corpus.getFilter();
+	String outputFile = FileNameSchema.getEntitySetIndexFileName(corpusName, type, cutoff);
+	cacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
 	    try {
 		String line;
 		BufferedReader r = new BufferedReader(new FileReader(termFile));
@@ -86,9 +97,11 @@ public class EntitySetIndexer {
 			words.add(entity.getText().replaceAll("\\s+", " ").trim());
 		    }
 		}
+		r.close();
 		// Processing documents
 		if (progressMonitor != null) {
 		    progressMonitor.setProgress(0);
+		    progressMonitor.setAlive(true);
 		    progressMonitor.setNote("Initializing Jet");
 		}
 		try {
@@ -128,11 +141,11 @@ public class EntitySetIndexer {
 		    System.err.println("Jet control finished");
 		    
 		    SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
-   FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
+													 cacheDir,
    inputDir,
    inputFile);
 		    IcePreprocessor.loadPOS(doc,
-   FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
+					    cacheDir,
 					    inputDir,
 					    inputFile);
 		    
@@ -150,6 +163,7 @@ public class EntitySetIndexer {
 			progressMonitor.setNote(docCount + " files processed");
 		    }
 		}
+		docListReader.close();
 		// Indexing
 		if (!isCanceled) {
 		    if (progressMonitor != null) {
@@ -205,6 +219,7 @@ public class EntitySetIndexer {
 		    if (progressMonitor != null) {
 			progressMonitor.setProgress(progressMonitor.getMaximum());
 			progressMonitor.setNote("Start indexing features... done.");
+			progressMonitor.setAlive(false);
 		    }
 		}
 	    }

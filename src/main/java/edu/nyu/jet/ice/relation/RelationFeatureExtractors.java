@@ -1155,6 +1155,7 @@ public class RelationFeatureExtractors {
             }
         }
         Collections.sort(ns);
+	reader.close();
         return ns;
     }
     /**

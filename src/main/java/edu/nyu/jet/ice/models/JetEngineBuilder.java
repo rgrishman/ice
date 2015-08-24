@@ -145,16 +145,18 @@ public class JetEngineBuilder {
             }
         }
         pw.close();
-        pw = new PrintWriter(new FileWriter(fileName + ".neg"));
-        for (IceRelation rs : relations) {
-            List<String> paths = rs.getNegPaths();
-            String type = rs.getName();
-            for (String path : paths) {
-                String pattern = path.replaceAll(" \\-\\- ", "--");
-                pw.println(pattern + "\t" + type);
-            }
+	pw = new PrintWriter(new FileWriter(fileName + ".neg"));
+	for (IceRelation rs : relations) {
+	    if (rs.getNegPaths() != null && rs.getNegPaths().size() > 0) {
+		List<String> paths = rs.getNegPaths();
+		String type = rs.getName();
+		for (String path : paths) {
+		    String pattern = path.replaceAll(" \\-\\- ", "--");
+		    pw.println(pattern + "\t" + type);
+		}
+	    }
         }
-        pw.close();
+	pw.close();
     }
 
 }

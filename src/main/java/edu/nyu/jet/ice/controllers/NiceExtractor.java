@@ -1,8 +1,10 @@
 package edu.nyu.jet.ice.controllers;
 
+import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.DepPaths;
 import edu.nyu.jet.ice.utils.IceUtils;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.io.FileUtils;
 
@@ -121,7 +123,9 @@ public class NiceExtractor  {
                             fileType,
                             pathsFileName,
                             pathsFileName + ".types",
-                            pathsFileName + ".source.dict"});
+		       pathsFileName + ".source.dict",
+		      FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)});
+
                     pathsArea.setText(IceUtils.readFileAsString(pathsFileName));
                 } catch (IOException e) {
                     e.printStackTrace();

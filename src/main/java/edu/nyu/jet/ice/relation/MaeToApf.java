@@ -67,6 +67,8 @@ public class MaeToApf {
 				
 		// write APF
 		aceDoc.write(apf, doc);
+		maeReader.close();
+		apf.close();
 	}
 
 	/**

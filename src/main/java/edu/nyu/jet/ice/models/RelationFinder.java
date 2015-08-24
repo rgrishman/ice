@@ -23,7 +23,7 @@ public class RelationFinder extends Thread {
     public RelationFinder(String docListFileName, String directory, String filter,
                    String instances, String types, JTextArea area, int numberOfDocs,
                    ProgressMonitorI relationProgressMonitor) {
-        args = new String[7];
+        args = new String[8];
         args[0] = FileNameSchema.getWD() + "onomaprops";
         args[1] = docListFileName;
         args[2] = directory;
@@ -31,10 +31,28 @@ public class RelationFinder extends Thread {
         args[4] = instances;
         args[5] = FileNameSchema.getWD() + "temp";
         args[6] = FileNameSchema.getWD() + "temp.source.dict";
+	args[7] = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
         this.types = types;
         this.area = area;
         this.numberOfDocs = numberOfDocs;
         this.relationProgressMonitor = relationProgressMonitor;
+    }
+
+    public RelationFinder(String corpusName) {
+	Corpus corpus = Ice.corpora.get(corpusName);
+	args = new String[8];
+        args[0] = FileNameSchema.getWD() + "onomaprops";
+        args[1] = FileNameSchema.getPreprocessedDocListFileName(corpusName);
+        args[2] = corpus.getDirectory();
+        args[3] = corpus.getFilter();
+        args[4] = FileNameSchema.getRelationsFileName(corpusName);
+        args[5] = FileNameSchema.getWD() + "temp";
+        args[6] = FileNameSchema.getWD() + "temp.source.dict";
+	args[7] = FileNameSchema.getPreprocessCacheDir(corpusName);
+        this.types = FileNameSchema.getRelationTypesFileName(corpusName);
+        this.area = null;
+        this.numberOfDocs = corpus.getNumberOfDocs();
+        this.relationProgressMonitor = null;
     }
 
     public void run() {
@@ -59,9 +77,10 @@ public class RelationFinder extends Thread {
             Corpus.sort(FileNameSchema.getWD() + "temp", types);
             Corpus.sort(FileNameSchema.getWD() + "temp.source.dict", types + ".source.dict");
             depPathMap.forceLoad();
-			if(area != null) {
-				Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
-			}
+	    if(area != null) {
+		Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
+	    }
+	    depPathMap.persist();
 
         } catch (IOException e) {
             System.out.println("IOException in DepPaths " + e);

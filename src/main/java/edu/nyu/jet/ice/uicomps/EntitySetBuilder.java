@@ -31,7 +31,8 @@ import java.util.List;
 
 public class EntitySetBuilder {
 
-    public static String type;
+    public static String type = "";
+	public static double cutoff = 0.0;
 
     public static ButtonGroup categoryGroup;
 
@@ -46,21 +47,17 @@ public class EntitySetBuilder {
 
         Corpus selectedCorpus = Ice.selectedCorpus;
         EntitySetIndexerThread indexer = new EntitySetIndexerThread(
-                FileNameSchema.getTermsFileName(selectedCorpus.getName()),
+			    selectedCorpus.getName(),
                 inType,
                 String.valueOf(cutoff),
-                "onomaprops",
-                selectedCorpus.getDocListFileName(),
-                selectedCorpus.getDirectory(),
-                selectedCorpus.getFilter(),
-                FileNameSchema.getEntitySetIndexFileName(selectedCorpus.getName(), inType)
+                "onomaprops"
         );
 
         indexer.start();
     }
 
     public List<String> suggestSeeds() {
-        return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpus.name, type),
+        return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpus.name, type, cutoff),
                 Ice.selectedCorpus.termFileName, type);
     }
 
@@ -80,7 +77,7 @@ public class EntitySetBuilder {
 
         List<String> seedStrings = splitSeedString(seedString);
 
-        EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + type,
+        EntitySetExpander expander = new EntitySetExpander(FileNameSchema.getEntitySetIndexFileName(selectedCorpus.getName(), type, cutoff),
                 seedStrings);
 
         expander.rank();
@@ -190,7 +187,7 @@ public class EntitySetBuilder {
 
         buildIndexButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                double cutoff = 0.0;
+                // double cutoff = 0.0;
                 //type   = "";
                 try {
                     cutoff = Double.valueOf(cutoffField.getText());
@@ -331,7 +328,7 @@ public class EntitySetBuilder {
                     }
                 }
                 //File entitySetIndexFile = new File(selectedCorpus.name + "EntitySetIndex_" + type);
-                String entitySetIndexFileName = FileNameSchema.getEntitySetIndexFileName(selectedCorpus.getName(), type);
+                String entitySetIndexFileName = FileNameSchema.getEntitySetIndexFileName(selectedCorpus.getName(), type, cutoff);
                 File entitySetIndexFile = new File(entitySetIndexFileName);
                 if (!entitySetIndexFile.exists() || entitySetIndexFile.isDirectory()) {
                     JOptionPane.showMessageDialog(Ice.mainFrame,
@@ -601,7 +598,7 @@ public class EntitySetBuilder {
                     }
                 }
                 //File entitySetIndexFile = new File(selectedCorpus.name + "EntitySetIndex_" + type);
-                String entitySetIndexFileName = FileNameSchema.getEntitySetIndexFileName(selectedCorpus.getName(), type);
+                String entitySetIndexFileName = FileNameSchema.getEntitySetIndexFileName(selectedCorpus.getName(), type, cutoff);
                 File entitySetIndexFile = new File(entitySetIndexFileName);
                 if (!entitySetIndexFile.exists() || entitySetIndexFile.isDirectory()) {
                     JOptionPane.showMessageDialog(Ice.mainFrame,
@@ -675,17 +672,12 @@ class EntitySetIndexerThread extends Thread {
     String[] args;
 
     EntitySetIndexerThread (String countFile, String type, String cutoff,
-                           String propsFile, String docList, String inputDir,
-                           String inputSuffix, String outputFile) {
-        args = new String[8];
+							String propsFile) {
+        args = new String[4];
         args[0] = countFile;
         args[1] = type;
         args[2] = cutoff;
         args[3] = propsFile;
-        args[4] = docList;
-        args[5] = inputDir;
-        args[6] = inputSuffix;
-        args[7] = outputFile;
         /**
          * String countFile   = args[0];
          String type        = args[1];

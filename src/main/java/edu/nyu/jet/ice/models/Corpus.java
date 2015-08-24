@@ -134,6 +134,7 @@ public class Corpus {
         directory = "?";
         filter = "?";
         relationBuilder = new RelationBuilder();
+        termFileName = FileNameSchema.getTermsFileName(name);
 
         try {
             String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
@@ -171,10 +172,7 @@ public class Corpus {
             return;
         }
         TermCounter counter = TermCounter.prepareRun(FileNameSchema.getWD() + "onomaprops",
-                Arrays.asList(docFileNames),
-                directory,
-                filter,
-                wordCountFileName,
+				 name,
                 monitor);
         counter.start();
     }
@@ -185,7 +183,7 @@ public class Corpus {
 //                run("Terms", "utils/findTerms " + wordCountFileName + " " +
 //                        Ice.corpora.get(backgroundCorpus).wordCountFileName + " " +
 //                        termFileName);
-        String ratioFileName = Ice.selectedCorpusName + "-" + backgroundCorpus + "-" + "Ratio";
+        String ratioFileName = FileNameSchema.getTermsRatioFileName(name, bgCorpus.getName());
         try {
             //Ratio.main(new String[] {wordCountFileName, Ice.corpora.get(backgroundCorpus).wordCountFileName, ratioFileName});
             //IceUtils.numsort(ratioFileName, termFileName);
@@ -322,15 +320,15 @@ public class Corpus {
     }
 
 	public List<String> checkRelations(String filterName) {
-        relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
         relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
 		if (filterName.equals("sentential")) {
 			relationFilter.onlySententialPatterns = true;
 		} else {
 			relationFilter.onlySententialPatterns = false;
 		}
-		findRelations(null, docListFileName, null);
-        return getTerms(termFileName, 40, relationFilter);
+		// findRelations(null, docListFileName, null);
+		System.err.println("getTerms(" + relationTypeFileName + ")");
+        return getTerms(relationTypeFileName, 40, relationFilter);
 	}
 
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor, RelationFilter relationFilter) {
@@ -358,9 +356,15 @@ public class Corpus {
     }
 
     public void findRelations(ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
-        relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
-        docListFileName = FileNameSchema.getDocListFileName(name);
+		if (relationInstanceFileName.length() < 1) {
+			relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
+		}
+		if (relationTypeFileName.length() < 1) {
+			relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
+		}
+		if (docListFileName.length() < 1) {
+			docListFileName = FileNameSchema.getDocListFileName(name);
+		}
 
 
         RelationFinder finder = new RelationFinder(
@@ -623,10 +627,12 @@ public class Corpus {
 //                        }
 //                    }
 //                    else {
-                        String repr = depPathMap.findRepr(parts[1]);
-                        if (repr != null) {
-                            topTerms.add(parts[0] + "\t" + repr);
-                        }
+					if (parts.length > 1) {
+						String repr = depPathMap.findRepr(parts[1]);
+						if (repr != null) {
+							topTerms.add(parts[0] + "\t" + repr);
+						}
+					}
 //                    }
                 }
                 else {
