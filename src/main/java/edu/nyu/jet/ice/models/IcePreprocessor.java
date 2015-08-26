@@ -103,7 +103,7 @@ public class IcePreprocessor extends Thread {
         icePreprocessor.processFiles();
     }
 
-    private void processFiles() {
+    public void processFiles() {
         System.out.println("Starting Jet Preprocessor ...");
         if (progressMonitor != null) {
 			progressMonitor.setAlive(true);
@@ -249,6 +249,7 @@ public class IcePreprocessor extends Thread {
 				   corpusName, progressMonitor);
                 counter.run();
                 corpus.wordCountFileName = FileNameSchema.getWordCountFileName(corpus.name);
+				System.out.println("Setting word count file name to " + corpus.wordCountFileName);
             }
 			System.out.println("Finished counting words.");
 			System.err.println("corpus.filter = " + corpus.filter);
