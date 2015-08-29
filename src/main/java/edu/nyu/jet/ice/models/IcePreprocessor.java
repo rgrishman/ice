@@ -317,7 +317,13 @@ public class IcePreprocessor extends Thread {
                 newInputFile = UUID.randomUUID().toString() + newSuffix;
             }
 			// System.out.println(inputFile + " -> " + newInputFile);
-            String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+			String content = "";
+			try {
+				content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+			} catch (IOException e) {
+				System.err.println("Unable to read file " + inputDir + File.separator + inputFile + ": " + e.getMessage());
+				continue;
+			}
             content = content.replaceAll(">", " ");
             content = content.replaceAll("<", " ");
             PrintWriter newFileWriter =
