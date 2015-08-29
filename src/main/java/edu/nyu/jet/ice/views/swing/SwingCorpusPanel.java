@@ -205,6 +205,8 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                     e.printStackTrace();
                     return;
                 }
+		IcePreprocessor icePreprocessor = new IcePreprocessor(Ice.selectedCorpus.getName());
+		/*
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                         Ice.selectedCorpus.directory,
                         Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
@@ -212,6 +214,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         filterTextField.getText(),
                         FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
                 );
+		*/
                 SwingProgressMonitor progressMonitor = new SwingProgressMonitor(SwingCorpusPanel.this,
                         "Preprocessing files",
                         "Processing files with Jet...",

@@ -108,6 +108,9 @@ public class FileNameSchema {
         return CACHE_ROOT + File.separatorChar + corpusName;
     }
 
+    public static String getEntitySetIndexFileName(String corpusName, String inType) {
+	return getEntitySetIndexFileName(corpusName, inType, 3.0);
+    }
     public static String getEntitySetIndexFileName(String corpusName, String inType, Double cutoff) {
 	String cutoffStr = String.valueOf(cutoff).replace('.', 'p');
         return CACHE_ROOT + File.separatorChar + corpusName + File.separator + entitySetIndexPrefix + inType + "_" + cutoffStr;

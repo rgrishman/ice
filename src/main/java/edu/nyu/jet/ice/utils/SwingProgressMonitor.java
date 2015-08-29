@@ -12,6 +12,8 @@ import java.awt.*;
  */
 public class SwingProgressMonitor extends ProgressMonitor implements ProgressMonitorI {
 
+    private boolean isAlive;
+
    public SwingProgressMonitor(Component parentComponent,
                           Object message,
                           String note,
@@ -19,4 +21,12 @@ public class SwingProgressMonitor extends ProgressMonitor implements ProgressMon
                           int max) {
        super(parentComponent, message, note, min, max);
    }
+
+    public void setAlive(boolean b) {
+	this.isAlive = b;
+    }
+
+    public boolean isAlive() {
+	return this.isAlive;
+    }
 }
