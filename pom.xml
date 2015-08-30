@@ -42,7 +42,11 @@
         </plugins>
     </build>
 <dependencies>
-
+  <dependency>
+    <groupId>org.apache.opennlp</groupId>
+    <artifactId>opennlp-tools</artifactId>
+    <version>1.6.0</version>
+  </dependency>
     <dependency>
         <groupId>org.la4j</groupId>
         <artifactId>la4j</artifactId>

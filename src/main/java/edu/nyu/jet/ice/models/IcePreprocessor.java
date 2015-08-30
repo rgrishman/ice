@@ -148,7 +148,8 @@ public class IcePreprocessor extends Thread {
                 copyFiles();
             }
             BufferedReader docListReader;
-            docListReader = new BufferedReader(new FileReader(docList));
+			FileReader docListFileReader = new FileReader(docList);
+            docListReader = new BufferedReader(docListFileReader);
             boolean isCanceled = false;
             docCount = 0;
             while ((docName = docListReader.readLine()) != null) {
@@ -224,7 +225,8 @@ public class IcePreprocessor extends Thread {
                     }
                 }
             }
-
+			docListReader.close();
+			docListFileReader.close();
             // Do word count now
 			System.out.println("Starting word count");
             String[] docFileNames = null;

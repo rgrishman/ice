@@ -135,9 +135,8 @@ public class Corpus {
         filter = "?";
         relationBuilder = new RelationBuilder();
         termFileName = FileNameSchema.getTermsFileName(name);
-
+		String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
         try {
-            String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
             //Files.createDirectory(Paths.get(corpusInfoDirectory));
             File dir = new File(corpusInfoDirectory);
             dir.mkdirs();

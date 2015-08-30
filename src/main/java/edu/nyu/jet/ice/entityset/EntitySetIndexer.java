@@ -175,7 +175,8 @@ public class EntitySetIndexer {
 			pw.println(FileEventStream.toLine(event).trim());
 		    }
 		    pw.close();
-		    DataIndexer indexer = new OnePassDataIndexer(new FileEventStream(tempFile), 0);
+		    FileEventStream tempStream = new FileEventStream(tempFile);
+		    DataIndexer indexer = new OnePassDataIndexer(tempStream, 0);
 
 		    if (progressMonitor != null) {
 			progressMonitor.setProgress(progressMonitor.getMaximum());
@@ -216,6 +217,7 @@ public class EntitySetIndexer {
 		    }
 		    w.close();
 		    wInverse.close();
+		    // TODO tempStream.close();
 		    if (progressMonitor != null) {
 			progressMonitor.setProgress(progressMonitor.getMaximum());
 			progressMonitor.setNote("Start indexing features... done.");
