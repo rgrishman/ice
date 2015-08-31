@@ -129,6 +129,7 @@ public class Corpus {
 
     ProgressMonitorI wordProgressMonitor;
 
+
     public Corpus(String name) {
         this.name = name;
         directory = "?";
