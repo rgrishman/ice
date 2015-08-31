@@ -276,12 +276,15 @@ public class DepPaths {
 		// ACE mode (provides additional antecedents ...)
 		Resolve.ACE = true;
         Properties props = new Properties();
-        props.load(new FileReader(propsFile));
+		FileReader propsReader = new FileReader(propsFile);
+		props.load(propsReader);
+		propsReader.close();
 
 		String docName;
 		int docCount = 0;
 
-		BufferedReader docListReader = new BufferedReader(new FileReader (docList));
+		FileReader docListFileReader = new FileReader (docList);
+		BufferedReader docListReader = new BufferedReader(docListFileReader);
         boolean isCanceled = false;
 		while ((docName = docListReader.readLine()) != null) {
 			docCount++;
@@ -339,6 +342,7 @@ public class DepPaths {
 			}
 		}
 		docListReader.close();
+		docListFileReader.close();
 		// *** write counts
         if (!isCanceled) {
             writer = new PrintWriter (new FileWriter (outputFile));

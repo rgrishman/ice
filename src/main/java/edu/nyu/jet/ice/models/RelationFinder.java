@@ -74,6 +74,7 @@ public class RelationFinder extends Thread {
             depPathMap.unpersist();
             DepPaths.progressMonitor = relationProgressMonitor;
             DepPaths.main(args);
+	    System.out.println("Saving new relations to " + types + ".");
             Corpus.sort(FileNameSchema.getWD() + "temp", types);
             Corpus.sort(FileNameSchema.getWD() + "temp.source.dict", types + ".source.dict");
             depPathMap.forceLoad();
