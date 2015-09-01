@@ -1,6 +1,6 @@
 # Using ICE
 
-*Feburary 24, 2015*
+*September 5, 2015*
 
 ## Introduction
 
@@ -196,4 +196,6 @@ Like building entity sets, you can choose whether you want to accept or reject a
  Finally, click *Persist* in the status panel to save the newly-built entities set to
  the ice.yml file, so that these entities will be available after Ice is closed and
   re-opened. Click *Export* to export all entity sets in the ice.yml file to Jet.
+
+## Command line interface
 
