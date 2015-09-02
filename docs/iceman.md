@@ -1,4 +1,4 @@
-# Using ICE
+# The ICE Manual
 
 *September 5, 2015*
 
