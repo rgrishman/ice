@@ -22,6 +22,9 @@ We go through the steps of adding a new corpus to the system, finding entities, 
 phrases, and building new relations. Each function can be completed in a panel of the Ice Swing GUI. Ice will bring us
 to the Corpus panel when started.
 
+ICE also provides a command line interface for possbily time-consuming tasks that do not require human intervention, so
+that we can run those tasks on a server without keeping a Swing GUI. This is discussed at the end of this manual.
+
 ## Starting Ice
 
 Unzip the package and run:
@@ -197,7 +200,7 @@ Like building entity sets, you can choose whether you want to accept or reject a
  the ice.yml file, so that these entities will be available after Ice is closed and
   re-opened. Click *Export* to export all entity sets in the ice.yml file to Jet.
 
-## Command line interface
+## ICECLI: The Command Line Interface
 
 ICE also provides a command line interface for actions that do not require human intervention.
 This can be called in the following command:
