@@ -174,20 +174,50 @@ public class Nice implements IceController {
     }
 
     public static void main(String[] args) {
-        String cover = "                  ___           ___     \n" +
-                "    ___          /  /\\         /  /\\    \n" +
-                "   /  /\\        /  /:/        /  /:/_   \n" +
-                "  /  /:/       /  /:/        /  /:/ /\\  \n" +
-                " /__/::\\      /  /:/  ___   /  /:/ /:/_ \n" +
-                " \\__\\/\\:\\__  /__/:/  /  /\\ /__/:/ /:/ /\\\n" +
-                "    \\  \\:\\/\\ \\  \\:\\ /  /:/ \\  \\:\\/:/ /:/\n" +
-                "     \\__\\::/  \\  \\:\\  /:/   \\  \\::/ /:/ \n" +
-                "     /__/:/    \\  \\:\\/:/     \\  \\:\\/:/  \n" +
-                "     \\__\\/      \\  \\::/       \\  \\::/   \n" +
-                "                 \\__\\/         \\__\\/ v0.2\n\n";
-        System.err.println(cover);
-        String unicodeMessage = "          \u5BD2\u96E8\u9023\u6C5F\u591C\u5165\u5433 \u5E73\u660E\u9001\u5BA2\u695A\u5C71\u5B64\n";
-        System.err.println(unicodeMessage);
+        printCover();
+        Properties iceProperties = loadIceProperties();
+        ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+        toolTipManager.setDismissDelay(7500);
+        initIce();
+        loadPathMatcher(iceProperties);
+        mainFrame = new JFrame();
+        mainFrame.setLayout(new MigLayout());
+        mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2demo");
+        mainFrame.setLocationRelativeTo(null); // center main window
+
+        reassemble();
+    }
+
+    public static void initIce() {
+        try {
+            File yamlFile = new File("ice.yml");
+            InputStream yamlInputStream = new FileInputStream(yamlFile);
+            YamlDecoder dec = new YamlDecoder(yamlInputStream);
+            Ice.corpora = new TreeMap((Map) dec.readObject());
+            Ice.entitySets = new TreeMap((Map) dec.readObject());
+            Ice.relations = new TreeMap((Map) dec.readObject());
+            dec.close();
+        } catch (IOException e) {
+            System.err.println("Did not load ice.yml.");
+        }
+        if (!Ice.corpora.isEmpty()) {
+            Ice.selectCorpus(Ice.corpora.firstKey());
+        }
+    }
+
+    public static void loadPathMatcher(Properties iceProperties) {
+        Bootstrap.pathMatcher = new PathMatcher();
+        if (iceProperties.getProperty("Ice.DepEmbeddings.fileName") != null) {
+            try {
+                Bootstrap.pathMatcher.loadWordEmbedding(
+                        iceProperties.getProperty("Ice.DepEmbeddings.fileName").trim());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static Properties loadIceProperties() {
         File icePropFile = new File("iceprops");
         Properties iceProperties = new Properties();
         Ice.iceProperties.getProperty("null");
@@ -204,36 +234,24 @@ public class Nice implements IceController {
                 Ice.iceProperties.setProperty((String)k, val);
             }
         }
-        try {
-            ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
-            toolTipManager.setDismissDelay(7500);
-            File yamlFile = new File("ice.yml");
-            InputStream yamlInputStream = new FileInputStream(yamlFile);
-            YamlDecoder dec = new YamlDecoder(yamlInputStream);
-            Ice.corpora = new TreeMap((Map) dec.readObject());
-            Ice.entitySets = new TreeMap((Map) dec.readObject());
-            Ice.relations = new TreeMap((Map) dec.readObject());
-            dec.close();
-        } catch (IOException e) {
-            System.out.println("Did not load ice.yml.");
-        }
-        if (!Ice.corpora.isEmpty())
-            Ice.selectCorpus(Ice.corpora.firstKey());
-        Bootstrap.pathMatcher = new PathMatcher();
-        if (iceProperties.getProperty("Ice.DepEmbeddings.fileName") != null) {
-            try {
-                Bootstrap.pathMatcher.loadWordEmbedding(
-                        iceProperties.getProperty("Ice.DepEmbeddings.fileName").trim());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        mainFrame = new JFrame();
-        mainFrame.setLayout(new MigLayout());
-        mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2demo");
-        mainFrame.setLocationRelativeTo(null); // center main window
+        return iceProperties;
+    }
 
-        reassemble();
+    public static void printCover() {
+        String cover = "                  ___           ___     \n" +
+                "    ___          /  /\\         /  /\\    \n" +
+                "   /  /\\        /  /:/        /  /:/_   \n" +
+                "  /  /:/       /  /:/        /  /:/ /\\  \n" +
+                " /__/::\\      /  /:/  ___   /  /:/ /:/_ \n" +
+                " \\__\\/\\:\\__  /__/:/  /  /\\ /__/:/ /:/ /\\\n" +
+                "    \\  \\:\\/\\ \\  \\:\\ /  /:/ \\  \\:\\/:/ /:/\n" +
+                "     \\__\\::/  \\  \\:\\  /:/   \\  \\::/ /:/ \n" +
+                "     /__/:/    \\  \\:\\/:/     \\  \\:\\/:/  \n" +
+                "     \\__\\/      \\  \\::/       \\  \\::/   \n" +
+                "                 \\__\\/         \\__\\/ v0.2\n\n";
+        System.err.println(cover);
+        String unicodeMessage = "          \u5BD2\u96E8\u9023\u6C5F\u591C\u5165\u5433 \u5E73\u660E\u9001\u5BA2\u695A\u5C71\u5B64\n";
+        System.err.println(unicodeMessage);
     }
 
     public static void reassemble() {
