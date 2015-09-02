@@ -204,7 +204,7 @@ This can be called in the following command:
 
     icecli ACTION CORPUS [OPTIONS]
         
-### addCorpus action
+### The _addCorpus_ action
 
 This action adds a new corpus to the ICE system and preprocess it. It is a time-consuming action.
 To run this action, the directory of the new corpus and the desired file extension needs to be specified
@@ -215,21 +215,21 @@ and use apw-nov (which already exists in ICE) as background.
 
     icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
 
-### setBackgroundFor action 
+### The _setBackgroundFor_ action 
 
 This action set the background corpus of a given corpus in ICE. The following command set the background corpus
 of deaatl to be apw-nov.
 
     icecli setBackgroundFor deaatl --background apw-nov
 
-### findEntities action
+### The _findEntities_ action
 
 This command generates the entity list for the corpus deaatl. For this command to work, background corpus should
 be properly set first. The following command finds entities (domain-specific noun groups) in deaatl.
 
     icecli findEntities deaatl
 
-### indexEntities action
+### The _indexEntities_ action
 
 This command index entities in a given corpus. findEntities should be run at least once before this command can run
 successfully. We have the opportunity to set the cutoff here. With a higher cutoff, a smaller portion of more specific
@@ -239,7 +239,7 @@ The following command indexes entities in deaatl, and sets cutoff to 4.0.
 
     icecli indexEntities deaatl --entityIndexCutoff 4.0
 
-### findPhrases action
+### The _findPhrases_ action
 
 This command extract phrases (dependency paths) in a given corpus. If a background corpus is given in the ICE configuration,
 it will also generate a pattern ratio file, which contains a list of phrases ranked by their domain-specialty. The following
