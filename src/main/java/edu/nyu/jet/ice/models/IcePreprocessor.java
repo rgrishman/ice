@@ -292,7 +292,8 @@ public class IcePreprocessor extends Thread {
                 if (progressMonitor != null) {
                     progressMonitor.setNote("Counting words and relations...");
                 }
-                if (!isCanceled && !progressMonitor.isCanceled()) {
+                System.err.println("Counting words...");
+                if (!isCanceled && (progressMonitor == null || !progressMonitor.isCanceled())) {
                     String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
                     TermCounter counter = TermCounter.prepareRun("onomaprops",
                             Arrays.asList(docFileNames),
@@ -303,7 +304,8 @@ public class IcePreprocessor extends Thread {
                     counter.run();
                     Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
                 }
-                if (!isCanceled && !progressMonitor.isCanceled()) {
+                System.err.println("Finding dependency paths...");
+                if (!isCanceled && (progressMonitor == null || !progressMonitor.isCanceled())) {
                     RelationFinder finder = new RelationFinder(
                             Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
                             Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),

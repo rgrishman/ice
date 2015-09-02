@@ -199,3 +199,30 @@ Like building entity sets, you can choose whether you want to accept or reject a
 
 ## Command line interface
 
+ICE also provides a command line interface for actions that do not require human intervention.
+This can be called in the following command:
+
+    icecli ACTION CORPUS [OPTIONS]
+    
+For a complete list of actions and options, please run 
+
+    icecli
+    
+### addCorpus action
+
+icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
+
+### setBackgroundFor action 
+
+icecli setBackgroundFor deaatl --background apw-nov
+
+### findEntities action
+
+icecli findEntities deaatl
+
+### indexEntities action
+
+icecli indexEntities deaatl --entityIndexCutoff 4.0
+
+### findPhrases action
+
