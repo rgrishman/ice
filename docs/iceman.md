@@ -203,26 +203,46 @@ ICE also provides a command line interface for actions that do not require human
 This can be called in the following command:
 
     icecli ACTION CORPUS [OPTIONS]
-    
-For a complete list of actions and options, please run 
-
-    icecli
-    
+        
 ### addCorpus action
 
-icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
+This action adds a new corpus to the ICE system and preprocess it. It is a time-consuming action.
+To run this action, the directory of the new corpus and the desired file extension needs to be specified
+in options. We recommend setting the background corpus too, unless this is the first corpus in ICE.
+
+The following command creates a new corpus called deaatl, from txt files in the corpus/dea_processed/atl directory,
+and use apw-nov (which already exists in ICE) as background.
+
+    icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
 
 ### setBackgroundFor action 
 
-icecli setBackgroundFor deaatl --background apw-nov
+This action set the background corpus of a given corpus in ICE. The following command set the background corpus
+of deaatl to be apw-nov.
+
+    icecli setBackgroundFor deaatl --background apw-nov
 
 ### findEntities action
 
-icecli findEntities deaatl
+This command generates the entity list for the corpus deaatl. For this command to work, background corpus should
+be properly set first. The following command finds entities (domain-specific noun groups) in deaatl.
+
+    icecli findEntities deaatl
 
 ### indexEntities action
 
-icecli indexEntities deaatl --entityIndexCutoff 4.0
+This command index entities in a given corpus. findEntities should be run at least once before this command can run
+successfully. We have the opportunity to set the cutoff here. With a higher cutoff, a smaller portion of more specific
+terms will be kept in the index. If the cutoff is not set, it defaults to 3.0. 
+
+The following command indexes entities in deaatl, and sets cutoff to 4.0.
+
+    icecli indexEntities deaatl --entityIndexCutoff 4.0
 
 ### findPhrases action
 
+This command extract phrases (dependency paths) in a given corpus. If a background corpus is given in the ICE configuration,
+it will also generate a pattern ratio file, which contains a list of phrases ranked by their domain-specialty. The following
+command extracts phrases from deaatl.  
+
+    icecli findPhrases deaatl
