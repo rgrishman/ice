@@ -18,8 +18,11 @@ import java.util.*;
  */
 public class DepPath {
 
+    // To store user-defined String representation. If path is set, toString() will return path,
+    // otherwise, the string representation will be computed on-the-fly
     String path = null;
 
+    // Dependency triples on the path
     List<SyntacticRelation> relations = new ArrayList<SyntacticRelation>();
 
     static Stemmer stemmer = Stemmer.getDefaultStemmer();
@@ -32,16 +35,34 @@ public class DepPath {
         super();
     }
 
+    /**
+     * Create a DepPath, with start and end points set.
+     * @param start span.start() of ARG1 (argument at one end of the path)
+     * @param end span.start() of ARG1 (argument at another end of the path)
+     */
     public DepPath(int start, int end) {
         super();
         this.start = start;
         this.end   = end;
     }
 
+    /**
+     * Define the string representation of the DepPath.
+     * Suppose a DepPath records a path ARG1:prep:of:pobj:ARG2, if we call toString() without first
+     * setPath(), toString() will return ARG1:prep:of:pobj:ARG2.
+     * However, we might want toString() to return the transformed path. In that case, we can first
+     * setPath("ARG1:prep_of:ARG2"). toString() will return the transformed path thereafter.
+     * @param path User-defined string representation of the path
+     */
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * Transcribe some dependency labels into words or punctuation marks in the linearized version.
+     * @param role The dependency label
+     * @return Transcribed dependency label
+     */
     public static String lexicalContent(String role) {
         if (role.equals("appos"))
             return ",";
@@ -104,18 +125,14 @@ public class DepPath {
         this.end = end;
     }
 
-    public boolean hasEdgeStartsFrom(int posn) {
-        for (SyntacticRelation r : relations) {
-            if (r.sourcePosn == posn) return true;
-        }
-        return start == posn;
-    }
-
     public int length() {
         return relations.size();
     }
 
     @Override
+    /**
+     * Given a DepPath, transcribe it to the string form i.e. label1:word1:label2:word2: ... :labelk
+     */
     public String toString() {
         if (path == null) {
             StringBuilder sb = new StringBuilder();
@@ -135,48 +152,36 @@ public class DepPath {
         }
     }
 
+    /**
+     * Linearize the DepPath, given the Jet Document, the SyntacticRelationSet, and
+     * the types of the entities at both ends.
+     * @param doc The Jet Document
+     * @param relations Dependency relations extracted from the Jet Document
+     * @param type1 Entity type of the first argument
+     * @param type2 Entity type of the second argument
+     * @return Linearized version of the dependency path
+     */
     public String linearize(Document doc, SyntacticRelationSet relations,
                             String type1, String type2) {
+        // PriorityQueue is maintained as a min-heap, so that the dependency relations
+        // in the heap are sorted by the offset of the governed word
         PriorityQueue<SyntacticRelation> nodes = new PriorityQueue<SyntacticRelation>(
                 relations.size(),
                 new RelationTargetPosnComparator()
         );
-        TIntHashSet targets = new TIntHashSet();
-        targets.add(this.start);
-        targets.add(this.end);
-        Annotation startToken = doc.annotationsAt(this.start, "token") != null ?
-                doc.annotationsAt(this.start, "token").get(0) : null;
-        String startName      = "UNK";
-        if (startToken != null) {
-            startName = doc.text(startToken).trim();
-        }
 
-        for (SyntacticRelation r : this.relations) {
-            targets.add(r.targetPosn);
-        }
         int count = 1;
+        // Add a "start relation" so that the entity type of the first argument will
+        // be printed out.
         SyntacticRelation startRel =
                 new SyntacticRelation(-1 , "", "", "NAMETAG", this.start, type1, "");
         nodes.add(startRel);
         for (SyntacticRelation r : this.relations) {
-            int sourcePosn = r.sourcePosn;
-            SyntacticRelationSet fromSet = relations.getRelationsFrom(sourcePosn);
-//            SyntacticRelation subj = fromSet.getRelation(sourcePosn, "nsubj");
-//            if (subj != null) {
-//                if (!targets.contains(subj.targetPosn)) {
-//                    nodes.add(subj);
-//                    targets.add(subj.targetPosn);
-//                }
-//            }
-//            SyntacticRelation obj = fromSet.getRelation(sourcePosn, "dobj");
-//            if (obj != null) {
-//                if (!targets.contains(obj.targetPosn)) {
-//                    nodes.add(obj);
-//                    targets.add(obj.targetPosn);
-//                }
-//            }
             if (count == this.relations.size()) {
-                // r.targetWord = "";
+                // Remove target word (the governed word) from the last dependency relation:
+                // the last target word won't be printed out; we will later add an endRel
+                // node to print out the entity type of the last target word on the dependency
+                // path instead.
                 SyntacticRelation fixedR = new SyntacticRelation(r.sourcePosn,
                         r.sourceWord, r.sourcePos, r.type, r.targetPosn,
                         "", r.targetPos);
@@ -185,6 +190,10 @@ public class DepPath {
             else {
                 nodes.add(r);
             }
+            // Determine if the relation is "inversed"
+            // This mainly helps to decide that if we want to add a word to the linearized path,
+            // where we should put the added word. For A:conj:B, "and" should be put after A, but
+            // for A:conj-1:B, "and" should be put after B.
             String nodeType = r.type;
             boolean inversed = false;
             if (nodeType.endsWith("-1")) {
@@ -194,6 +203,9 @@ public class DepPath {
             if (nodeType.equals("poss")) {
                 inversed = !inversed;
             }
+            // If the label can be transcribed to the word, add the transcribed word we obtained
+            // from the dependency label to the heap.
+            // (all labels will be added to the linearized path later)
             String lexicalContent = lexicalContent(nodeType);
             if (lexicalContent.length() > 0){
                 SyntacticRelation prepRel =
@@ -203,32 +215,18 @@ public class DepPath {
             }
             count++;
         }
+        // Add an "end relation" so that the type of the second argument will be printed out.
         SyntacticRelation endRel   =
                 new SyntacticRelation(-1 , "", "", "NAMETAG", this.end, type2, "");
         nodes.add(endRel);
-        //Collections.sort(nodes, new RelationTargetPosnComparator());
         StringBuilder linearizedPath = new StringBuilder();
         String lastWord = "";
+        // Add all target words from the heap to the linearized path. Note that
+        // nodes is an ordered heap based on targetPosn
         while (!nodes.isEmpty()) {
             SyntacticRelation node = nodes.poll();
-
-//            String lexicalContent = lexicalContent(nodeType);
-//
-//            if (lexicalContent.equals("and") &&
-//                    !(lastWord.equals("and") || lastWord.equals("or"))) {
-//                linearizedPath.append("and ");
-//                lastWord = "and";
-//            }
-//            else {
-//                if (lexicalContent.length() > 0) {
-//                    if (!lexicalContent.toLowerCase().trim().equals(lastWord)) {
-//                        linearizedPath.append(lexicalContent).append(" ");
-//                        lastWord = lexicalContent.toLowerCase().trim();
-//                    }
-//                }
-//            }
-            //if (i < nodes.size() - 1) {
             String targetWord = wordOnPath(node);
+            // Avoid "Tom and and Jerry", "Tom and or Jerry" etc.
             if (targetWord.equals("and") ||
                     targetWord.equals("or") ||
                     targetWord.equals(",")) {
@@ -241,6 +239,7 @@ public class DepPath {
                 }
             }
             else {
+                // add word on the heap to the linearized path
                 if (!targetWord.toLowerCase().trim().equals(lastWord)
                         || targetWord.toUpperCase().equals(targetWord)) {
                     linearizedPath.append(targetWord);
@@ -250,8 +249,6 @@ public class DepPath {
                     }
                 }
             }
-
-            //}
         }
         return linearizedPath.toString().trim();
     }
@@ -270,15 +267,9 @@ public class DepPath {
         }
     }
 
-    String getPrep(String relationName) {
-        if (relationName.startsWith("prep_")) {
-            return relationName.substring(5);
-        }
-        else {
-            return "";
-        }
-    }
-
+    /**
+     * Compares SyntacticRelations based on their targetPosn
+     */
     class RelationTargetPosnComparator implements Comparator<SyntacticRelation> {
         public int compare(SyntacticRelation syntacticRelation, SyntacticRelation t1) {
             return syntacticRelation.targetPosn - t1.targetPosn;
