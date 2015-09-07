@@ -73,6 +73,10 @@ public class JetEngineBuilder {
         buildOnomaFromNames(fileName, new ArrayList<String>(Ice.entitySets.keySet()));
     }
 
+    public static String getOnomaFileName() {
+	return FileNameSchema.getDD() + props.getProperty("Onoma.fileName");
+    }
+
     public static void buildOnomaFromNames(String fileName, List<String> entitySetNames) throws IOException {
         List<IceEntitySet> entitySets = new ArrayList<IceEntitySet>();
         for (String type : entitySetNames) {

@@ -17,7 +17,7 @@ public class DepPathMap {
     private TreeMap<String, List<String>> reprPathMap = new TreeMap<String, List<String>>();
     private TreeMap<String, String> pathExampleMap = new TreeMap<String, String>();
     private DepPathMap() { }
-    private String previousFileName = null;
+    private static String previousFileName = null;
     private static String fileName = "";
 
     public enum AddStatus {
@@ -55,15 +55,29 @@ public class DepPathMap {
         return instance;
     }
 
-    public static DepPathMap getInstance(String fileName) {
-	fileName = fileName;
-        if (instance == null) {
+    public static DepPathMap getInstance(String fn) {
+	if (!fn.equals(fileName)) {
+	    previousFileName = fileName;
+	    fileName = fn;
             instance = new DepPathMap();
+	    instance.forceLoad();
+	} else if (instance == null) {
+            instance = new DepPathMap();
+	    instance.load();
         }
         return instance;
     }
 
     public String findRepr(String path) {
+	System.out.println("findRepr(" + path + ")");
+	if (null == pathReprMap) {
+	    System.err.println("pathReprMap is null!");
+	    return "";
+	}
+	if (!pathReprMap.containsKey(lemmatize(path))) {
+	    System.err.println("findRepr: no entry found for " + path);
+	    //   return "";
+	}
         return pathReprMap.get(lemmatize(path));
     }
 
@@ -93,6 +107,7 @@ public class DepPathMap {
     }
 
     public void persist() {
+	System.out.println("Saving reprs to file " + fileName);
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(fileName));
             for (String path : pathReprMap.keySet()) {
@@ -105,6 +120,7 @@ public class DepPathMap {
             pw.close();
         }
         catch (IOException e) {
+	    System.err.println("Unable to write file " + fileName);
             e.printStackTrace();
         }
     }
@@ -125,9 +141,7 @@ public class DepPathMap {
                 String path = parts[0];
                 String repr = parts[1];
                 String example = parts[2];
-//                if (repr.equals("PERSON sell DRUGS")) {
-//                    System.err.println(path + " <> " + repr);
-//                }
+		//		System.out.println("pathReprMap.put(" + path + ", " + repr + ")");
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
