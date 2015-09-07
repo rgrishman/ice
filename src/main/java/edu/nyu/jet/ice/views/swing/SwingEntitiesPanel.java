@@ -28,7 +28,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by yhe on 10/13/14.
+ * Panel that manages the entity/terminology extraction.
+ *
+ * Currently, the entity index functionality comes from EntitySetBuilder.makeSwingBox()
+ *
+ * @author yhe
  */
 public class SwingEntitiesPanel extends JPanel implements Refreshable {
     public final SwingIceStatusPanel statusPanel = new SwingIceStatusPanel();

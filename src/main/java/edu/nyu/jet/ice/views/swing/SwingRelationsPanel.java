@@ -27,7 +27,9 @@ import java.util.List;
 
 
 /**
- * Created by yhe on 4/14/14.
+ * Panel to bootstrap relation extractor
+ *
+ * @author yhe
  */
 public class SwingRelationsPanel extends JPanel implements Refreshable {
     JList relationList;

@@ -22,7 +22,9 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * Created by yhe on 10/13/14.
+ * Panel that extracts dependency paths from in the current corpus
+ *
+ * @author yhe
  */
 public class SwingPathsPanel extends JPanel implements Refreshable {
 

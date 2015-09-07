@@ -6,7 +6,6 @@ import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.IceUtils;
-import edu.nyu.jet.ice.views.CorpusPanel;
 import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
 import net.miginfocom.swing.MigLayout;
@@ -29,7 +28,7 @@ import java.util.TreeMap;
 /**
  * Nice is a (N)ew Ice GUI in Swing.
  */
-public class NiceBootstrapper implements IceController {
+public class NiceBootstrapper {
     public static JFrame mainFrame;
     public SwingCorpusPanel corpusPanel;
     public SwingEntitiesPanel entitiesPanel;
@@ -52,49 +51,8 @@ public class NiceBootstrapper implements IceController {
         corpusPanel.refresh();
     }
 
-    public void refreshCorpusPanel() {
-        java.util.List<String> names = new ArrayList<String>();
-        names.addAll(Ice.corpora.keySet());
-        String selectedCorpusName = Ice.selectedCorpusName;
-        corpusPanel.setCorporaList(names);
-        corpusPanel.setSelectedCorpus(selectedCorpusName);
-        java.util.List<String> backgroundNames = new ArrayList<String>();
-        for (String corpus : Ice.corpora.keySet()) {
-            if (corpus.equals(Ice.selectedCorpusName))
-                continue;
-            if (Ice.corpora.get(corpus).wordCountFileName == null)
-                continue;
-            if (Ice.corpora.get(corpus).relationTypeFileName == null)
-                continue;
-            backgroundNames.add(corpus);
-        }
-        String selectedBackground = "";
-        if (Ice.selectedCorpus != null && Ice.selectedCorpus.backgroundCorpus != null) {
-            selectedBackground = Ice.selectedCorpus.backgroundCorpus;
-        }
-        corpusPanel.setBackgroundList(backgroundNames);
-        corpusPanel.setSelectedBackground(selectedBackground);
-        String filter = "?";
-        String directory = "?";
-        if (Ice.selectedCorpus != null && Ice.selectedCorpus.filter != null) {
-            filter = Ice.selectedCorpus.filter;
-        }
-        corpusPanel.setFilter(filter);
-        if (Ice.selectedCorpus != null && Ice.selectedCorpus.directory != null) {
-            directory = Ice.selectedCorpus.directory;
-        }
-        corpusPanel.setDirectory(directory);
 
-        if (Ice.selectedCorpus != null) {
-            corpusPanel.printCorpusSize(Ice.selectedCorpus.getNumberOfDocs());
-        }
-        else {
-            corpusPanel.printCorpusSize(0);
-        }
-
-    }
-
-    public void setCorpusPanel(CorpusPanel corpusPanel) {
+    public void setCorpusPanel(SwingCorpusPanel corpusPanel) {
         this.corpusPanel = (SwingCorpusPanel)corpusPanel;
     }
 
@@ -249,8 +207,8 @@ public class NiceBootstrapper implements IceController {
         contentPane.removeAll();
         contentPane.setLayout(new MigLayout());
 
-        IceController niceController = new NiceBootstrapper();
-        NiceBootstrapper.instance = (NiceBootstrapper)niceController;
+        NiceBootstrapper niceController = new NiceBootstrapper();
+        NiceBootstrapper.instance = niceController;
         // SwingCorpusPanel swingCorpusPanel = new SwingCorpusPanel(niceController);
         // niceController.setCorpusPanel(swingCorpusPanel);
 //        SwingEntitiesPanel swingEntitiesPanel = null;

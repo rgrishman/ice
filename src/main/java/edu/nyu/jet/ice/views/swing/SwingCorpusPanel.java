@@ -1,11 +1,11 @@
 package edu.nyu.jet.ice.views.swing;
 
+import edu.nyu.jet.ice.controllers.Nice;
+import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
-import edu.nyu.jet.ice.controllers.IceController;
-import edu.nyu.jet.ice.views.CorpusPanel;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 
@@ -19,9 +19,11 @@ import java.util.ArrayList;
 
 
 /**
- * Created by yhe on 10/12/14.
+ * The Corpus panel that manages the basic information of the corpus
+ *
+ * @author yhe
  */
-public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refreshable {
+public class SwingCorpusPanel extends JComponent implements Refreshable {
     private JLabel corpusSelectionLabel = new JLabel("Corpus");
     private JComboBox corpusSelectionComboBox = new JComboBox();
     private JButton addButton = new JButton("Add...");
@@ -38,10 +40,10 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
     private JLabel statisticsLabel = new JLabel("Current corpus has 0 documents.");
     private JButton saveProgressButton = new JButton("Save progress");
     private JButton exportButton = new JButton("Export to Jet");
-    private IceController controller;
+    private Nice controller;
     private SwingIceStatusPanel iceStatusPanel;
 
-    public SwingCorpusPanel(IceController controller) {
+    public SwingCorpusPanel() {
         super();
         this.setLayout(new MigLayout());
         this.setOpaque(false);
@@ -115,7 +117,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                     }
                 }
                 if (corpusName != null) {
-                    SwingCorpusPanel.this.controller.addCorpus(corpusName);
+                    addCorpus(corpusName);
                 }
             }
         });
@@ -127,7 +129,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                         "Confirm",
                         JOptionPane.YES_NO_OPTION);
                 if (input == JOptionPane.YES_OPTION) {
-                    SwingCorpusPanel.this.controller.deleteCorpus(Ice.selectedCorpusName);
+                    deleteCorpus(Ice.selectedCorpusName);
                 }
             }
         });
@@ -137,7 +139,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 JComboBox comboBox = (JComboBox)actionEvent.getSource();
                 String selectedCorpus = (String)comboBox.getSelectedItem();
                 if (selectedCorpus != null) {
-                    SwingCorpusPanel.this.controller.selectCorpus(selectedCorpus);
+                    selectCorpus(selectedCorpus);
                 }
             }
         });
@@ -151,7 +153,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                     File file = fc.getSelectedFile();
                     String path = file.getPath();
                     directoryTextField.setText(path);
-                    SwingCorpusPanel.this.controller.selectDirectory(path);
+                    selectDirectory(path);
                 }
             }
         });
@@ -172,7 +174,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 if (n == 0) {
                     return;
                 }
-                SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
+                setFilter(filterTextField.getText());
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                         Ice.selectedCorpus.directory,
                         Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
@@ -201,7 +203,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 JComboBox comboBox = (JComboBox)actionEvent.getSource();
                 String selectedBackgroundCorpus = (String)comboBox.getSelectedItem();
                 if (selectedBackgroundCorpus != null) {
-                    SwingCorpusPanel.this.controller.selectBackgroundCorpus(selectedBackgroundCorpus);
+                    selectBackgroundCorpus(selectedBackgroundCorpus);
                 }
             }
         });
@@ -234,18 +236,17 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         corpusSelectionComboBox.setSelectedItem(name);
     }
 
-    public void addCorpus(String corpusName) {
-        corpusSelectionComboBox.addItem(corpusName);
-        corpusSelectionComboBox.setSelectedItem(corpusName);
-    }
+//    public void addCorpus(String corpusName) {
+//
+//    }
 
     public void setDirectory(String directory) {
         directoryTextField.setText(directory);
     }
 
-    public void setFilter(String type) {
-        filterTextField.setText(type);
-    }
+//    public void setFilter(String type) {
+//       filterTextField.setText(type);
+//    }
 
     public void setBackgroundList(java.util.List<String> names) {
         backgroundCorpusComboBox.removeAllItems();
@@ -256,6 +257,10 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
 //        if (oldSelection >=0 && oldSelection < backgroundCorpusComboBox.getItemCount()) {
 //            backgroundCorpusComboBox.setSelectedIndex(oldSelection);
 //        }
+    }
+
+    public void setUIFilterFromIce(String filterName) {
+        filterTextField.setText(filterName);
     }
 
     public void setSelectedBackground(String name) {
@@ -293,7 +298,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         if (Ice.selectedCorpus != null && Ice.selectedCorpus.filter != null) {
             filter = Ice.selectedCorpus.filter;
         }
-        setFilter(filter);
+        setUIFilterFromIce(filter);
         if (Ice.selectedCorpus != null && Ice.selectedCorpus.directory != null) {
             directory = Ice.selectedCorpus.directory;
         }
@@ -306,5 +311,45 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
             printCorpusSize(0);
         }
         iceStatusPanel.refresh();
+    }
+
+    public void addCorpus(String corpusName) {
+        Corpus newCorpus = new Corpus(corpusName);
+        Ice.corpora.put(corpusName, newCorpus);
+        corpusSelectionComboBox.addItem(corpusName);
+        corpusSelectionComboBox.setSelectedItem(corpusName);
+        Ice.selectCorpus(corpusName);
+        refresh();
+    }
+
+    public void deleteCorpus(String corpusName) {
+        Ice.corpora.remove(corpusName);
+        if (!Ice.corpora.isEmpty())
+            Ice.selectCorpus(Ice.corpora.firstKey());
+        refresh();
+    }
+
+    public void selectCorpus(String selectedCorpus) {
+        Ice.selectCorpus(selectedCorpus);
+        refresh();
+    }
+
+    public void selectDirectory(String directoryName) {
+        Ice.selectedCorpus.setDirectory(directoryName);
+        Ice.selectedCorpus.writeDocumentList();
+    }
+
+    public void setFilter(String filterName) {
+        Ice.selectedCorpus.setFilter(filterName);
+        Ice.selectedCorpus.writeDocumentList();
+        // need to update because corpus size may have changed
+        // filterTextField.setText(filterName);
+        refresh();
+    }
+
+    public void selectBackgroundCorpus(String backgroundCorpusName) {
+        if (backgroundCorpusName != null) {
+            Ice.selectedCorpus.backgroundCorpus = backgroundCorpusName;
+        }
     }
 }

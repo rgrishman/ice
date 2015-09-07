@@ -1,6 +1,5 @@
 package edu.nyu.jet.ice.views.swing;
 
-import edu.nyu.jet.ice.entityset.EmbeddingEntitySetExpander;
 import edu.nyu.jet.ice.entityset.EntitySetExpander;
 import edu.nyu.jet.ice.entityset.EntitySetRankThread;
 import edu.nyu.jet.ice.models.IceEntitySet;
@@ -26,7 +25,9 @@ import java.util.Timer;
 
 
 /**
- * Created by yhe on 4/14/14.
+ * Panel that manages entity set.
+ *
+ * @author yhe
  */
 public class SwingEntitySetPanel extends JPanel implements Refreshable {
     JList entitySetList;
