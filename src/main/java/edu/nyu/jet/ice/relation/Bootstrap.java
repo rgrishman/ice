@@ -162,6 +162,11 @@ public class Bootstrap {
         List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
         for (String sp : seedPaths) {
             List<AnchoredPath> posPaths = pathSet.getByPath(sp);
+			// TODO figure out why some paths are coming up empty
+			if (null == posPaths || posPaths.size() < 1) {
+				System.err.println("No paths found for seedPath " + sp);
+				continue;
+			}
             for (AnchoredPath p : posPaths) {
                 seedPathInstances.add(new BootstrapAnchoredPath(p,
                         BootstrapAnchoredPathType.POSITIVE));
