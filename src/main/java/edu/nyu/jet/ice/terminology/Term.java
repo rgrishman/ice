@@ -14,6 +14,7 @@ public class Term implements Comparable<Term>{
     private int negativeFreq;
     private double score;
     private int[] rawFreq;
+    private String type;
 
     public Term(String text, int positiveDocFreq, int positiveFreq, int negativeDocFreq, int negativeFreq) {
         this.text = text;
@@ -31,10 +32,19 @@ public class Term implements Comparable<Term>{
         this.text = text;
     }
 
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+
     public int getPositiveDocFreq() {
         return positiveDocFreq;
     }
-
 
     public int getPositiveFreq() {
         return positiveFreq;

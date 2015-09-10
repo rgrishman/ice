@@ -19,6 +19,8 @@ public class IceRelation {
 
     List<String> negPaths;
 
+    List<IcePath> icePaths;
+
 	// ---- property methods -----
 
 	public String getName() {return name;}
@@ -29,6 +31,14 @@ public class IceRelation {
 	public void setArg1type (String s) {arg1type = s;}
 	public String getArg2type() {return arg2type;}
 	public void setArg2type (String s) {arg2type = s;}
+
+    public List<IcePath> getIcePaths() {
+	return icePaths;
+    }
+
+    public void setIcePaths (List<IcePath> paths) {
+	icePaths = paths;
+    }
 
     public List<String> getNegPaths() {
         return negPaths;

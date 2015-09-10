@@ -15,6 +15,7 @@ import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.Ratio;
+import edu.nyu.jet.ice.utils.IceInfoStatus;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
@@ -49,6 +50,11 @@ public class Corpus {
     public TermFilter termFilter = new TermFilter();
     static public RelationFilter relationFilter = new RelationFilter();
     public EntitySetBuilder entitySetBuilder = new EntitySetBuilder();
+
+	private ArrayList<String> fileNames;
+	private IceInfoStatus countStatus;
+	private IceInfoStatus relationStatus;
+	private HashMap<String, Index> indices = new HashMap<String, Index>();
 
     // property methods
     public String getName() {
@@ -126,6 +132,46 @@ public class Corpus {
 	public void setRelationTypeFileName(String fileName) {
 		relationTypeFileName = fileName;
 	}
+
+    public IceInfoStatus getCountStatus() { return countStatus; }
+
+    public void setCountStatus(IceInfoStatus countStatus) {
+        this.countStatus = countStatus;
+    }
+
+    public IceInfoStatus getRelationStatus() { return relationStatus; }
+
+    public void setRelationStatus(IceInfoStatus relationStatus) {
+        this.relationStatus = relationStatus;
+    }
+
+    public ArrayList<String> getFileNames() { return fileNames; }
+
+    public void setFileNames(ArrayList<String> fileNames) {
+        this.fileNames = fileNames;
+    }
+
+    public HashMap<String, Index> getIndices() { return this.indices; }
+
+    public Index getIndex(String name) {
+        return this.indices.get(name);
+    }
+
+    public void setIndices (HashMap<String, Index> indices) {
+        this.indices = indices;
+    }
+
+    public void addIndices (HashMap<String, Index> indices) {
+        this.indices.putAll(indices);
+    }
+
+    public void addIndex (String name, Index index) {
+        this.indices.put(name, index);
+    }
+
+    public void removeIndex(String name) {
+        this.indices.remove(name);
+    }
 
     ProgressMonitorI wordProgressMonitor;
 
