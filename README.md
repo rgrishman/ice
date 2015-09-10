@@ -1,3 +1,5 @@
+# ATTENTION: THIS BRANCH IS RESEARCH ONLY AND CONTAINS GPL CODE (MAINLY edu.jhu.jacana and edu.stanford.core-nlp)
+
 # ATTENTION: This is a pre-release version of Ice. Use at your own risk.
 
 Licensed under the Apache 2.0 license.
