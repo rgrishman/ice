@@ -92,7 +92,7 @@
     <dependency>
         <groupId>edu.nyu.cs.proteus</groupId>
         <artifactId>Jet</artifactId>
-        <version>1.8.2-depfix-6</version>
+        <version>1.8.2-depfix-8</version>
     </dependency>
     <dependency>
         <groupId>commons-cli</groupId>

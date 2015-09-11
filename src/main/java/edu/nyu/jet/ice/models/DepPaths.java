@@ -330,6 +330,7 @@ public class DepPaths {
 
 			relations.addInverses();
 			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
+			IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
             IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
 			IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
             collectPaths(doc, relations, transformedRelations);
