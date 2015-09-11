@@ -71,9 +71,9 @@ public class DepPath {
         if (role.equals("infmod"))  {
             return "to";
         }
-        if (role.startsWith("prep_")) {
-            return role.substring(5);
-        }
+//        if (role.startsWith("prep_")) {
+//            return role.substring(5);
+//        }
         if (role.equals("conj")) {
             return "and";
         }
