@@ -295,6 +295,7 @@ public class DepPath {
                         candidate.type.startsWith("nsubj") ||
                         candidate.type.startsWith("iobj")) {
                     if (!visitedOffsets.contains(candidate.targetPosn)) {
+                        candidate.targetWord = "STH";
                         heap.add(candidate);
                         visitedOffsets.add(candidate.targetPosn);
                     }
