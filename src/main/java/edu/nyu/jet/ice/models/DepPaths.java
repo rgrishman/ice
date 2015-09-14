@@ -326,7 +326,7 @@ public class DepPaths {
 			SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
 					cacheDir, inputDir, inputFile
 			);
-			SyntacticRelationSet transformedRelations = transformer.transform(relations);
+			SyntacticRelationSet transformedRelations = transformer.transform(relations.deepCopy());
 
 			relations.addInverses();
 			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
@@ -437,7 +437,7 @@ public class DepPaths {
 //                    if (!sentences.inSameSentence(h1, h2)) continue;
                     // find and record dep path from head of m1 to head of m2
                     DepPath path = buildSyntacticPathOnSpans(h1, h2, relations, localHeadSpans);
-                    String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
+                    String pathText = buildPathStringOnSpans(h1, h2, transformedRelations, localHeadSpans);
                     if (path != null) {
                         path.setPath(pathText);
                     }

@@ -289,8 +289,8 @@ public class DepPath {
                                    TIntHashSet visitedOffsets) {
         if (posAt(r.targetPosn, doc).startsWith("V")) {
             SyntacticRelationSet candidates = relations.getRelationsFrom(r.targetPosn);
-            while (candidates.hasNext()) {
-                SyntacticRelation candidate = candidates.next();
+            for (SyntacticRelation candidate : candidates) {
+                //SyntacticRelation candidate = candidates.next();
                 if (candidate.type.startsWith("dobj") ||
                         candidate.type.startsWith("nsubj") ||
                         candidate.type.startsWith("iobj")) {
