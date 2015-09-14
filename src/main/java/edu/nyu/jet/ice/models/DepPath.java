@@ -291,13 +291,17 @@ public class DepPath {
             SyntacticRelationSet candidates = relations.getRelationsFrom(r.targetPosn);
             while (candidates.hasNext()) {
                 SyntacticRelation candidate = candidates.next();
-                if (!visitedOffsets.contains(candidate.targetPosn)) {
-                    heap.add(candidate);
-                    visitedOffsets.add(candidate.targetPosn);
-                }
+                if (candidate.type.startsWith("dobj") ||
+                        candidate.type.startsWith("nsubj") ||
+                        candidate.type.startsWith("iobj")) {
+                    if (!visitedOffsets.contains(candidate.targetPosn)) {
+                        heap.add(candidate);
+                        visitedOffsets.add(candidate.targetPosn);
+                    }
 //                if (posAt(candidate.targetPosn, doc).startsWith("V")) {
 //                    addVerbDependents(candidate, relations, doc, heap, visitedOffsets);
 //                }
+                }
             }
         }
 
