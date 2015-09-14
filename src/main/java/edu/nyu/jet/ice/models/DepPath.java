@@ -71,9 +71,9 @@ public class DepPath {
         if (role.equals("infmod"))  {
             return "to";
         }
-        if (role.startsWith("prep_")) {
-            return role.substring(5);
-        }
+//        if (role.startsWith("prep_")) {
+//            return role.substring(5);
+//        }
         if (role.equals("conj")) {
             return "and";
         }
@@ -169,6 +169,7 @@ public class DepPath {
                 relations.size(),
                 new RelationTargetPosnComparator()
         );
+        TIntHashSet visitedOffsets = new TIntHashSet();
 
         int count = 1;
         // Add a "start relation" so that the entity type of the first argument will
@@ -176,6 +177,7 @@ public class DepPath {
         SyntacticRelation startRel =
                 new SyntacticRelation(-1 , "", "", "NAMETAG", this.start, type1, "");
         nodes.add(startRel);
+        visitedOffsets.add(this.start);
         for (SyntacticRelation r : this.relations) {
             if (count == this.relations.size()) {
                 // Remove target word (the governed word) from the last dependency relation:
@@ -186,9 +188,11 @@ public class DepPath {
                         r.sourceWord, r.sourcePos, r.type, r.targetPosn,
                         "", r.targetPos);
                 nodes.add(fixedR);
+                visitedOffsets.add(r.targetPosn);
             }
             else {
                 nodes.add(r);
+                visitedOffsets.add(r.targetPosn);
             }
             // Determine if the relation is "inversed"
             // This mainly helps to decide that if we want to add a word to the linearized path,
@@ -208,10 +212,12 @@ public class DepPath {
             // (all labels will be added to the linearized path later)
             String lexicalContent = lexicalContent(nodeType);
             if (lexicalContent.length() > 0){
+                int offset = inversed ? r.targetPosn + 1 : r.sourcePosn + 1;
                 SyntacticRelation prepRel =
                         new SyntacticRelation(-1 , "", "", "NODETYPE",
-                                inversed ? r.targetPosn + 1 : r.sourcePosn + 1, lexicalContent, "");
+                                offset, lexicalContent, "");
                 nodes.add(prepRel);
+                visitedOffsets.add(offset);
             }
             count++;
         }
@@ -219,6 +225,17 @@ public class DepPath {
         SyntacticRelation endRel   =
                 new SyntacticRelation(-1 , "", "", "NAMETAG", this.end, type2, "");
         nodes.add(endRel);
+        visitedOffsets.add(this.end);
+
+        List<SyntacticRelation> currentNodes = new ArrayList<SyntacticRelation>();
+        currentNodes.addAll(nodes);
+        for (SyntacticRelation r : currentNodes) {
+            //System.err.println("[POS]\t" + r.targetWord + "/" + posAt(r.targetPosn, doc));
+            addVerbDependents(r, relations, doc, nodes, visitedOffsets);
+        }
+
+
+
         StringBuilder linearizedPath = new StringBuilder();
         String lastWord = "";
         // Add all target words from the heap to the linearized path. Note that
@@ -251,6 +268,44 @@ public class DepPath {
             }
         }
         return linearizedPath.toString().trim();
+    }
+
+    private String posAt(int pos, Document doc) {
+        List<Annotation> taggerAnns = doc.annotationsAt(pos, "tagger");
+        String tag = null;
+        if (taggerAnns != null && taggerAnns.size() > 0) {
+            tag = (String)taggerAnns.get(0).get("cat");
+        }
+        if (tag == null) {
+            tag = "?";
+        }
+        return tag;
+    }
+
+    private void addVerbDependents(SyntacticRelation r,
+                                   SyntacticRelationSet relations,
+                                   Document doc,
+                                   PriorityQueue<SyntacticRelation> heap,
+                                   TIntHashSet visitedOffsets) {
+        if (posAt(r.targetPosn, doc).startsWith("V")) {
+            SyntacticRelationSet candidates = relations.getRelationsFrom(r.targetPosn);
+            while (candidates.hasNext()) {
+                SyntacticRelation candidate = candidates.next();
+                if (candidate.type.startsWith("dobj") ||
+                        candidate.type.startsWith("nsubj") ||
+                        candidate.type.startsWith("iobj")) {
+                    if (!visitedOffsets.contains(candidate.targetPosn)) {
+                        candidate.targetWord = "STH";
+                        heap.add(candidate);
+                        visitedOffsets.add(candidate.targetPosn);
+                    }
+//                if (posAt(candidate.targetPosn, doc).startsWith("V")) {
+//                    addVerbDependents(candidate, relations, doc, heap, visitedOffsets);
+//                }
+                }
+            }
+        }
+
     }
 
     private String wordOnPath(SyntacticRelation node) {

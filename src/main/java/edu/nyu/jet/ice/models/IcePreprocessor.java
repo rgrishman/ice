@@ -171,7 +171,8 @@ public class IcePreprocessor extends Thread {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
             if (Ice.selectedCorpus != null) {
                 List<String> newFileNames = new ArrayList<String>();
-                String newDirName = selectedCorpusDir//FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+                String newDirName = //selectedCorpusDir
+                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
                         + File.separator + "sources";
                 File newDir = new File(newDirName);
                 newDir.mkdirs();
