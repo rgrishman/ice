@@ -213,6 +213,9 @@ public class DepPath {
             String lexicalContent = lexicalContent(nodeType);
             if (lexicalContent.length() > 0){
                 int offset = inversed ? r.targetPosn + 1 : r.sourcePosn + 1;
+                if (lexicalContent.equals("to")) {
+                    offset = inversed ? r.sourcePosn - 1 : r.targetPosn - 1;
+                }
                 SyntacticRelation prepRel =
                         new SyntacticRelation(-1 , "", "", "NODETYPE",
                                 offset, lexicalContent, "");

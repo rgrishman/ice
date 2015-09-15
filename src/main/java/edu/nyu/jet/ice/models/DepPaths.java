@@ -249,7 +249,8 @@ public class DepPaths {
 		relationInstanceCounts.clear();
 		sourceDict.clear();
         linearizationDict.clear();
-		DepTransformer transformer = new DepTransformer("trace");
+		DepTransformer transformer = new DepTransformer("transform");
+		transformer.setUsePrepositionTransformation(false);
 		if (args.length != 7 && args.length != 8) {
 			System.err.println ("DepCounter requires 7 arguments:");
 			System.err.println ("  propsFile docList inputDir inputSuffix outputFile");
@@ -333,7 +334,7 @@ public class DepPaths {
 			IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
             IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
 			IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
-            collectPaths(doc, relations, transformedRelations);
+            collectPaths(doc, transformedRelations, transformedRelations);
 			if (progressMonitor != null) {
 				progressMonitor.setProgress(docCount);
 				progressMonitor.setNote(docCount + " files processed");
