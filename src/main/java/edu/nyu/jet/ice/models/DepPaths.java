@@ -64,6 +64,12 @@ public class DepPaths {
 
     public static DepPathRegularizer depPathRegularizer = new DepPathRegularizer();
 
+	public static HashSet<String> disallowedRelations = new HashSet<String>();
+	static {
+		disallowedRelations.add("advcl");
+		disallowedRelations.add("rcmod");
+	}
+
 	public static void extractPathRelations(String inputFileList,
 											String outputFile,
 											String inputSuffix,
@@ -437,10 +443,10 @@ public class DepPaths {
 //                    if (!sentences.inSameSentence(h1, h2)) continue;
                     // find and record dep path from head of m1 to head of m2
                     DepPath path = buildSyntacticPathOnSpans(h1, h2, relations, localHeadSpans);
-                    String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
-                    if (path != null) {
-                        path.setPath(pathText);
-                    }
+//                    String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
+//                    if (path != null) {
+//                        path.setPath(pathText);
+//                    }
                     recordPath(doc, sentence, relations, localNames.get(i), path, localNames.get(j));
                 }
             }
@@ -532,6 +538,9 @@ public class DepPaths {
             logger.trace ("fromSet = " + fromSet);
             for (int ifrom = 0; ifrom < fromSet.size(); ifrom++) {
                 SyntacticRelation r = fromSet.get(ifrom);
+				if (disallowedRelations.contains(r.type)) {
+					continue;
+				}
                 Integer to = new Integer(r.targetPosn);
                 // avoid loops
                 if (path.get(to) != null) continue;
@@ -548,7 +557,7 @@ public class DepPaths {
                     // return (path.get(from) + ":" + r.type).substring(1);
                 } else {
                     // 'to' is another node
-                    path.put(to, path.get(from).extend(r));
+					path.put(to, path.get(from).extend(r));
                     // path.put(to, path.get(from) + ":" + r.type + ":" + r.targetWord);
                 }
                 todo.add(to);
