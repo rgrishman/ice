@@ -68,6 +68,8 @@ public class DepPaths {
 	static {
 		disallowedRelations.add("advcl");
 		disallowedRelations.add("rcmod");
+		disallowedRelations.add("advcl-1");
+		disallowedRelations.add("rcmod-1");
 	}
 
 	public static void extractPathRelations(String inputFileList,
@@ -255,7 +257,8 @@ public class DepPaths {
 		relationInstanceCounts.clear();
 		sourceDict.clear();
         linearizationDict.clear();
-		DepTransformer transformer = new DepTransformer("trace");
+		DepTransformer transformer = new DepTransformer("dep");
+		transformer.setUsePrepositionTransformation(false);
 		if (args.length != 7 && args.length != 8) {
 			System.err.println ("DepCounter requires 7 arguments:");
 			System.err.println ("  propsFile docList inputDir inputSuffix outputFile");
