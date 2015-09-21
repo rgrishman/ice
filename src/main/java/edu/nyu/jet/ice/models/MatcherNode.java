@@ -1,7 +1,7 @@
 package edu.nyu.jet.ice.models;
 
 /**
- * Describe the code here
+ * A matcher node is a node on the dependency tree. It contains a dependency label and a word governed by the label.
  *
  * @author yhe
  * @version 1.0

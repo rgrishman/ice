@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Describe the code here
+ * MatcherPath is a dependency path to be matched by the PathMatcher. It is an ordered list of MatcherNodes.
  *
  * @author yhe
  * @version 1.0

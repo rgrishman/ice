@@ -81,7 +81,7 @@ public class IcePreprocessor extends Thread {
      * @param  propsFile     Jet properties file
      * @param  docList       file containing list of documents to be processed, 1 per line
      * @param  inputSuffix   file extension to be added to document name to obtain name of input file
-     * @param  cacheDir
+     * @param  cacheDir      cache directory for the given corpus
      */
     public IcePreprocessor(String inputDir, String propsFile, String docList, String inputSuffix, String cacheDir) {
         this.inputDir = inputDir;
@@ -100,8 +100,7 @@ public class IcePreprocessor extends Thread {
      * docList       file containing list of documents to be processed, 1 per line
      * inputDir      directory containing files to be processed
      * inputSuffix   file extension to be added to document name to obtain name of input file
-     * outputFile    file to contain counts of dependency relations
-     * typeOutputFile    file to contain counts of dependency relations
+     * cacheDir      cache directory of the given corpus (can usu. be obtained by FileNameSchema.getPreprocessCacheDir())
      */
 
     public static void main(String[] args) throws IOException {

@@ -8,7 +8,9 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Created by yhe on 3/6/14.
+ * DepPathMap maintains a map between depPaths and linearizations. It originally computes linearizations
+ * for each path and saves it. Linearization is currently handled by the DepPath class, so DepPathMap only
+ * handles serialization/deserialization of the map.
  */
 public class DepPathMap {
     private static DepPathMap instance = null;
@@ -18,12 +20,6 @@ public class DepPathMap {
     private TreeMap<String, String> pathExampleMap = new TreeMap<String, String>();
     private DepPathMap() { }
     private String previousFileName = null;
-
-    public enum AddStatus {
-        SUCCESSFUL,
-        EXIST,
-        ILLEGAL
-    }
 
     private Set<String> leftRelations = new HashSet<String>();
     {
@@ -177,35 +173,6 @@ public class DepPathMap {
         return true;
     }
 
-    public Set<String> reprs() {
-        return reprPathMap.keySet();
-    }
-
-//    public AddStatus addPath(String typedPath, String example) {
-//        // Assuming path has form "TYPE -- path -- TYPE"
-////        String[] parts = typedPath.split(" -- ");
-////        if (parts.length != 3) {
-////            return AddStatus.ILLEGAL;
-////        }
-////        String path = parts[0] + ":" + AnchoredPath.lemmatizePath(parts[1]) + ":" + parts[2];
-//        //String repr = linearize(path.replaceAll(" -- ", ":"));
-//        String path = lemmatize(typedPath);
-//        if (path ==  null) {
-//            return AddStatus.ILLEGAL;
-//        }
-//        String repr = linearize(path.replaceAll(" -- ", ":"));
-//        if (repr.equals("")) return AddStatus.ILLEGAL;
-//        String normalizedRepr = normalizeRepr(repr);
-//        // if (reprPathMap.containsKey(normalizedRepr)) return AddStatus.EXIST;
-//        if (!reprPathMap.containsKey(normalizedRepr)) {
-//            reprPathMap.put(normalizedRepr, new ArrayList<String>());
-//        }
-//        pathReprMap.put(path, repr);
-//        reprPathMap.get(normalizedRepr).add(path);
-//        pathExampleMap.put(path, example);
-//        return AddStatus.SUCCESSFUL;
-//    }
-
     private String lemmatize(String path) {
         String[] parts = path.split(" -- ");
         if (parts.length != 3) {
@@ -223,132 +190,6 @@ public class DepPathMap {
         return repr.toLowerCase().replaceAll("\\s+", " ").trim();
     }
 
-//    public String linearize (String path) {
-//        String[] pathArray = path.split(":");
-//        LinkedList ll = new LinkedList(Arrays.asList(pathArray));
-//        return linearize (ll);
-//    }
 
-    /**
-     *  generate an English expression corresponding to the path 'path'
-     *  in a dependency tree.
-     */
-
-//    String linearize (LinkedList<String> path) {
-//        // if path has been reduced to a single string, we are done
-//        if (path.size() == 1)
-//            return path.get(0);
-//	if (path.size() == 2) {
-//            System.err.println ("*** path of length 2: " +
-//		path.get(0) + ":" + path.get(1));
-//            return "";
-//	}
-//        // if first dep relation in path is an inverse relation
-//        // collapse it into a string, with dependent to left or
-//        // right of head, depending on relation
-//        if (isInverse(path.get(1))) {
-//            String dep  = path.removeFirst();
-//            String role = abs(path.removeFirst());
-//            String head = path.removeFirst();
-//            String result;
-//            if (leftChild(role)) {
-//                result = dep + lexicalContent(role, dep, head) + head;
-//            } else {
-//                result = head + lexicalContent(role, head, dep) + dep;
-//            }
-//            path.addFirst(result);
-//            return linearize (path);
-//        }
-//        // if last dep relation in path is not an inverse relation
-//        // collapse it into a string
-//        if (!isInverse(path.get(path.size()-2))) {
-//            String dep  = path.removeLast();
-//            String role = path.removeLast();
-//            String head = path.removeLast();
-//            String result;
-//            if (leftChild(role)) {
-//                result = dep + lexicalContent(role, dep, head) + head;
-//            } else {
-//                result = head + lexicalContent(role, head, dep) + dep;
-//            }
-//            path.addLast(result);
-//            return linearize (path);
-//        }
-//        // stuck ... some non-inverse relation precedes an
-//        // inverse relatiom
-//        System.err.print ("*** unexected path: " + path.get(0));
-//	    for (int i = 1; i < path.size(); i++)
-//		System.err.print (":" + path.get(i));
-//	    System.err.println ();
-//        return "";
-//    }
-
-    static boolean isInverse (String x) {
-        return x.endsWith("-1");
-    }
-
-    /**
-     *  if passed the name of an inverse relation, return the
-     *  corresponding non-inverse relation, otherwise return the
-     *  original relation name.
-     */
-
-    String abs(String x) {
-        if (x.endsWith("-1"))
-            return x.substring(0, x.length()-2);
-        else
-            return x;
-    }
-
-    /**
-     *  return true if child should precede parent if connected
-     *  by dep relation 'role'
-     */
-
-    boolean leftChild (String role) {
-        return leftRelations.contains(role);
-    }
-
-    /**
-     *   some reduced dep relations, such as 'prep_of', have
-     *  lexical content;  return that content
-     */
-
-    static String lexicalContent (String role, String left, String right) {
-        if (role.startsWith("prep_"))
-            return " " + role.substring(5) + " ";
-        if (role.equals("appos"))
-            return " , ";
-        if (role.startsWith("poss"))
-            return " 's ";
-        if (role.equals("conj") &&
-                !(left.equals("and") || left.endsWith(" and") || left.equals("or") || left.endsWith(" or")) &&
-                !(right.equals("and") || right.startsWith("and ") || right.equals("or") || right.endsWith(" or"))) {
-            return " and ";
-        }
-        return " ";
-    }
-
-    public static void main (String[] args) {
-//        DepPathMap depPathMap = new DepPathMap();
-//        System.out.println(depPathMap.linearize("PERSON:prep_of:ORGANIZATION"));
-//        System.out.println(depPathMap.linearize("GPE:amod-1:protesters:nsubj-1:demonstrate:prep_outside:FACILITY"));
-//        System.out.println(depPathMap.linearize("PERSON:nsubj-1:eats:dobj:FOOD"));
-//        System.out.println(depPathMap.linearize("GPE:amod-1:hit:prep_in-1:site:appos:LOCATION"));
-//        System.out.println(depPathMap.linearize("GPE:amod-1:head:infmod:visit:dobj:GPE"));
-    }
-
-//    private String stemIfNecessary(String s) {
-//        if (allUpper(s)) return s;
-//        if (s.trim().contains(" ")) return s;
-//        return stemmer.getStem(s, "NULL");
-//    }
-
-    private boolean allUpper(String s) {
-        for (char c : s.toCharArray()) {
-            if (!Character.isUpperCase(c)) return false;
-        }
-        return true;
-    }
 
 }

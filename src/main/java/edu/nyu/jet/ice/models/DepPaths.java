@@ -250,6 +250,8 @@ public class DepPaths {
      *    inputSuffix   file extension to be added to document name to obtain name of input file
      *    outputFile    file to contain counts of dependency relations
      *    typeOutputFile    file to contain counts of dependency relations
+	 *    sourceDictFile file to save source sentences for given dependency paths
+	 *    cacheDir (optional) cache of preprocessed files
      */
 
     public static void main (String[] args) throws IOException {
