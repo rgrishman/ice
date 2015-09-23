@@ -70,6 +70,8 @@ public class DepPaths {
 		disallowedRelations.add("rcmod");
 		disallowedRelations.add("advcl-1");
 		disallowedRelations.add("rcmod-1");
+		disallowedRelations.add("mod");
+		disallowedRelations.add("mod-1");
 	}
 
 	public static void extractPathRelations(String inputFileList,
