@@ -40,9 +40,10 @@ import java.util.*;
 
 public class DepPaths {
 
-    final static Logger logger = LoggerFactory.getLogger(DepPaths.class);
+	final static Logger logger = LoggerFactory.getLogger(DepPaths.class);
+	public static final int MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH = 600;
 
-    static Stemmer stemmer = new Stemmer().getDefaultStemmer();
+	static Stemmer stemmer = new Stemmer().getDefaultStemmer();
 
     static Map<String, Integer> relationTypeCounts = new TreeMap<String, Integer>();
     static Map<String, Integer> relationInstanceCounts = new TreeMap<String, Integer>();
@@ -72,6 +73,8 @@ public class DepPaths {
 		disallowedRelations.add("rcmod-1");
 		disallowedRelations.add("mod");
 		disallowedRelations.add("mod-1");
+		disallowedRelations.add("conj");
+		disallowedRelations.add("conj-1");
 	}
 
 	public static void extractPathRelations(String inputFileList,
@@ -411,6 +414,20 @@ public class DepPaths {
         int sentCount = 0;
         for (Annotation sentence : jetSentences) {
             sentCount++;
+
+			// first, block "bad sentences": 1) first sentence, 2) very long sentence
+			// (> MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH characters);
+			// 3) sentence with quotes, and 4) sentence with parenthesis
+
+			if (sentCount == 1) continue;
+			if (sentence.end() - sentence.start() > MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH) continue;
+			String sentText = doc.text(sentence);
+			if (sentText.contains("(") || sentText.contains(")") || sentText.contains("[") || sentText.contains("]") ||
+					sentText.contains("{") || sentText.contains("}") || sentText.contains("\"") ||
+					sentText.contains("'")) {
+				continue;
+			}
+
 
             List<Annotation> localNames = new ArrayList<Annotation>();
 			List<Span> localHeadSpans   = new ArrayList<Span>();
