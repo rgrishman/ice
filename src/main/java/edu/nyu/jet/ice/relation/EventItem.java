@@ -3,7 +3,10 @@ package edu.nyu.jet.ice.relation;
 import java.util.*;
 
 /**
- * Describe the code here
+ * EventItem is a wrapper around the OpenNLP Event class (feature+label for a training instance), to simplify training
+ * of supervised relation extraction models
+ *
+ * Not used in ICE GUI/CLI.
  *
  * @author yhe
  * @version 1.0

@@ -11,7 +11,9 @@ import opennlp.model.Event;
 import java.util.List;
 
 /**
- * Created by yhe on 9/1/14.
+ * Interface for a feature extractor for relation classifiers.
+ *
+ * Used for supervised/simulated active learning; not used by ICE GUI/CLI.
  */
 public interface RelationFeatureExtractor {
     public Event extractFeatures(AceEntityMention m1,

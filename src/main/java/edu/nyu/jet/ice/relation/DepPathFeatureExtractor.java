@@ -12,7 +12,9 @@ import opennlp.model.Event;
 import java.util.List;
 
 /**
- * Created by yhe on 9/1/14.
+ * A Feature extractor using dependency path features for supervised/simulated active learning relation extraction.
+ *
+ * This class is not used by ICE GUI/CLI.
  */
 public class DepPathFeatureExtractor implements RelationFeatureExtractor {
     public Event extractFeatures(AceEntityMention m1,

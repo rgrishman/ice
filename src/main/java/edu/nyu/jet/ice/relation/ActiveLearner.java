@@ -13,7 +13,9 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Feature based active learner.
+ * A feature based active learner intended to run simulated experiments.
+ *
+ * It is not used in current Ice GUI or CLI.
  *
  * @author yhe
  * @version 1.0

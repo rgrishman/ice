@@ -20,7 +20,9 @@ import java.util.*;
  * New dependency paths are extracted using 1) identical arguments and 2) lexical similarity
  * between dependency path using PathMatcher
  *
- * @see edu.nyu.jet.ice.models.PathMatcher PathMatcher)
+ * Not used by default by ICE GUI/CLI. Can be turned on optionally in the config file.
+ *
+ * @see edu.nyu.jet.ice.models.PathMatcher PathMatcher
  */
 
 public class LexicalSimilarityBootstrap extends Bootstrap {

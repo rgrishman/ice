@@ -19,8 +19,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * a simple bootstrapping learner for relations.
- * Assumes a relation is defined by a set of dependency paths.
+ * An experimental boostrapper, using phrase embeddings of relation arguments.
+ *
+ * It is not currently used by default by the current ICE GUI/CLI, but can be turned on in config files
+ *
+ * @author yhe
  */
 
 public class ArgEmbeddingBootstrap extends Bootstrap {

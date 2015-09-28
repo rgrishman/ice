@@ -160,9 +160,11 @@ public class Bootstrap {
     }
 
     private void bootstrap(String arg1Type, String arg2Type) {
+        // DEBUG = Show various distance scores (used to select instances) in tooltip
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
             DEBUG = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.debug"));
         }
+        // DIVERSIFY = Disallow similar paths in top 20
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.diversify") != null) {
             DIVERSIFY = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.diversify"));
         }
@@ -181,6 +183,7 @@ public class Bootstrap {
                         sp,
                         BootstrapAnchoredPathType.POSITIVE));
             }
+            // should we bootstrap negative paths?
             if (USE_NEGATIVE) {
                 for (String rp : rejects) {
                     double sim = pathMatcher.matchPaths(arg1Type + "--" + sp + "--" + arg2Type,
@@ -250,8 +253,7 @@ public class Bootstrap {
         // -- sharedCount = number of distinct argument pairs it shares
         // -- totalCount = total number of distinct arg pairs it appears with
         Map<String, Integer> sharedCount = new HashMap<String, Integer>();
-        // Map<String, Integer> totalCount = new HashMap<String, Integer>();
-        // Map<String, Integer> score = new HashMap<String, Integer>();
+
         List<IcePath> scoreList = new ArrayList<IcePath>();
         for (String p : shared.keySet()) {
             sharedCount.put(p, shared.get(p).size());
@@ -260,35 +262,27 @@ public class Bootstrap {
             for (AnchoredPath ap : pathSet.getByPath(p)) {
                 argPairsForP.add(ap.arg1 + ":" + ap.arg2);
             }
-            // totalCount.put(p, argPairsForP.size());
-//            score.put(p, 100 * sharedCount.get(p) / argPairsForP.size()
-//                    / (1 + p.split(":").length));
-            // score.put(p, (100 * sharedCount.get(p) - 90) / totalCount.get(p));
+            //  arguments are similar to existing paths
             double argScore = 1 - (double)sharedCount.get(p)/argPairsForP.size();
+            // how close the path is to positive seeds accoring to edit distance
             double posScore = minDistanceToSet(p, seedPaths);
+            // how close the path is to negative seeds
             double negScore = minDistanceToSet(p, rejects);
             int    patternLength = 1 + p.split(":").length;
+            // if the path is equally close to positive and negative paths
             double nearestNeighborConfusion     = 1 - Math.abs(posScore - negScore);
-            // double borderConfusion = 1 - Math.abs(posScore - PathRelationExtractor.minThreshold);
-            // double borderConfusion = posScore - PathRelationExtractor.minThreshold;
+
             double argConfusion    = Math.abs(argScore - posScore);
-            //if (borderConfusion > 0) {
-            //    borderConfusion = 1 - posScore + PathRelationExtractor.minThreshold / (1 - PathRelationExtractor.minThreshold);
-            //}
-            //else if (borderConfusion < 0) {
-            //    borderConfusion = posScore / PathRelationExtractor.minThreshold;
-            //}
+
             double borderConfusion = 0;
+
+            // In any case, candidate paths are ranked by the confusionScore they are assigned
+            // confusion score can be an arbitrary combination of the scores above.
             double confusionScore  = Math.max(Math.max(nearestNeighborConfusion, borderConfusion), argConfusion);
             if (!USE_NEGATIVE) {
-                // confusionScore = argConfusion;
                 confusionScore = 1/posScore;
             }
-//            System.err.println("[Bootstrap score]\t" + p + "\t" + (int)Math.round(confusionScore * 100) +
-//                    "\tnnConfusion:" + nearestNeighborConfusion +
-//                    "\tborderConfusion:" + borderConfusion +
-//                    "\targConfusion:" + argConfusion);
-            // score.put(p, (int) Math.round(confusionScore * 100));
+
             String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
             String pRepr = depPathMap.findRepr(fullp);
             if (pRepr == null) {
@@ -350,19 +344,6 @@ public class Bootstrap {
                 }
             }
         }
-
-        // print paths, best path last
-//        for (int scr = 10000; scr >= 5; scr--) {
-//            for (String p : score.keySet()) {
-//                if (score.get(p) == scr) {
-//                    String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
-//                    String pRepr = depPathMap.findRepr(fullp);
-//                    if (pRepr == null) continue;
-//                    foundPatterns.add(new IcePath(p, pRepr, depPathMap.findExample(fullp), scr));
-//                }
-//            }
-//        }
-
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
         }

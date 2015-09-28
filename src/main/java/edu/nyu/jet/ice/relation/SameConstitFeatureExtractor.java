@@ -12,7 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by yhe on 9/1/14.
+ * A Feature extractor that checks if both arguments belong to the same syntactic constituent for supervised/simulated
+ * active learning relation extraction.
+ *
+ * This class is not used by ICE GUI/CLI.
+ *
+ * @author yhe
  */
 public class SameConstitFeatureExtractor implements RelationFeatureExtractor {
     public Event extractFeatures(AceEntityMention m1,
