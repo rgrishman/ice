@@ -261,7 +261,7 @@ public class DepPaths {
 		relationInstanceCounts.clear();
 		sourceDict.clear();
         linearizationDict.clear();
-		DepTransformer transformer = new DepTransformer("dep");
+		DepTransformer transformer = new DepTransformer("trace");
 		transformer.setUsePrepositionTransformation(false);
 		if (args.length != 7 && args.length != 8) {
 			System.err.println ("DepCounter requires 7 arguments:");
@@ -339,9 +339,15 @@ public class DepPaths {
 			SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
 					cacheDir, inputDir, inputFile
 			);
-			SyntacticRelationSet transformedRelations = transformer.transform(relations);
+			SyntacticRelationSet transformedRelations = transformer.transform(
+					relations.deepCopy(), doc.fullSpan());
+			relations = transformedRelations;
 
+			System.err.println("RELATIONS BEFORE ADDING INVERSE:");
+			System.err.println(relations);
 			relations.addInverses();
+			System.err.println("RELATIONS AFTER ADDING INVERSE");
+			System.err.println(relations);
 			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
 			IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
             IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
@@ -391,26 +397,6 @@ public class DepPaths {
 		return "o";
 	}
 	
-	static String normalizeWord(String word,String pos){
-		String np=word.replaceAll("[ \t]+", "_");
-		String ret = "";
-		String[] tmp;
-		tmp = np.split("_ \t");
-		
-		if(tmp.length==0)
-			return "";
-		
-		if(tmp.length == 1)
-			ret = stemmer.getStem(tmp[0].toLowerCase(), pos.toLowerCase());
-		else {
-			for(int i=0; i<tmp.length-1; i++) {
-				ret += stemmer.getStem(tmp[i].toLowerCase(), pos.toLowerCase()) + "_";
-			}
-			ret += stemmer.getStem(tmp[tmp.length-1].toLowerCase(), pos.toLowerCase());
-		}
-		//System.out.println("[stemmer] " + ret);
-		return ret;
-	}
 
     static void collectPaths (Document doc,
 							  SyntacticRelationSet relations,
@@ -558,6 +544,9 @@ public class DepPaths {
                 }
                 logger.trace ("to = " + to);
                 // if 'to' is target
+				if (r.type.equals("-1")) {
+					System.err.println("WARNING: Label error!");
+				}
                 if (to.intValue() == toPosn) {
                     logger.trace ("TO is an argument");
                     return path.get(from).extend(r);

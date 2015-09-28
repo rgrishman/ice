@@ -42,6 +42,7 @@ import java.util.*;
  *  <li> aggregate term counts over the corpus </li>
  *  <li> dependency paths over the corpus </li>
  *  </ul>
+ *  All this information is stored as files within the cache directory.
  */
 
 public class IcePreprocessor extends Thread {
@@ -92,10 +93,9 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     * counts the number of instances of each dependency triple in a set
-     * of files.  Invoked by <br>
-     * DepCounter  propsFile docList inputDir inputSuffix outputFile
-     * <p/>
+     * command-line version of IcePreprocessor, invoked by <br>
+     * IcePreprocessor  propsFile docList inputDir inputSuffix outputFile
+     * <br>
      * propsFile     Jet properties file
      * docList       file containing list of documents to be processed, 1 per line
      * inputDir      directory containing files to be processed
@@ -130,6 +130,7 @@ public class IcePreprocessor extends Thread {
      *  preprocess all the files in a corpus.
      */
     private void processFiles(String selectedCorpusDir, String selectedCorpusName) {
+
         System.out.println("Starting Jet Preprocessor ...");
         if (progressMonitor != null) {
             progressMonitor.setProgress(1);
@@ -139,16 +140,13 @@ public class IcePreprocessor extends Thread {
         File cacheDirFile = new File(cacheDir);
         cacheDirFile.mkdirs();
 
-        //String cacheRepository = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
         // initialize Jet
-
         JetTest.initializeFromConfig(propsFile);
 
         try {
             FileUtils.copyFile(new File(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
                     new File(cacheDir + File.separator + "apf.v5.1.1.dtd"));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return;
         }
@@ -169,6 +167,11 @@ public class IcePreprocessor extends Thread {
         try {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
             if (Ice.selectedCorpus != null) {
+		//
+		// ***** make separate method *****
+		//
+		// copy source files into "sources" directory
+		//
                 List<String> newFileNames = new ArrayList<String>();
                 String newDirName = //selectedCorpusDir
                         FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
@@ -206,6 +209,9 @@ public class IcePreprocessor extends Thread {
                 }
                 this.inputDir = newDirName; //Ice.selectedCorpus.directory;
                 docListReader = new BufferedReader(new FileReader(docList));
+		// 
+		// *****
+		//
 
             }
             boolean isCanceled = false;
@@ -218,13 +224,6 @@ public class IcePreprocessor extends Thread {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
-//                String newInputFile = inputFile.replaceAll(File.separator, "_");
-//                String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
-//                PrintWriter newFileWriter =
-//                        new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
-//                newFileWriter.print(content);
-//                newFileWriter.close();
-//                newFileNames.add(newInputFile);
                 System.out.println("\nProcessing document " + docCount + ": " + inputFile);
                 ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
                 doc.setAllTags(true);
@@ -251,7 +250,6 @@ public class IcePreprocessor extends Thread {
                         new BufferedWriter(
                                 new FileWriter(cacheFileName(cacheDir, inputDir, inputFile) + ".ace"))), doc);
                 // ---------------
-                // invoke parser on 'doc' and accumulate counts
                 SyntacticRelationSet relations = null;
                 try {
                     saveENAMEX(doc, cacheFileName(cacheDir, inputDir, inputFile) + ".names");
@@ -398,32 +396,6 @@ public class IcePreprocessor extends Thread {
 
     public static Annotation findTermHead(Document doc, Annotation term, SyntacticRelationSet relations) {
         return findTermHead(doc, term.span(), relations);
-//        List<Annotation> tokens = doc.annotationsOfType("token", term.span());
-//        if (tokens == null || tokens.size() == 0) {
-//            return null;
-//        }
-//        int chosen = -1;
-//        for (int i = tokens.size() - 1; i > -1; i--) {
-//            List<Annotation> posAnn = doc.annotationsOfType("tagger", tokens.get(i).span());
-//            if (posAnn != null && posAnn.size() > 0 && posAnn.get(0).get("cat") != null &&
-//                    ((String)posAnn.get(0).get("cat")).startsWith("NN")) {
-//                SyntacticRelation sourceRelation = relations.getRelationTo(tokens.get(i).start());
-//                if (sourceRelation == null ||
-//                        sourceRelation.type.endsWith("-1") ||
-//                                sourceRelation.sourcePosn < term.start() &&
-//                                sourceRelation.sourcePosn > term.end()) {
-//                    chosen = i;
-//                    break;
-//                }
-//            }
-//        }
-//        if (chosen < 0) {
-//            chosen = tokens.size() - 1;
-//        }
-//        // Debug only
-//        // System.err.println(doc.text(term) + "=> " + doc.text(tokens.get(chosen)));
-
-        //return tokens.get(chosen);
     }
 
     public static Annotation findTermHead(Document doc, Span term, SyntacticRelationSet relations) {
@@ -455,8 +427,6 @@ public class IcePreprocessor extends Thread {
         if (chosen < 0) {
             chosen = tokens.size() - 1;
         }
-        // Debug only
-        // System.err.println(doc.text(term) + "=> " + doc.text(tokens.get(chosen)));
 
         return tokens.get(chosen);
     }
