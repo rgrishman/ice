@@ -32,17 +32,17 @@ import java.io.*;
 import java.util.*;
 
 /**
- *  computes and saves a variety of NLP features of a corpus.
- *  Invoked whenever a new corpus is added to ICE. Saves <ul>
- *  <li> ENAMEX tags for each document </li>
- *  <li> POS tags for each document </li>
- *  <li> the extent of each entity mention in a document </li>
- *  <li> the count of each possible term in each document </li>
- *  <li> dependency parse of each document </li>
- *  <li> aggregate term counts over the corpus </li>
- *  <li> dependency paths over the corpus </li>
- *  </ul>
- *  All this information is stored as files within the cache directory.
+ * computes and saves a variety of NLP features of a corpus.
+ * Invoked whenever a new corpus is added to ICE. Saves <ul>
+ * <li> ENAMEX tags for each document </li>
+ * <li> POS tags for each document </li>
+ * <li> the extent of each entity mention in a document </li>
+ * <li> the count of each possible term in each document </li>
+ * <li> dependency parse of each document </li>
+ * <li> aggregate term counts over the corpus </li>
+ * <li> dependency paths over the corpus </li>
+ * </ul>
+ * All this information is stored as files within the cache directory.
  */
 
 public class IcePreprocessor extends Thread {
@@ -50,6 +50,7 @@ public class IcePreprocessor extends Thread {
     static Stemmer stemmer = new Stemmer().getDefaultStemmer();
 
     static HashMap<String, String> aceTypeMap = new HashMap<String, String>();
+
     {
         aceTypeMap.put("PER", "PERSON");
         aceTypeMap.put("ORG", "ORGANIZATION");
@@ -78,11 +79,11 @@ public class IcePreprocessor extends Thread {
     /**
      * creates an IcePreprocessor.
      *
-     * @param  inputDir      directory containing files to be processed
-     * @param  propsFile     Jet properties file
-     * @param  docList       file containing list of documents to be processed, 1 per line
-     * @param  inputSuffix   file extension to be added to document name to obtain name of input file
-     * @param  cacheDir      cache directory for the given corpus
+     * @param inputDir    directory containing files to be processed
+     * @param propsFile   Jet properties file
+     * @param docList     file containing list of documents to be processed, 1 per line
+     * @param inputSuffix file extension to be added to document name to obtain name of input file
+     * @param cacheDir    cache directory for the given corpus
      */
     public IcePreprocessor(String inputDir, String propsFile, String docList, String inputSuffix, String cacheDir) {
         this.inputDir = inputDir;
@@ -118,7 +119,7 @@ public class IcePreprocessor extends Thread {
 
         IcePreprocessor icePreprocessor = new IcePreprocessor(inputDir,
                 propsFile, docList, inputSuffix, cacheDir);
-        String selectedCorpusDir = Ice.selectedCorpusName == null?
+        String selectedCorpusDir = Ice.selectedCorpusName == null ?
                 "cache" + File.separator + docList.split(File.separator)[0].split("\\.")[0] :
                 FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName);
         icePreprocessor.processFiles(selectedCorpusDir,
@@ -127,7 +128,7 @@ public class IcePreprocessor extends Thread {
 
 
     /**
-     *  preprocess all the files in a corpus.
+     * preprocess all the files in a corpus.
      */
     private void processFiles(String selectedCorpusDir, String selectedCorpusName) {
 
@@ -166,92 +167,90 @@ public class IcePreprocessor extends Thread {
         }
         try {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
-            if (Ice.selectedCorpus != null) {
-		//
-		// ***** make separate method *****
-		//
-		// copy source files into "sources" directory
-		//
-                List<String> newFileNames = new ArrayList<String>();
-                String newDirName = //selectedCorpusDir
-                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
-                        + File.separator + "sources";
-                File newDir = new File(newDirName);
-                newDir.mkdirs();
-                while ((docName = docListReader.readLine()) != null) {
+//            if (Ice.selectedCorpus != null) {
+            //
+            // ***** make separate method *****
+            //
+            // copy source files into "sources" directory
+            //
+//                List<String> newFileNames = new ArrayList<String>();
+//                String newDirName = //selectedCorpusDir
+//                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+//                        + File.separator + "sources";
+//                File newDir = new File(newDirName);
+//                newDir.mkdirs();
+//                while ((docName = docListReader.readLine()) != null) {
+//                    String inputFile;
+//                    if ("*".equals(inputSuffix.trim())) {
+//                        inputFile = docName;
+//                    } else {
+//                        inputFile = docName + "." + inputSuffix;
+//                    }
+//                    String from = File.separator;
+//                    if (from.equals("\\")) {
+//                        from = "\\\\";
+//                    }
+//                    String newInputFile = inputFile.replaceAll(from, "_");
+//                    String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+//                    if (!inputSuffix.equals(".sgm")) {
+//                        content = content.replaceAll(">", " ");
+//                        content = content.replaceAll("<", " ");
+//                    }
+//                    PrintWriter newFileWriter =
+//                            new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
+//                    newFileWriter.print(content);
+//                    newFileWriter.close();
+//                    newFileNames.add(newInputFile);
+//                }
+//                String docListFileName = Ice.selectedCorpus != null ? Ice.selectedCorpus.docListFileName :
+//                        selectedCorpusName + "_DocList";
+//                createNewFileList(newFileNames, newDirName, docListFileName);
+//                this.docList = docListFileName; // Ice.selectedCorpus.docListFileName;
+//                if (Ice.selectedCorpus != null) {
+//                    Ice.selectedCorpus.docListFileName = docListFileName;
+//                    Ice.selectedCorpus.directory = newDirName;
+//                }
+//                this.inputDir = newDirName; //Ice.selectedCorpus.directory;
+//                docListReader = new BufferedReader(new FileReader(docList));
+//            }
+            boolean isCanceled = false;
+            docCount = 0;
+            while ((docName = docListReader.readLine()) != null) {
+                docCount++;
+                try {
                     String inputFile;
                     if ("*".equals(inputSuffix.trim())) {
                         inputFile = docName;
                     } else {
                         inputFile = docName + "." + inputSuffix;
                     }
-                    String from = File.separator;
-                    if (from.equals("\\")) {
-                        from = "\\\\";
-                    }
-                    String newInputFile = inputFile.replaceAll(from, "_");
-                    String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
-                    content = content.replaceAll(">", " ");
-                    content = content.replaceAll("<", " ");
-                    PrintWriter newFileWriter =
-                            new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
-                    newFileWriter.print(content);
-                    newFileWriter.close();
-                    newFileNames.add(newInputFile);
-                }
-                String docListFileName = Ice.selectedCorpus != null ? Ice.selectedCorpus.docListFileName :
-                        selectedCorpusName + "_DocList";
-                createNewFileList(newFileNames, newDirName, docListFileName);
-                this.docList = docListFileName; // Ice.selectedCorpus.docListFileName;
-                if (Ice.selectedCorpus != null) {
-                    Ice.selectedCorpus.docListFileName = docListFileName;
-                    Ice.selectedCorpus.directory = newDirName;
-                }
-                this.inputDir = newDirName; //Ice.selectedCorpus.directory;
-                docListReader = new BufferedReader(new FileReader(docList));
-		// 
-		// *****
-		//
+                    System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+                    ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+                    doc.setAllTags(true);
+                    doc.open();
+                    // process document
+                    Ace.monocase = Ace.allLowerCase(doc);
+                    // --------------- code from Ace.java
+                    doc.stretchAll();
+                    // process document
+                    Ace.monocase = Ace.allLowerCase(doc);
+                    Control.processDocument(doc, null, docCount == -1, docCount);
 
-            }
-            boolean isCanceled = false;
-            docCount = 0;
-            while ((docName = docListReader.readLine()) != null) {
-                docCount++;
-                String inputFile;
-                if ("*".equals(inputSuffix.trim())) {
-                    inputFile = docName;
-                } else {
-                    inputFile = docName + "." + inputSuffix;
-                }
-                System.out.println("\nProcessing document " + docCount + ": " + inputFile);
-                ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
-                doc.setAllTags(true);
-                doc.open();
-                // process document
-                Ace.monocase = Ace.allLowerCase(doc);
-                // --------------- code from Ace.java
-                doc.stretchAll();
-                // process document
-                Ace.monocase = Ace.allLowerCase(doc);
-                Control.processDocument(doc, null, docCount == -1, docCount);
-
-                Ace.tagReciprocalRelations(doc);
-                String docId = Ace.getDocId(doc);
-                if (docId == null)
-                    docId = docName;
-                // create empty Ace document
-                String sourceType = "text";
-                AceDocument aceDoc =
-                        new AceDocument(inputFile, sourceType, docId, doc.text());
-                // build entities
-                Ace.buildAceEntities(doc, docId, aceDoc);
-                aceDoc.write(new PrintWriter(
-                        new BufferedWriter(
-                                new FileWriter(cacheFileName(cacheDir, inputDir, inputFile) + ".ace"))), doc);
-                // ---------------
-                SyntacticRelationSet relations = null;
-                try {
+                    Ace.tagReciprocalRelations(doc);
+                    String docId = Ace.getDocId(doc);
+                    if (docId == null)
+                        docId = docName;
+                    // create empty Ace document
+                    String sourceType = "text";
+                    AceDocument aceDoc =
+                            new AceDocument(inputFile, sourceType, docId, doc.text());
+                    // build entities
+                    Ace.buildAceEntities(doc, docId, aceDoc);
+                    aceDoc.write(new PrintWriter(
+                            new BufferedWriter(
+                                    new FileWriter(cacheFileName(cacheDir, inputDir, inputFile) + ".ace"))), doc);
+                    // ---------------
+                    SyntacticRelationSet relations = null;
                     saveENAMEX(doc, cacheFileName(cacheDir, inputDir, inputFile) + ".names");
                     savePOS(doc, cacheFileName(cacheDir, inputDir, inputFile) + ".pos");
                     saveJetExtents(aceDoc, cacheFileName(cacheDir, inputDir, inputFile) + ".jetExtents");
@@ -260,13 +259,13 @@ public class IcePreprocessor extends Thread {
                     doc.removeAnnotationsOfType("entity");
                     relations = DepParser.parseDocument(doc);
                     saveSyntacticRelationSet(relations, cacheFileName(cacheDir, inputDir, inputFile) + ".dep");
+
+                    if (relations == null) {
+                        continue;
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                if (relations == null) {
-                    continue;
-                }
-
                 if (progressMonitor != null) {
                     progressMonitor.setProgress(docCount + 5);
                     progressMonitor.setNote(docCount + " files processed");
@@ -351,10 +350,10 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     *  part of preprocessing:  compute the local count of each potential term
-     *  (head of NP with preceding nouns and adjectives) in document <CODE>doc</CODE>
-     *  and save the result in file <CODE>fileName</CODE>.  File format:
-     *  one term per line.
+     * part of preprocessing:  compute the local count of each potential term
+     * (head of NP with preceding nouns and adjectives) in document <CODE>doc</CODE>
+     * and save the result in file <CODE>fileName</CODE>.  File format:
+     * one term per line.
      */
     public static void saveNPs(Document doc, String fileName) throws IOException {
         List<Annotation> nps = doc.annotationsOfType("ng");
@@ -404,8 +403,7 @@ public class IcePreprocessor extends Thread {
             List<Annotation> startAtAnn = doc.annotationsAt(term.start(), "token");
             if (startAtAnn == null || startAtAnn.size() == 0) {
                 return null;
-            }
-            else {
+            } else {
                 return startAtAnn.get(0);
             }
         }
@@ -413,7 +411,7 @@ public class IcePreprocessor extends Thread {
         for (int i = tokens.size() - 1; i > -1; i--) {
             List<Annotation> posAnn = doc.annotationsOfType("tagger", tokens.get(i).span());
             if (posAnn != null && posAnn.size() > 0 && posAnn.get(0).get("cat") != null &&
-                    ((String)posAnn.get(0).get("cat")).startsWith("NN")) {
+                    ((String) posAnn.get(0).get("cat")).startsWith("NN")) {
                 SyntacticRelation sourceRelation = relations.getRelationTo(tokens.get(i).start());
                 if (sourceRelation == null ||
                         sourceRelation.type.endsWith("-1") ||
@@ -432,8 +430,8 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     *  part of preprocessing:  save every Ace entity mention in <CODE>aceDocument</CODE>
-     *  along with its extent.  Format:  one mention per line, mention id + start + end.
+     * part of preprocessing:  save every Ace entity mention in <CODE>aceDocument</CODE>
+     * along with its extent.  Format:  one mention per line, mention id + start + end.
      */
 
     public static void saveJetExtents(AceDocument aceDocument, String fileName) throws IOException {
@@ -459,7 +457,7 @@ public class IcePreprocessor extends Thread {
             String[] parts = line.split("\\t");
             String id = parts[0];
             int start = Integer.valueOf(parts[1]);
-            int end   = Integer.valueOf(parts[2]);
+            int end = Integer.valueOf(parts[2]);
             jetExtentsMap.put(id, new Span(start, end));
         }
         br.close();
@@ -468,9 +466,9 @@ public class IcePreprocessor extends Thread {
 
 
     /**
-     *  part of preprocessing:  save each name (ENAMEX annotation) in document
-     *  <CODE>doc</CODE> to file <CODE>fileName</CODE>.  File format:
-     *  one name per line:  type + start + end
+     * part of preprocessing:  save each name (ENAMEX annotation) in document
+     * <CODE>doc</CODE> to file <CODE>fileName</CODE>.  File format:
+     * one name per line:  type + start + end
      */
 
     public static void saveENAMEX(Document doc, String fileName) throws IOException {
@@ -485,8 +483,8 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     *  regenerate <CODE>ENAMEX</CODE> and generate <CODE>enamex</CODE> annotations from
-     *  file saved by saveENAMEX.
+     * regenerate <CODE>ENAMEX</CODE> and generate <CODE>enamex</CODE> annotations from
+     * file saved by saveENAMEX.
      */
 
     public static void loadENAMEX(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
@@ -549,7 +547,7 @@ public class IcePreprocessor extends Thread {
         List<Annotation> names = doc.annotationsOfType("ENAMEX");
         if (names != null) {
             for (Annotation name : names) {
-                String type = (String)name.get("TYPE");
+                String type = (String) name.get("TYPE");
                 if (type != null) {
                     Annotation lowercasedAnn = new Annotation("enamex",
                             new Span(name.start(), name.end()),
@@ -566,8 +564,8 @@ public class IcePreprocessor extends Thread {
         }
         List<Annotation> qnames = doc.annotationsOfType("qenamex");
         if (qnames != null) {
-            for (Annotation qname :qnames) {
-                Annotation name = (Annotation)qname.get("name");
+            for (Annotation qname : qnames) {
+                Annotation name = (Annotation) qname.get("name");
                 if (name != null) {
                     String type = (String) name.get("TYPE");
                     doc.removeAnnotation(name);
@@ -582,8 +580,7 @@ public class IcePreprocessor extends Thread {
                                 new FeatureSet("TYPE", type)));
                     }
                     // System.err.println("Merged:" + doc.text(qname));
-                }
-                else {
+                } else {
                     // System.err.println("Skipped:" + doc.text(qname));
                 }
             }
@@ -591,16 +588,16 @@ public class IcePreprocessor extends Thread {
     }
 
     public static void loadAdditionalMentions(Document doc,
-                                      String cacheDir,
-                                      String inputDir,
-                                      String inputFile) throws IOException {
+                                              String cacheDir,
+                                              String inputDir,
+                                              String inputFile) throws IOException {
         String aceFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".ace";
         String txtFileName = inputDir + File.separator + inputFile;
         if (!(new File(aceFileName)).exists()) {
             return;
         }
 
-            // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
+        // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
         Map<String, Span> jetExtentsMap = loadJetExtents(cacheDir, inputDir, inputFile);
         AceDocument aceDocument = new AceDocument(txtFileName, aceFileName);
         if (aceDocument.entities != null) {
@@ -608,8 +605,7 @@ public class IcePreprocessor extends Thread {
                 String val = "";
                 if (aceEntity.names != null && aceEntity.names.size() > 0) {
                     val = aceEntity.names.get(0).text;
-                }
-                else {
+                } else {
                     break;
                 }
                 if (aceEntity.mentions != null) {
@@ -629,14 +625,13 @@ public class IcePreprocessor extends Thread {
     }
 
     public static void tagAdditionalMentions(Document doc,
-                                              AceDocument aceDocument) {
+                                             AceDocument aceDocument) {
         if (aceDocument.entities != null) {
             for (AceEntity aceEntity : aceDocument.entities) {
                 String val = "";
                 if (aceEntity.names != null && aceEntity.names.size() > 0) {
                     val = aceEntity.names.get(0).text;
-                }
-                else {
+                } else {
                     break;
                 }
                 if (aceEntity.mentions != null) {
@@ -664,8 +659,8 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     *  part of preprocessing:  save part-of-speech information for <CODE>doc</CODE>
-     *  to file <CODE>fileName</CODE>.  Format:  one token per line, POS + start + end.
+     * part of preprocessing:  save part-of-speech information for <CODE>doc</CODE>
+     * to file <CODE>fileName</CODE>.  Format:  one token per line, POS + start + end.
      */
     public static void savePOS(Document doc, String fileName) throws IOException {
         PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
@@ -679,7 +674,7 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     *  regenerate <CODE>tagger</CODE> annotations from cache file produced by savePOS.
+     * regenerate <CODE>tagger</CODE> annotations from cache file produced by savePOS.
      */
     public static void loadPOS(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
         String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".pos";
@@ -688,8 +683,8 @@ public class IcePreprocessor extends Thread {
         while ((line = br.readLine()) != null) {
             String[] parts = line.split("\\t");
             String cat = parts[0];
-            int start  = Integer.valueOf(parts[1]);
-            int end    = Integer.valueOf(parts[2]);
+            int start = Integer.valueOf(parts[1]);
+            int end = Integer.valueOf(parts[2]);
             doc.addAnnotation(new Annotation("tagger", new Span(start, end), new FeatureSet("cat", cat)));
         }
         br.close();
@@ -724,8 +719,8 @@ public class IcePreprocessor extends Thread {
     }
 
     public static String cacheFileName(String cacheDir,
-                                        String inputDir,
-                                        String inputFile) {
+                                       String inputDir,
+                                       String inputFile) {
         return cacheDir + File.separator
                 + inputDir.replaceAll("/", "_") + "_"
                 + inputFile.replaceAll("/", "_");

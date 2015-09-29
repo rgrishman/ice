@@ -91,23 +91,28 @@ public class TermCounter extends Thread {
                 break;
             }
             docCount++;
-            String inputFile;
-            if ("*".equals(inputSuffix)) {
-                inputFile = docName;
-            } else {
-                inputFile = docName + "." + inputSuffix;
+            try {
+                String inputFile;
+                if ("*".equals(inputSuffix)) {
+                    inputFile = docName;
+                } else {
+                    inputFile = docName + "." + inputSuffix;
+                }
+                System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+                ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+                doc.setAllTags(true);
+                doc.open();
+                // process document
+                Ace.monocase = Ace.allLowerCase(doc);
+                Control.processDocument(doc, null, false, docCount);
+                addDocument(doc, FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName), inputDir, inputFile);
+                if (progressMonitor != null) {
+                    progressMonitor.setProgress(docCount);
+                    progressMonitor.setNote(docCount + " files processed");
+                }
             }
-            System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
-            ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
-            doc.setAllTags(true);
-            doc.open();
-            // process document
-            Ace.monocase = Ace.allLowerCase(doc);
-            Control.processDocument(doc, null, false, docCount);
-            addDocument(doc, FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName), inputDir, inputFile);
-            if (progressMonitor != null) {
-                progressMonitor.setProgress(docCount);
-                progressMonitor.setNote(docCount + " files processed");
+            catch (Exception e) {
+                e.printStackTrace();
             }
         }
         writeOutputFile(outputFile, docCount);

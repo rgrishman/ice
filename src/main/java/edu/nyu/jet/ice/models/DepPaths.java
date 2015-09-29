@@ -305,24 +305,25 @@ public class DepPaths {
         boolean isCanceled = false;
 		while ((docName = docListReader.readLine()) != null) {
 			docCount++;
-            if ("*".equals(inputSuffix.trim())) {
-                inputFile = docName;
-            } else {
-    			inputFile = docName + "." + inputSuffix;
-            }
-			System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
-			ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
-			doc.setAllTags(true);
-			doc.open();
-			// process document
-			Ace.monocase = Ace.allLowerCase(doc);
-			// --------------- code from Ace.java
-			doc.stretchAll();
-			// process document
-			Ace.monocase = Ace.allLowerCase(doc);
-			Control.processDocument(doc, null, docCount == -1, docCount);
+			try {
+				if ("*".equals(inputSuffix.trim())) {
+					inputFile = docName;
+				} else {
+					inputFile = docName + "." + inputSuffix;
+				}
+				System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+				ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+				doc.setAllTags(true);
+				doc.open();
+				// process document
+				Ace.monocase = Ace.allLowerCase(doc);
+				// --------------- code from Ace.java
+				doc.stretchAll();
+				// process document
+				Ace.monocase = Ace.allLowerCase(doc);
+				Control.processDocument(doc, null, docCount == -1, docCount);
 
-            // Ace.tagReciprocalRelations(doc);
+				// Ace.tagReciprocalRelations(doc);
 //			String docId = Ace.getDocId(doc);
 //			if (docId == null)
 //				docId = docName;
@@ -330,40 +331,44 @@ public class DepPaths {
 //			String sourceType = "text";
 //			AceDocument aceDoc =
 //				new AceDocument(inputFile, sourceType, docId, doc.text());
-			// build entities
+				// build entities
 //			Ace.buildAceEntities (doc, docId, aceDoc);
-			// ---------------
-			// invoke parser on 'doc' and accumulate counts
-			// String cacheDir = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
+				// ---------------
+				// invoke parser on 'doc' and accumulate counts
+				// String cacheDir = FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
 //			AceDocument aceDoc = new AceDocument(inputFile,
 //					IcePreprocessor.cacheFileName(cacheDir, inputDir, inputFile) + ".ace");
 //			Map<String, Span> mentionSpanMap = IcePreprocessor.loadJetExtents(
 //					cacheDir, inputDir, inputFile);
-			SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
-					cacheDir, inputDir, inputFile
-			);
-			SyntacticRelationSet transformedRelations = transformer.transform(
-					relations.deepCopy(), doc.fullSpan());
-			relations = transformedRelations;
+				SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
+						cacheDir, inputDir, inputFile
+				);
+				SyntacticRelationSet transformedRelations = transformer.transform(
+						relations.deepCopy(), doc.fullSpan());
+				relations = transformedRelations;
 
-			System.err.println("RELATIONS BEFORE ADDING INVERSE:");
-			System.err.println(relations);
-			relations.addInverses();
-			System.err.println("RELATIONS AFTER ADDING INVERSE");
-			System.err.println(relations);
-			// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
-			IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
-            IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
-			IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
-            collectPaths(doc, relations, transformedRelations);
-			if (progressMonitor != null) {
-				progressMonitor.setProgress(docCount);
-				progressMonitor.setNote(docCount + " files processed");
-                if (progressMonitor.isCanceled()) {
-                    isCanceled = true;
-                    System.err.println("Relation path collection canceled.");
-                    break;
-                }
+				System.err.println("RELATIONS BEFORE ADDING INVERSE:");
+				System.err.println(relations);
+				relations.addInverses();
+				System.err.println("RELATIONS AFTER ADDING INVERSE");
+				System.err.println(relations);
+				// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
+				IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
+				IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
+				IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
+				collectPaths(doc, relations, transformedRelations);
+				if (progressMonitor != null) {
+					progressMonitor.setProgress(docCount);
+					progressMonitor.setNote(docCount + " files processed");
+					if (progressMonitor.isCanceled()) {
+						isCanceled = true;
+						System.err.println("Relation path collection canceled.");
+						break;
+					}
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		// *** write counts
