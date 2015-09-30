@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 /**
- * Created by yhe on 5/25/15.
+ * Expand entity sets according to distributional similarity. Each noun group is represented by
+ * its skip-gram embedding trained by word2vec.
+ *
+ * This class is not used by default by the ICE GUI, but can be activated easily.
  */
 public class EmbeddingEntitySetExpander extends EntitySetExpander {
 
