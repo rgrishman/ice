@@ -8,6 +8,10 @@ import java.util.*;
 /**
  * Entity set expansion using the MIRA-trained perceptron
  *
+ * This is an alternative to the default distance based algorithm in EntitySetExpander. It has
+ * similar performance as the default algorithm, so it is not activated by default in the current
+ * system.
+ *
  * Using the binary version of MIRA:
  * Koby Crammer and Yoram Singer. Ultraconservative Online Algorithms for Multiclass Problems
  * in JMLR 3 (2003): 965

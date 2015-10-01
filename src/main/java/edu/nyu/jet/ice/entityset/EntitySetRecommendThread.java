@@ -4,7 +4,7 @@ package edu.nyu.jet.ice.entityset;
 import edu.nyu.jet.ice.uicomps.EntitySetBuilderFrame;
 
 /**
- * Created by yhe on 2/18/14.
+ * Wrapper of the EntitySetExpander; not used in current N(ice).
  */
 public class EntitySetRecommendThread extends Thread {
     private EntitySetExpander expander;

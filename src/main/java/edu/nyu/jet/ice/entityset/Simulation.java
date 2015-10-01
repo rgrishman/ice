@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by yhe on 5/29/14.
+ * Simulation is used to run simulated experiments on entity set expansion. See documentation
+ * for the main() method for usage.
  */
 public class Simulation {
 
@@ -67,15 +68,25 @@ public class Simulation {
         System.out.println(String.format("%.4f @ %d", tpr, entities.size()));
     }
 
+    /**
+     * Simulation currently does not take arguments - the necessary files should be set in the source
+     * code.
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         try {
             int[] sizes = new int[]{20};
             List<String> seedStrings = new ArrayList<String>();
+            // set weights for each entity; there are two possibilities:
+            // 1. weight the entity with counts in the format of word\tcount
+            // 2. use Scorer(file, init_count): just provide a entity list and all entities will have the
+            //    same weight init_count
             scorer = new Scorer("drugs_gold.weighted.txt");
-            List<String> gold = Arrays.asList(IceUtils.readLines("drugs_gold.txt"));
+            List<String> gold = Arrays.asList(IceUtils.readLines("drugs_gold.txt")); // answer key
 //            seedStrings.add("enforcement partners");
 //            seedStrings.add("local law enforcement agencies");
-            seedStrings.add("methamphetamine");
+            seedStrings.add("methamphetamine"); // seeds
             seedStrings.add("oxycodone");
 
             for (int size : sizes) {
@@ -85,7 +96,7 @@ public class Simulation {
 //                EntitySetExpander expander = new EmbeddingEntitySetExpander("cache/DEA/phrases.embedding.200",
 //                        seedStrings);
                 EntitySetExpander expander = new EntitySetExpander("cache/DEA/EntitySetIndex_nn",
-                        seedStrings);
+                        seedStrings); // Set index here.
                 expander.rank();
                 System.out.println("Iteration 1");
                 //List<String> proposed = extractTopN(expander.rankedEntities, size);
