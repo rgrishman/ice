@@ -7,6 +7,7 @@ import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.models.RelationFinder;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.ProcessFarm;
 import edu.nyu.jet.ice.views.swing.SwingEntitiesPanel;
 import org.apache.commons.cli.*;
 
@@ -33,10 +34,13 @@ public class IceCLI {
                 .desc("File extension to process: sgm, txt, etc.").build();
         Option entityIndexCutoff = Option.builder().longOpt("entityIndexCutoff").hasArg().argName("cutoff")
                 .desc("Cutoff of entity index: 1.0-25.0").build();
+        Option numOfProcessesOpt = Option.builder().longOpt("processes").hasArg().argName("numOfProcesses")
+                .desc("Num of parallel processes when adding and preprocessing corpus").build();
         options.addOption(inputDir);
         options.addOption(background);
         options.addOption(filter);
         options.addOption(entityIndexCutoff);
+        options.addOption(numOfProcessesOpt);
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -51,6 +55,7 @@ public class IceCLI {
             String corpusName  = arguments[1];
 
             if (action.equals("addCorpus")) {
+                int numOfProcesses = 1;
                 String inputDirName = cmd.getOptionValue("inputDir");
                 if (inputDirName == null) {
                     System.err.println("--inputDir must be set for the preprocess action.");
@@ -62,6 +67,20 @@ public class IceCLI {
                     System.err.println("--filter must be set for the preprocess action.");
                     printHelp(options);
                     System.exit(-1);
+                }
+                String numOfProcessesStr = cmd.getOptionValue("processes");
+                if (numOfProcessesStr != null) {
+                    try {
+                        numOfProcesses = Integer.valueOf(numOfProcessesStr);
+                        if (numOfProcesses < 1) {
+                            throw new Exception();
+                        }
+                    }
+                    catch (Exception e) {
+                        System.err.println("--processes only accepts an integer (>=1) as parameter");
+                        printHelp(options);
+                        System.exit(-1);
+                    }
                 }
                 File inputDirFile = new File(inputDirName);
                 if (inputDirFile.exists() && inputDirFile.isDirectory()) {
@@ -93,17 +112,13 @@ public class IceCLI {
                         System.err.println("Unable to find any file that satisfies the filter.");
                         System.exit(-1);
                     }
-                    IcePreprocessor icePreprocessor = new IcePreprocessor(
-                            Ice.selectedCorpus.directory,
-                            Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
-                            Ice.selectedCorpus.docListFileName,
-                            filterName,
-                            FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
-                    );
-                    icePreprocessor.run();
-                    saveStatus();
-                    if (backgroundCorpusName == null) {
-                        System.err.println("[WARNING]\tBackground corpus is not set.");
+                    if (numOfProcesses == 1) {
+                        preprocess(filterName, backgroundCorpusName);
+                    }
+                    else {
+                        ProcessFarm processFarm = new ProcessFarm();
+                        processFarm.submit();
+                        processFarm.waitFor();
                     }
                     System.err.println("Corpus added successfully.");
                 }
@@ -113,6 +128,12 @@ public class IceCLI {
                     System.exit(-1);
                 }
 
+            }
+            else if (action.equals("preprocess")) {
+                init();
+                validateCorpus(corpusName);
+                Ice.selectCorpus(corpusName);
+                preprocess(Ice.selectedCorpus.filter, Ice.selectedCorpus.backgroundCorpus);
             }
             else if (action.equals("setBackgroundFor")) {
                 init();
@@ -220,6 +241,21 @@ public class IceCLI {
             System.err.println(e.getMessage());
             printHelp(options);
             System.exit(-1);
+        }
+    }
+
+    public static void preprocess(String filterName, String backgroundCorpusName) {
+        IcePreprocessor icePreprocessor = new IcePreprocessor(
+                Ice.selectedCorpus.directory,
+                Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
+                Ice.selectedCorpus.docListFileName,
+                filterName,
+                FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
+        );
+        icePreprocessor.run();
+        saveStatus();
+        if (backgroundCorpusName == null) {
+            System.err.println("[WARNING]\tBackground corpus is not set.");
         }
     }
 
