@@ -95,7 +95,7 @@ public class Nice {
         printCover();
         Properties iceProperties = loadIceProperties();
         ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
-        toolTipManager.setDismissDelay(7500);
+        toolTipManager.setDismissDelay(60000);
         initIce();
         loadPathMatcher(iceProperties);
         mainFrame = new JFrame();
