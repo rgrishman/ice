@@ -147,6 +147,14 @@ public class IceUtils {
         return result.toArray(new String[result.size()]);
     }
 
+    public static void writeLines(String filename, String[] lines) throws IOException {
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+        for (String line : lines) {
+            pw.println(line.trim());
+        }
+        pw.close();
+    }
+
     public static String readFileAsString(String filePath) throws IOException {
         StringBuilder fileData = new StringBuilder(1000);
         BufferedReader reader = new BufferedReader(new FileReader(filePath));

@@ -7,11 +7,13 @@ import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.models.RelationFinder;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProcessFarm;
 import edu.nyu.jet.ice.views.swing.SwingEntitiesPanel;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Properties;
 
 
@@ -86,7 +88,7 @@ public class IceCLI {
                 if (inputDirFile.exists() && inputDirFile.isDirectory()) {
                     init();
                     if (Ice.corpora.containsKey(corpusName)) {
-                        System.err.println("Name of corpus already exist. Please choose another name.");
+                        System.err.println("Name of corpus already exists. Please choose another name.");
                         System.exit(-1);
                     }
 
@@ -114,9 +116,61 @@ public class IceCLI {
                     }
                     if (numOfProcesses == 1) {
                         preprocess(filterName, backgroundCorpusName);
+
                     }
                     else {
+                        if (backgroundCorpusName == null) {
+                            System.err.println("[WARNING]\tMultiprocess preprocessing will not handle background corpus.");
+                        }
                         ProcessFarm processFarm = new ProcessFarm();
+                        // split corpus
+                        try {
+                            String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
+                            int splitCount = 1;
+                            int portion = docList.length % (numOfProcesses - 1);
+                            int start = 0;
+                            int end   = 0;
+                            if (portion > 0) {
+                                end = portion;
+                                Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
+                                splitCorpus.setDirectory(inputDirName);
+                                splitCorpus.setFilter(filterName);
+                                String docListFileName = FileNameSchema.getDocListFileName(
+                                        splitCorpusName(corpusName, splitCount));
+                                IceUtils.writeLines(docListFileName, Arrays.copyOfRange(docList,
+                                        start, end));
+                                splitCorpus.setDocListFileName(docListFileName);
+                                Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
+                                processFarm.addTask(String.format("icecli preprocess %s",
+                                        splitCorpusName(corpusName, splitCount)));
+                                start = end;
+                                splitCount++;
+                            }
+                            portion = docList.length / (numOfProcesses - 1);
+                            if (portion > 0) {
+                                end += portion;
+                                for (int i = 1; i < numOfProcesses - 1; i++) {
+                                    Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
+                                    splitCorpus.setDirectory(inputDirName);
+                                    splitCorpus.setFilter(filterName);
+                                    String docListFileName = FileNameSchema.getDocListFileName(
+                                            splitCorpusName(corpusName, splitCount));
+                                    IceUtils.writeLines(docListFileName, Arrays.copyOfRange(docList,
+                                            start, end));
+                                    splitCorpus.setDocListFileName(docListFileName);
+                                    Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
+                                    processFarm.addTask(String.format("icecli preprocess %s",
+                                            splitCorpusName(corpusName, splitCount)));
+                                    start = end;
+                                    splitCount++;
+                                }
+                            }
+                            saveStatus();
+                        }
+                        catch (Exception e) {
+                            System.err.println("Error occured when preparing to submit processes.");
+                            e.printStackTrace();
+                        }
                         processFarm.submit();
                         processFarm.waitFor();
                     }
@@ -242,6 +296,10 @@ public class IceCLI {
             printHelp(options);
             System.exit(-1);
         }
+    }
+
+    public static String splitCorpusName(String corpusName, int splitCount) {
+        return "." + corpusName + "_split_" + splitCount;
     }
 
     public static void preprocess(String filterName, String backgroundCorpusName) {
