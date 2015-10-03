@@ -127,29 +127,15 @@ public class IceCLI {
                         try {
                             String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                             int splitCount = 1;
-                            int portion = docList.length % (numOfProcesses - 1);
                             int start = 0;
-                            int end   = 0;
-                            if (portion > 0) {
-                                end = portion;
-                                Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
-                                splitCorpus.setDirectory(inputDirName);
-                                splitCorpus.setFilter(filterName);
-                                String docListFileName = FileNameSchema.getDocListFileName(
-                                        splitCorpusName(corpusName, splitCount));
-                                IceUtils.writeLines(docListFileName, Arrays.copyOfRange(docList,
-                                        start, end));
-                                splitCorpus.setDocListFileName(docListFileName);
-                                Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
-                                processFarm.addTask(String.format("icecli preprocess %s",
-                                        splitCorpusName(corpusName, splitCount)));
-                                start = end;
-                                splitCount++;
-                            }
-                            portion = docList.length / (numOfProcesses - 1);
+                            int end   = start;
+                            int portion = docList.length / numOfProcesses;
                             if (portion > 0) {
                                 end += portion;
-                                for (int i = 1; i < numOfProcesses - 1; i++) {
+                                for (int i = 1; i < numOfProcesses; i++) {
+                                    if (i == 1) {
+                                        end += docList.length % numOfProcesses;
+                                    }
                                     Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
                                     splitCorpus.setDirectory(inputDirName);
                                     splitCorpus.setFilter(filterName);
@@ -159,7 +145,7 @@ public class IceCLI {
                                             start, end));
                                     splitCorpus.setDocListFileName(docListFileName);
                                     Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
-                                    processFarm.addTask(String.format("icecli preprocess %s",
+                                    processFarm.addTask(String.format("./icecli preprocess %s",
                                             splitCorpusName(corpusName, splitCount)));
                                     start = end;
                                     splitCount++;
