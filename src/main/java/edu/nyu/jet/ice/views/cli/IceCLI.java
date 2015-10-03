@@ -60,13 +60,13 @@ public class IceCLI {
                 int numOfProcesses = 1;
                 String inputDirName = cmd.getOptionValue("inputDir");
                 if (inputDirName == null) {
-                    System.err.println("--inputDir must be set for the preprocess action.");
+                    System.err.println("--inputDir must be set for the addCorpus action.");
                     printHelp(options);
                     System.exit(-1);
                 }
                 String filterName = cmd.getOptionValue("filter");
                 if (filterName == null) {
-                    System.err.println("--filter must be set for the preprocess action.");
+                    System.err.println("--filter must be set for the addCorpus action.");
                     printHelp(options);
                     System.exit(-1);
                 }
