@@ -215,6 +215,7 @@ public class IcePreprocessor extends Thread {
 //            }
             boolean isCanceled = false;
             docCount = 0;
+            System.out.println();
             while ((docName = docListReader.readLine()) != null) {
                 docCount++;
                 try {
@@ -224,7 +225,8 @@ public class IcePreprocessor extends Thread {
                     } else {
                         inputFile = docName + "." + inputSuffix;
                     }
-                    System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+                    System.out.println(String.format("[Corpus:%s]", Ice.selectedCorpusName)
+                            + " Processing document " + docCount + ": " + inputFile);
                     ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
                     doc.setAllTags(true);
                     doc.open();

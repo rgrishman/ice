@@ -132,8 +132,8 @@ public class IceCLI {
                             int portion = docList.length / numOfProcesses;
                             if (portion > 0) {
                                 end += portion;
-                                for (int i = 1; i < numOfProcesses; i++) {
-                                    if (i == 1) {
+                                for (int i = 0; i < numOfProcesses; i++) {
+                                    if (i == 0) {
                                         end += docList.length % numOfProcesses;
                                     }
                                     Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
