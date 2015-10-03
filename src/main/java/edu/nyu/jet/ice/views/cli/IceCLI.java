@@ -128,11 +128,11 @@ public class IceCLI {
                             String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                             int splitCount = 1;
                             int start = 0;
-                            int end   = start;
+                            int end   = 0;
                             int portion = docList.length / numOfProcesses;
                             if (portion > 0) {
-                                end += portion;
                                 for (int i = 0; i < numOfProcesses; i++) {
+                                    end += portion;
                                     if (i == 0) {
                                         end += docList.length % numOfProcesses;
                                     }

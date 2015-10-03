@@ -53,17 +53,22 @@ public class ProcessFarm {
      */
     synchronized public boolean waitFor() {
         boolean success = true;
+        int i = 0;
         for (DefaultExecuteResultHandler p : processes) {
             try {
                 p.waitFor();
                 int returnVal = p.getExitValue();
                 if (returnVal != 0) {
+                    System.err.println(tasks.get(i) + String.format(" (return code %d)", returnVal));
                     success = false;
                 }
             }
             catch (InterruptedException e) {
+                System.err.println(tasks.get(i) + " encountered interrupted exception:");
+                e.printStackTrace();
                 success = false;
             }
+            i++;
         }
         return success;
     }
