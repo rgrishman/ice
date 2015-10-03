@@ -28,6 +28,7 @@ public class ProcessFarm {
     synchronized public void submit() {
         try {
             for (String line : tasks) {
+                System.err.println("Submit: " + line);
                 CommandLine cmdLine = CommandLine.parse(line);
 
                 DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
