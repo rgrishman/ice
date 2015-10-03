@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 /**
- * Rank extracted terms
+ * Ranker for extracted terms.
  *
  * @author yhe
  * @version 1.0
@@ -18,10 +18,12 @@ public class TermRanker {
     private List<Term> terms;
 
     /**
-     * Ranking multi-word terms by the following score:
+     * Rank multi-word terms using the following score: <br>
      *
-     * Score = POSITIVE_FREQ * log(POSITIVE_FREQ) ^ alpha / NEGATIVE_FREQ
+     * Score = POSITIVE_FREQ * log(POSITIVE_FREQ) ^ alpha / NEGATIVE_FREQ <br>
      *
+     * where POSITIVE_FREQ is the document frequency in the foreground corpus
+     * and NEGATIVE_FREQ is the document frequency in the background corpus.
      * alpha can be set in iceprops with the Ice.TermRanker.alpha property
      *
      * @param foregroundCountFile Name of the word count file for the foreground corpus
@@ -89,6 +91,10 @@ public class TermRanker {
         Collections.reverse(terms);
     }
 
+    /**
+     *  Write a ranked list of terms (top-ranked term first) to file
+     *  <CODE>outputFileName</CODE>.
+     */
 
     public void writeRankedList(String outputFileName) throws IOException {
         PrintWriter pw = new PrintWriter(new FileWriter(outputFileName));
@@ -97,6 +103,12 @@ public class TermRanker {
         }
         pw.close();
     }
+
+    /**
+     *  Rank terms using term count files <CODE>foregroundCountFile</CODE> and
+     *  <CODE>backgroundCountFile</CODE>, writing result to <CODE>outputFile</CODE>
+     *  and returning a ranked list.
+     */
 
     public static List<Term> rankTerms(String foregroundCountFile,
                                        String backgroundCountFile,
