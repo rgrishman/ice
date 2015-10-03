@@ -37,6 +37,7 @@ public class ProcessFarm {
                 executor.setExitValue(0);
                 executor.setWatchdog(watchdog);
                 executor.execute(cmdLine, resultHandler);
+                processes.add(resultHandler);
             }
         }
         catch (Exception e) {

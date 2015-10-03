@@ -172,7 +172,10 @@ public class IceCLI {
                             e.printStackTrace();
                         }
                         processFarm.submit();
-                        processFarm.waitFor();
+                        boolean success = processFarm.waitFor();
+                        if (!success) {
+                            System.err.println("[WARNING] processFarm returned with error. Please check log.");
+                        }
                     }
                     System.err.println("Corpus added successfully.");
                 }
