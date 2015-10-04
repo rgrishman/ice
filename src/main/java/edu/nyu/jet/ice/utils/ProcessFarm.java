@@ -33,7 +33,7 @@ public class ProcessFarm {
 
                 DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 
-                ExecuteWatchdog watchdog = new ExecuteWatchdog(60 * 1000);
+                ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
                 Executor executor = new DefaultExecutor();
                 executor.setExitValue(0);
                 executor.setWatchdog(watchdog);
