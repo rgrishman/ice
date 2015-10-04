@@ -250,17 +250,17 @@ public class IcePreprocessor extends Thread {
                     Ace.buildAceEntities(doc, docId, aceDoc);
                     aceDoc.write(new PrintWriter(
                             new BufferedWriter(
-                                    new FileWriter(cacheFileName(cacheDir, inputDir, inputFile) + ".ace"))), doc);
+                                    new FileWriter(getAceFileName(cacheDir, inputDir, inputFile)))), doc);
                     // ---------------
                     SyntacticRelationSet relations = null;
-                    saveENAMEX(doc, cacheFileName(cacheDir, inputDir, inputFile) + ".names");
-                    savePOS(doc, cacheFileName(cacheDir, inputDir, inputFile) + ".pos");
-                    saveJetExtents(aceDoc, cacheFileName(cacheDir, inputDir, inputFile) + ".jetExtents");
-                    saveNPs(doc, cacheFileName(cacheDir, inputDir, inputFile) + ".nps");
+                    saveENAMEX(doc, getNamesFileName(cacheDir, inputDir, inputFile));
+                    savePOS(doc, getPosFileName(cacheDir, inputDir, inputFile));
+                    saveJetExtents(aceDoc, getJetExtentsFileName(cacheDir, inputDir, inputFile));
+                    saveNPs(doc, getNpsFileName(cacheDir, inputDir, inputFile));
                     doc.removeAnnotationsOfType("ENAMEX");
                     doc.removeAnnotationsOfType("entity");
                     relations = DepParser.parseDocument(doc);
-                    saveSyntacticRelationSet(relations, cacheFileName(cacheDir, inputDir, inputFile) + ".dep");
+                    saveSyntacticRelationSet(relations, getDepFileName(cacheDir, inputDir, inputFile));
 
                     if (relations == null) {
                         continue;
@@ -379,7 +379,7 @@ public class IcePreprocessor extends Thread {
     }
 
     public static Map<String, Integer> loadNPs(String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".nps";
+        String inputFileName = getNpsFileName(cacheDir, inputDir, inputFile);
         Map<String, Integer> localCount = new HashMap<String, Integer>();
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         String line = null;
@@ -393,6 +393,10 @@ public class IcePreprocessor extends Thread {
         br.close();
         return localCount;
 
+    }
+
+    public static String getNpsFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".nps";
     }
 
     public static Annotation findTermHead(Document doc, Annotation term, SyntacticRelationSet relations) {
@@ -451,7 +455,7 @@ public class IcePreprocessor extends Thread {
     }
 
     public static Map<String, Span> loadJetExtents(String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".jetExtents";
+        String inputFileName = getJetExtentsFileName(cacheDir, inputDir, inputFile);
         Map<String, Span> jetExtentsMap = new HashMap<String, Span>();
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         String line = null;
@@ -464,6 +468,10 @@ public class IcePreprocessor extends Thread {
         }
         br.close();
         return jetExtentsMap;
+    }
+
+    public static String getJetExtentsFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".jetExtents";
     }
 
 
@@ -490,7 +498,7 @@ public class IcePreprocessor extends Thread {
      */
 
     public static void loadENAMEX(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".names";
+        String inputFileName = getNamesFileName(cacheDir, inputDir, inputFile);
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         String line = null;
         List<Annotation> existingNames = doc.annotationsOfType("ENAMEX");
@@ -517,11 +525,15 @@ public class IcePreprocessor extends Thread {
         br.close();
     }
 
+    public static String getNamesFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".names";
+    }
+
     public static void loadENAMEX(Document doc, String cacheDir, String inputDir, String inputFile,
                                   PatternSet patternSet) throws IOException {
 
 
-        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".names";
+        String inputFileName = getNamesFileName(cacheDir, inputDir, inputFile);
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         String line = null;
         List<Annotation> existingNames = doc.annotationsOfType("ENAMEX");
@@ -593,7 +605,7 @@ public class IcePreprocessor extends Thread {
                                               String cacheDir,
                                               String inputDir,
                                               String inputFile) throws IOException {
-        String aceFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".ace";
+        String aceFileName = getAceFileName(cacheDir, inputDir, inputFile);
         String txtFileName = inputDir + File.separator + inputFile;
         if (!(new File(aceFileName)).exists()) {
             return;
@@ -624,6 +636,10 @@ public class IcePreprocessor extends Thread {
                 }
             }
         }
+    }
+
+    public static String getAceFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".ace";
     }
 
     public static void tagAdditionalMentions(Document doc,
@@ -679,7 +695,7 @@ public class IcePreprocessor extends Thread {
      * regenerate <CODE>tagger</CODE> annotations from cache file produced by savePOS.
      */
     public static void loadPOS(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".pos";
+        String inputFileName = getPosFileName(cacheDir, inputDir, inputFile);
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         String line = null;
         while ((line = br.readLine()) != null) {
@@ -690,6 +706,10 @@ public class IcePreprocessor extends Thread {
             doc.addAnnotation(new Annotation("tagger", new Span(start, end), new FeatureSet("cat", cat)));
         }
         br.close();
+    }
+
+    public static String getPosFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".pos";
     }
 
     public static void saveSyntacticRelationSet(SyntacticRelationSet relationSet, String fileName) throws IOException {
@@ -709,7 +729,7 @@ public class IcePreprocessor extends Thread {
     public static SyntacticRelationSet loadSyntacticRelationSet(String cacheDir,
                                                                 String inputDir,
                                                                 String inputFile) throws IOException {
-        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
+        String inputFileName = getDepFileName(cacheDir, inputDir, inputFile);
         SyntacticRelationSet relations = new SyntacticRelationSet();
         if (!(new File(inputFileName).exists())) {
             return relations;
@@ -718,6 +738,10 @@ public class IcePreprocessor extends Thread {
         relations.read(br);
         br.close();
         return relations;
+    }
+
+    public static String getDepFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
     }
 
     public static String cacheFileName(String cacheDir,
