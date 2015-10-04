@@ -9,7 +9,7 @@ so .dep file presumably does not include transformations
 
 # ICE Design Document                                    
 
-Oct. 4, 2015
+*Oct. 4, 2015*
 
 ## OVERVIEW
 
