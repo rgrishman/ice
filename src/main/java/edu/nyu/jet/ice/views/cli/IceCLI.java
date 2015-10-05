@@ -318,6 +318,12 @@ public class IceCLI {
         }
     }
 
+    /**
+     * Merge preprocessed splits for a corpus by creating hard links for each
+     * cache file
+     * @param corpusName name of the corpus
+     * @param numOfProcesses number of splits
+     */
     public static void mergeSplit(String corpusName, int numOfProcesses) {
         String origCorpusName = corpusName;
         String origPreprocessDir = FileNameSchema.getPreprocessCacheDir(origCorpusName);
