@@ -279,9 +279,11 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                 names.add(corpus);
             }
         }
-        String selectedCorpusName = Ice.selectedCorpusName;
+        // String selectedCorpusName = Ice.selectedCorpusName;
         setCorporaList(names);
-        setSelectedCorpus(selectedCorpusName);
+        if (names.size() > 0) {
+            setSelectedCorpus(names.get(0));
+        }
         java.util.List<String> backgroundNames = new ArrayList<String>();
         for (String corpus : Ice.corpora.keySet()) {
             if (corpus.equals(Ice.selectedCorpusName))
