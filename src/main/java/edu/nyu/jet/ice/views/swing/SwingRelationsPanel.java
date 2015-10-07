@@ -66,8 +66,13 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         negPaths.clear();
         for (String relationName : Ice.relations.keySet()) {
             IceRelation r = Ice.relations.get(relationName);
+            if (r == null) {
+                continue;
+            }
             List<String> paths = new ArrayList<String>();
-            paths.addAll(r.getNegPaths());
+            if (r.getNegPaths() != null) {
+                paths.addAll(r.getNegPaths());
+            }
             negPaths.put(relationName, paths);
         }
 

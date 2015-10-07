@@ -217,6 +217,17 @@ The following command creates a new corpus called deaatl, from txt files in the 
 and use apw-nov (which already exists in ICE) as background.
 
     icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
+    
+### Parallel _addCorpus_ action
+
+When processing very large corpus on a server with abundant memory, it is possible to spawn multiple
+processes using the --processes option. It will start multiple icecli script to process input data
+in parallel. By default, each icecli script requires 4GB of memory.
+
+The following command creates a new corpus called deaatl, from txt files in the corpus/dea_processed/atl 
+directory using apw-nov (which already exists in ICE) as background with 8 parallel processes.
+
+    icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov --processes 8
 
 ### The _setBackgroundFor_ action 
 

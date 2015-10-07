@@ -33,7 +33,9 @@ import org.la4j.vector.sparse.CompressedVector;
  * @author yhe
  * @version 1.0
  */
+
 public class EntitySetIndexer {
+
     private static ProgressMonitorI defaultProgressMonitor = null;
     private static final String[] stopWordsArr = new String[]{
             "a", "an", "and", "are", "as", "at", "be", "but", "by",
@@ -67,11 +69,28 @@ public class EntitySetIndexer {
 		this.progressMonitor = progressMonitor;
 	}
 
+	/**
+	 *  Command-line callable method to index terms by their contextual features.
+	 */
+
 	public static void main(String[] args) {
 		EntitySetIndexer indexer = new EntitySetIndexer();
 		indexer.setProgressMonitor(defaultProgressMonitor);
 		indexer.run(args[0], args[1], Double.valueOf(args[2]), args[3], args[4], args[5], args[6], args[7]);
     }
+
+       /**
+        *  Index terms by their contextual features.
+        *
+        *  @param termFile    file of terms, one per line
+        *  @param type        type of terms to be indexed
+        *  @param cutoff       minimum score of terms to be indexed
+        *  @param propsFile   Jet properties file
+        *  @param docList     list of document file names to be processed
+        *  @param inputDir    input dirctory for documents
+        *  @param inputSuffix file extension for document file names (* ==> no extension)
+        *  @param outputFile  output file with indexed terms
+        */
 
 	public void run(String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
 		try {
@@ -115,9 +134,9 @@ public class EntitySetIndexer {
 			while ((docName = docListReader.readLine()) != null) {
 				docCount++;
 				String inputFile = docName;
-                if (!("*".equals(inputSuffix.trim()))) {
-                    inputFile = inputFile + "." + inputSuffix;
-                }
+				if (!("*".equals(inputSuffix.trim()))) {
+					inputFile = inputFile + "." + inputSuffix;
+				}
 				System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
 				ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
 				doc.setAllTags(true);

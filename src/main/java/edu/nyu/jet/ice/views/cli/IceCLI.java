@@ -13,6 +13,8 @@ import edu.nyu.jet.ice.views.swing.SwingEntitiesPanel;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -60,13 +62,13 @@ public class IceCLI {
                 int numOfProcesses = 1;
                 String inputDirName = cmd.getOptionValue("inputDir");
                 if (inputDirName == null) {
-                    System.err.println("--inputDir must be set for the preprocess action.");
+                    System.err.println("--inputDir must be set for the addCorpus action.");
                     printHelp(options);
                     System.exit(-1);
                 }
                 String filterName = cmd.getOptionValue("filter");
                 if (filterName == null) {
-                    System.err.println("--filter must be set for the preprocess action.");
+                    System.err.println("--filter must be set for the addCorpus action.");
                     printHelp(options);
                     System.exit(-1);
                 }
@@ -127,29 +129,15 @@ public class IceCLI {
                         try {
                             String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                             int splitCount = 1;
-                            int portion = docList.length % (numOfProcesses - 1);
                             int start = 0;
                             int end   = 0;
+                            int portion = docList.length / numOfProcesses;
                             if (portion > 0) {
-                                end = portion;
-                                Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
-                                splitCorpus.setDirectory(inputDirName);
-                                splitCorpus.setFilter(filterName);
-                                String docListFileName = FileNameSchema.getDocListFileName(
-                                        splitCorpusName(corpusName, splitCount));
-                                IceUtils.writeLines(docListFileName, Arrays.copyOfRange(docList,
-                                        start, end));
-                                splitCorpus.setDocListFileName(docListFileName);
-                                Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
-                                processFarm.addTask(String.format("icecli preprocess %s",
-                                        splitCorpusName(corpusName, splitCount)));
-                                start = end;
-                                splitCount++;
-                            }
-                            portion = docList.length / (numOfProcesses - 1);
-                            if (portion > 0) {
-                                end += portion;
-                                for (int i = 1; i < numOfProcesses - 1; i++) {
+                                for (int i = 0; i < numOfProcesses; i++) {
+                                    end += portion;
+                                    if (i == 0) {
+                                        end += docList.length % numOfProcesses;
+                                    }
                                     Corpus splitCorpus = new Corpus(splitCorpusName(corpusName, splitCount));
                                     splitCorpus.setDirectory(inputDirName);
                                     splitCorpus.setFilter(filterName);
@@ -159,7 +147,7 @@ public class IceCLI {
                                             start, end));
                                     splitCorpus.setDocListFileName(docListFileName);
                                     Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
-                                    processFarm.addTask(String.format("icecli preprocess %s",
+                                    processFarm.addTask(String.format("./icecli preprocess %s",
                                             splitCorpusName(corpusName, splitCount)));
                                     start = end;
                                     splitCount++;
@@ -172,7 +160,14 @@ public class IceCLI {
                             e.printStackTrace();
                         }
                         processFarm.submit();
-                        processFarm.waitFor();
+                        boolean success = processFarm.waitFor();
+                        if (!success) {
+                            System.err.println("[WARNING] processFarm returned with error. Please check log.");
+                        }
+                        if (numOfProcesses > 1) {
+                            System.err.println("Preprocessing finished. Merging splits...");
+                            mergeSplit(corpusName, numOfProcesses);
+                        }
                     }
                     System.err.println("Corpus added successfully.");
                 }
@@ -188,6 +183,31 @@ public class IceCLI {
                 validateCorpus(corpusName);
                 Ice.selectCorpus(corpusName);
                 preprocess(Ice.selectedCorpus.filter, Ice.selectedCorpus.backgroundCorpus);
+            }
+            else if (action.equals("mergeSplit")) {
+                int numOfProcesses = 1;
+                init();
+                validateCorpus(corpusName);
+                Ice.selectCorpus(corpusName);
+                String numOfProcessesStr = cmd.getOptionValue("processes");
+                if (numOfProcessesStr != null) {
+                    try {
+                        numOfProcesses = Integer.valueOf(numOfProcessesStr);
+                        if (numOfProcesses < 1) {
+                            throw new Exception();
+                        }
+                    }
+                    catch (Exception e) {
+                        System.err.println("--processes only accepts an integer (>=1) as parameter");
+                        printHelp(options);
+                        System.exit(-1);
+                    }
+                }
+                if (numOfProcesses == 1) {
+                    System.err.println("No need to corpus that has 1 split.");
+                    System.exit(0);
+                }
+                mergeSplit(corpusName, numOfProcesses);
             }
             else if (action.equals("setBackgroundFor")) {
                 init();
@@ -295,6 +315,97 @@ public class IceCLI {
             System.err.println(e.getMessage());
             printHelp(options);
             System.exit(-1);
+        }
+    }
+
+    /**
+     * Merge preprocessed splits for a corpus by creating hard links for each
+     * cache file
+     * @param corpusName name of the corpus
+     * @param numOfProcesses number of splits
+     */
+    public static void mergeSplit(String corpusName, int numOfProcesses) {
+        String origCorpusName = corpusName;
+        String origPreprocessDir = FileNameSchema.getPreprocessCacheDir(origCorpusName);
+        File origPreprocessDirFile = new File(origPreprocessDir);
+        origPreprocessDirFile.mkdirs();
+        String suffixName = Ice.selectedCorpus.filter;
+
+        for (int i = 1; i < numOfProcesses + 1; i++) {
+            try {
+                String currentCorpusName = splitCorpusName(corpusName, i);
+                Ice.selectCorpus(currentCorpusName);
+                String currentPreprocessDir = FileNameSchema.getPreprocessCacheDir(currentCorpusName);
+
+                String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
+                for (String docName : docList) {
+                    docName = docName + "." + Ice.selectedCorpus.filter;
+                    String sourceFileName = IcePreprocessor.getAceFileName(currentPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName
+                    );
+                    String targetFileName = IcePreprocessor.getAceFileName(origPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName);
+                    Path target = (new File(targetFileName)).toPath();
+                    Path source = (new File(sourceFileName)).toPath();
+                    Files.createLink(target, source);
+                    sourceFileName = IcePreprocessor.getDepFileName(currentPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName
+                    );
+                    targetFileName = IcePreprocessor.getDepFileName(origPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName);
+                    target = (new File(targetFileName)).toPath();
+                    source = (new File(sourceFileName)).toPath();
+                    Files.createLink(target, source);
+                    sourceFileName = IcePreprocessor.getJetExtentsFileName(currentPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName
+                    );
+                    targetFileName = IcePreprocessor.getJetExtentsFileName(origPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName);
+                    target = (new File(targetFileName)).toPath();
+                    source = (new File(sourceFileName)).toPath();
+                    Files.createLink(target, source);
+                    sourceFileName = IcePreprocessor.getNamesFileName(currentPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName
+                    );
+                    targetFileName = IcePreprocessor.getNamesFileName(origPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName);
+                    target = (new File(targetFileName)).toPath();
+                    source = (new File(sourceFileName)).toPath();
+                    Files.createLink(target, source);
+                    sourceFileName = IcePreprocessor.getNpsFileName(currentPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName
+                    );
+                    targetFileName = IcePreprocessor.getNpsFileName(origPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName);
+                    target = (new File(targetFileName)).toPath();
+                    source = (new File(sourceFileName)).toPath();
+                    Files.createLink(target, source);
+                    sourceFileName = IcePreprocessor.getPosFileName(currentPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName
+                    );
+                    targetFileName = IcePreprocessor.getPosFileName(origPreprocessDir,
+                            Ice.selectedCorpus.directory,
+                            docName);
+                    target = (new File(targetFileName)).toPath();
+                    source = (new File(sourceFileName)).toPath();
+                    Files.createLink(target, source);
+                }
+            }
+            catch (Exception e) {
+                System.err.println("Problem merging split " + i);
+                e.printStackTrace();
+            }
         }
     }
 

@@ -28,15 +28,17 @@ public class ProcessFarm {
     synchronized public void submit() {
         try {
             for (String line : tasks) {
+                System.err.println("Submit: " + line);
                 CommandLine cmdLine = CommandLine.parse(line);
 
                 DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 
-                ExecuteWatchdog watchdog = new ExecuteWatchdog(60 * 1000);
+                ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
                 Executor executor = new DefaultExecutor();
                 executor.setExitValue(0);
                 executor.setWatchdog(watchdog);
                 executor.execute(cmdLine, resultHandler);
+                processes.add(resultHandler);
             }
         }
         catch (Exception e) {
@@ -51,17 +53,22 @@ public class ProcessFarm {
      */
     synchronized public boolean waitFor() {
         boolean success = true;
+        int i = 0;
         for (DefaultExecuteResultHandler p : processes) {
             try {
                 p.waitFor();
                 int returnVal = p.getExitValue();
                 if (returnVal != 0) {
+                    System.err.println(tasks.get(i) + String.format(" (return code %d)", returnVal));
                     success = false;
                 }
             }
             catch (InterruptedException e) {
+                System.err.println(tasks.get(i) + " encountered interrupted exception:");
+                e.printStackTrace();
                 success = false;
             }
+            i++;
         }
         return success;
     }

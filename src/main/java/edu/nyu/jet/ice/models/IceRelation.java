@@ -9,15 +9,15 @@ import java.util.*;
 
 public class IceRelation {
 
-	String name;
+	String name = "";
 
-	String arg1type;
+	String arg1type = "";
 
-	String arg2type;
+	String arg2type = "";
 
-	List<String> paths;
+	List<String> paths = new ArrayList<String>();
 
-    List<String> negPaths;
+    List<String> negPaths = new ArrayList<String>();
 
 	// ---- property methods -----
 

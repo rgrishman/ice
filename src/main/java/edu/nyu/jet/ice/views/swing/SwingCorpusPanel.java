@@ -273,10 +273,20 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
 
     public void refresh() {
         java.util.List<String> names = new ArrayList<String>();
-        names.addAll(Ice.corpora.keySet());
-        String selectedCorpusName = Ice.selectedCorpusName;
+        // names.addAll(Ice.corpora.keySet());
+        for (String corpus : Ice.corpora.keySet()) {
+            if (!corpus.startsWith(".")) {
+                names.add(corpus);
+            }
+        }
+        // String selectedCorpusName = Ice.selectedCorpusName;
         setCorporaList(names);
-        setSelectedCorpus(selectedCorpusName);
+        if (Ice.selectedCorpusName.startsWith(".") && names.size() > 0) {
+            setSelectedCorpus(names.get(0));
+        }
+        else {
+            setSelectedCorpus(Ice.selectedCorpusName);
+        }
         java.util.List<String> backgroundNames = new ArrayList<String>();
         for (String corpus : Ice.corpora.keySet()) {
             if (corpus.equals(Ice.selectedCorpusName))
@@ -285,6 +295,9 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                 continue;
             if (Ice.corpora.get(corpus).relationTypeFileName == null)
                 continue;
+            if (corpus.startsWith(".")) {
+                continue;
+            }
             backgroundNames.add(corpus);
         }
         String selectedBackground = "";
