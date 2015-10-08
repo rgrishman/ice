@@ -290,9 +290,13 @@ public class DepPath {
         if (posAt(r.targetPosn, doc).startsWith("V")) {
             SyntacticRelationSet candidates = relations.getRelationsFrom(r.targetPosn);
             for (SyntacticRelation candidate : candidates) {
-                if (candidate.type.startsWith("dobj") ||
+                if (candidate.virtual) {
+                    System.err.println("Skipped virtual node: " + candidate);
+                }
+                if (!candidate.virtual && (
+                        candidate.type.startsWith("dobj") ||
                         candidate.type.startsWith("nsubj") ||
-                        candidate.type.startsWith("iobj")) {
+                        candidate.type.startsWith("iobj"))) {
                     if (!visitedOffsets.contains(candidate.targetPosn)) {
                         candidate.targetWord = "STH";
                         heap.add(candidate);
