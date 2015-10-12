@@ -214,7 +214,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 List<String> paths = depPathMap.findPath(relationInstance);
                 if (paths == null) {
                     JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                            "The provided path is invalid.",
+                            String.format("No example in the corpus for [%s]", relationInstance),
                             "Dependency Path Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;
