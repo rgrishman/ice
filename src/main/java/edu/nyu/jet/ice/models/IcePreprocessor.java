@@ -267,7 +267,7 @@ public class IcePreprocessor extends Thread {
                         FileNameSchema.getRelationTypesFileName(corpus.name);
                 corpus.relationInstanceFileName =
                         FileNameSchema.getRelationsFileName(corpusName);
-				DepPathMap depPathMap = DepPathMap.getInstance();
+				DepPathMap depPathMap = DepPathMap.getInstance(FileNameSchema.getRelationReprFileName(corpusName));
 				depPathMap.forceLoad();
             }
 			System.out.println("Finished finding relations.");

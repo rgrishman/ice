@@ -69,10 +69,11 @@ public class DepPathMap {
     }
 
     public String findRepr(String path) {
-	System.out.println("findRepr(" + path + ")");
 	if (null == pathReprMap) {
 	    System.err.println("pathReprMap is null!");
 	    return "";
+	} else {
+	    System.out.println("pathReprMap contains " + Integer.toString(pathReprMap.size()) + " paths");
 	}
 	if (!pathReprMap.containsKey(lemmatize(path))) {
 	    System.err.println("findRepr: no entry found for " + path);
@@ -141,13 +142,14 @@ public class DepPathMap {
                 String path = parts[0];
                 String repr = parts[1];
                 String example = parts[2];
-		//		System.out.println("pathReprMap.put(" + path + ", " + repr + ")");
+		System.out.println("pathReprMap.put(" + path + ", " + repr + ")");
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
                     reprPathMap.put(normalizedRepr, new ArrayList());
                 }
                 reprPathMap.get(normalizedRepr).add(path);
+		System.out.println("reprPathMap.get(" + normalizedRepr + ").add(" + path + ")");
                 pathExampleMap.put(path, example);
             }
             r.close();
@@ -177,7 +179,7 @@ public class DepPathMap {
                 String repr = parts[1];
                 String example = parts[2];
 //                if (repr.equals("PERSON sell DRUGS")) {
-//                    System.err.println(path + " <> " + repr);
+		System.out.println(path + " <> " + repr);
 //                }
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);

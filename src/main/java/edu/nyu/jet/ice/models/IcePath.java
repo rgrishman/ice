@@ -24,6 +24,10 @@ public class IcePath implements Comparable<IcePath> {
     public  TObjectDoubleHashMap subScores;
     private IcePathChoice choice;
 
+    public IcePath() {
+
+    }
+
     public IcePath(String path, String repr, String example, double score, IcePathChoice choice) {
         this.path = path;
         this.repr = repr;

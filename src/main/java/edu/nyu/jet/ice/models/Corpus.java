@@ -177,8 +177,10 @@ public class Corpus {
 
 
     public Corpus(String name) {
+		System.out.println("New Corpus(" + name + ")");
         this.name = name;
-        directory = "?";
+		//        directory = "?";
+		directory = name;
         filter = "?";
         relationBuilder = new RelationBuilder();
         termFileName = FileNameSchema.getTermsFileName(name);
@@ -194,7 +196,6 @@ public class Corpus {
     }
 
     public Corpus() {
-        this("?");
     }
 
     //List<JRadioButton> backgroundCorpusButtons = new ArrayList<JRadioButton>();

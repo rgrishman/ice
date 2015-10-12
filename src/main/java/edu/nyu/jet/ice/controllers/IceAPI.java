@@ -40,9 +40,10 @@ public class IceAPI {
     }
 
     // Need to initialize some of the same members as Ice.main() does.
-    public void init(String workingDirectory, String configFileName) {
-	// ABG 20150119 get corpus file from yaml configuration
-	workingDirectory = workingDirectory;
+    public void init(String wd, String configFileName) {
+	File kashrutFile = new File("/misc/proteus108/angus/ice/test/cache/");
+	log.info("init(" + wd + ", " + configFileName + ")");
+	this.workingDirectory = wd;
 	log.info("Setting working directory to " + this.workingDirectory);
 	configFile = this.workingDirectory + File.separator + configFileName;
 	log.info("configFile = " + configFile);
@@ -59,11 +60,16 @@ public class IceAPI {
 	    log.error("Cache root file is not a directory!");
 	    System.exit(0);
 	}
+	log.info(Integer.toString(kashrutFile.listFiles().length) + " directories in cache" );
 
         Ice.loadConfig(configFile);
+	log.info("Ice.loadConfig() complete");
+	log.info(Integer.toString(kashrutFile.listFiles().length) + " directories in cache" );
 	if (null != workingDirectory && workingDirectory.length() > 0) {
 	    setWorkingDirectory(workingDirectory);
 	}
+	log.info("setWorkingDirectory(" + workingDirectory + ") complete");
+	log.info(Integer.toString(kashrutFile.listFiles().length) + " directories in cache" );
         if (!Ice.corpora.isEmpty()) {
 	    log.debug ("Selecting first key: " + Ice.corpora.firstKey());
             selectCorpus(Ice.corpora.firstKey());
@@ -93,6 +99,10 @@ public class IceAPI {
 	return Ice.corpora.get(corpusName);
     }
 
+    public SortedMap<String, Corpus> getCorpora() {
+	return Ice.corpora;
+    }
+
     public Corpus selectCorpus (String corpusName) {
 	log.info("selectCorpus(" + corpusName + ")");
 	if (null == corpusName || corpusName.equals("null")) {
@@ -100,15 +110,16 @@ public class IceAPI {
 	    Ice.selectedCorpus = null;
 	    Ice.selectedCorpusName = null;
 	    return null;
+	} else if (Ice.corpora.containsKey(corpusName)) {
+	    Corpus corpus = Ice.corpora.get(corpusName);
+	    log.debug("selectCorpus " + corpusName);
+	    Ice.selectedCorpus = corpus;
+	    Ice.selectedCorpusName = corpusName;
+	    return Ice.selectedCorpus;
+	} else {
+	    log.error("Corpus " + corpusName + " not found!");
+	    return null;
 	}
-        Corpus corpus = Ice.corpora.get(corpusName);
-	log.debug("selectCorpus " + corpusName);
-        if (null == corpus) {
-	    addCorpus(corpusName, "?");
-        }
-        Ice.selectedCorpus = corpus;
-        Ice.selectedCorpusName = corpusName;
-        return Ice.selectedCorpus;
     }
 
     public String getSelectedCorpus() {
@@ -189,8 +200,6 @@ public class IceAPI {
 	    String newCorpusInfoDirName = FileNameSchema.getCorpusInfoDirectory(newName);
             File newCorpusDir = new File(newCorpusInfoDirName);
             originalCorpusDir.renameTo(newCorpusDir);
-            // TODO: Get rid of all these member variables.  They should all be derived from the corpus name.
-	    // ABG what could possibly go wrong?
 
             corpus.setName(newName);
             corpus.setWordCountFileName(FileNameSchema.getWordCountFileName(newName));
@@ -203,7 +212,6 @@ public class IceAPI {
 		log.error("docListFileName schema unrecognized.  Unable to change to reflect new name");
 	    }
             Ice.corpora.put(newName, corpus);
-	    Ice.corpora.remove(originalName);
             return true;
         } else {
             return false;
@@ -274,16 +282,13 @@ public class IceAPI {
     }
 
     public void loadStateFromDefault() {
-	// TODO: retrieve default config from server.yaml
         if (!loadState("ice.yaml")) {
-	    // TODO: create a default ice.yaml
             Ice.corpora = new TreeMap();
             Ice.entitySets = new TreeMap();
             Ice.relations = new TreeMap();
 	}
     }
     public void saveStateToDefault() {
-        // saveState("ice.yaml");
 	saveState(configFile);
     }
 
@@ -391,7 +396,6 @@ public class IceAPI {
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
-	//	icePreprocessor.start();
 	monitor.setNote("Queued");
 	icePreprocessor.processFiles();
 	saveStateToDefault();
@@ -489,42 +493,45 @@ public class IceAPI {
 	return Ice.relations.get(relationName);
     }
 
-    public IceRelation addRelation (String corpusName, String relationName, String relationInstance) {
-	// ABG 20150514 for multi-user, we will have to set the corpus
-	IceRelation relation = new IceRelation(relationName);
-	Ice.relations.put(relationName, relation);
+    public void addRelation (String corpusName, String relationName, String relationInstance) {
 	addToRelation(corpusName, relationName, relationInstance);
-	saveStateToDefault();
-	return relation;
     }
 
 
     public void addToRelation (String corpusName, String relationName, String relationInstance) {
-	// ABG 201505
-	if (Ice.relations.containsKey(relationName)) {
-	    IceRelation relation = Ice.relations.get(relationName);
-	    String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
-	    DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
-	    List<String> paths = depPathMap.findPath(relationInstance);
-	    String arg1 = "";
-	    String arg2 = "";
-	    List<String> seedPaths = new ArrayList<String>();
-	    if (null != paths) {
-		for (String path: paths) {
-		    String[] parts = path.split("--");
-		    arg1 = parts[0].trim();
-		    arg2 = parts[2].trim();
-		    seedPaths.add(parts[1].trim());
-		}
-		relation.setArg1type(arg1);
-		relation.setArg2type(arg2);
-		relation.setPaths(seedPaths);
-	    } else {
-		log.error("No paths found for instance " + relationInstance);
-	    }
+	IceRelation relation;
+	if (!Ice.relations.containsKey(relationName)) {
+	    relation = new IceRelation(relationName);
+	    Ice.relations.put(relationName, relation);
+	    log.info("Added relation " + relationName + " with instance " + relationInstance);
 	} else {
-	    log.error("Unable to add instance: relation " + relationName + " not found in Ice.relations");
+	    relation = Ice.relations.get(relationName);
 	}
+	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
+	DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
+	List<String> paths = depPathMap.findPath(relationInstance);
+	String arg1 = "";
+	String arg2 = "";
+	List<String> seedPaths = new ArrayList<String>();
+	if (null != paths) {
+	    for (String path: paths) {
+		String[] parts = path.split("--");
+		arg1 = parts[0].trim();
+		arg2 = parts[2].trim();
+		seedPaths.add(parts[1].trim());
+	    }
+	    relation.setArg1type(arg1);
+	    relation.setArg2type(arg2);
+	    relation.setPaths(seedPaths);
+	    String seed = String.join(":::", paths);
+	    log.info("Getting IcePaths for seed " + seed);
+	    List<IcePath> icePaths = buildPathsFromStrings(corpusName, paths);
+	    log.info("Retrieved " + Integer.toString(icePaths.size()) + " IcePaths.");
+	    relation.setIcePaths(icePaths);
+	} else {
+	    log.error("No paths found for instance " + relationInstance);
+	}
+	saveStateToDefault();
     }
 
     public void addPaths (String relationName, List<IcePath> icePathsToAdd) {
@@ -548,7 +555,9 @@ public class IceAPI {
 	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
         String patternFileName = FileNameSchema.getRelationsFileName(corpusName);
         Bootstrap bootstrap = new Bootstrap(monitor);
-        List<IcePath> toReturn = bootstrap.initialize(seed, reprFileName, patternFileName);
+	List<IcePath> toReturn = bootstrap.initialize(seed, reprFileName, patternFileName);
+	
+	buildPaths(corpusName, toReturn);
         return toReturn;
     }
 
@@ -562,7 +571,9 @@ public class IceAPI {
 	    paths.add(icePath.getRepr());
 	}
 	String[] splitPaths = paths.toArray(new String[paths.size()]);
-        return bootstrap.initMulti(splitPaths, reprFileName, patternFileName);
+	List<IcePath> outputPaths = bootstrap.initMulti(splitPaths, reprFileName, patternFileName);
+	// buildPaths(corpusName, outputPaths);
+        return outputPaths;
 
     }
 
@@ -576,8 +587,9 @@ public class IceAPI {
                 (null == rejectedPaths || rejectedPaths.isEmpty())) {
             return toReturn;
         }
-
-        return bootstrap.iterate(approvedPaths, rejectedPaths);
+	toReturn = bootstrap.iterate(approvedPaths, rejectedPaths);
+	//	buildPaths(corpusName, toReturn);
+        return toReturn;
     }
 
     public IceRelation createRelation(String corpusName, List<String> pathReprs) {
@@ -631,6 +643,31 @@ public class IceAPI {
 	    corpusPaths.put(relName, crPaths);
 	}
 	return corpusPaths;
+    }
+
+    public void buildPaths (String corpusName, List<IcePath> paths) {
+	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
+	DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
+	for (IcePath path: paths) {
+	    String pathString = path.getPath();
+	    log.info("Building path for " + pathString);
+	    path.setRepr(depPathMap.findRepr(pathString));
+	    path.setExample(depPathMap.findExample(pathString));
+	}
+
+    }
+
+    public List<IcePath> buildPathsFromStrings (String corpusName, List<String> paths) {
+	List<IcePath> icePaths = new ArrayList<IcePath>();
+	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
+	DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
+	for (String pathString: paths) {
+	    String repr = depPathMap.findRepr(pathString);
+	    String example = depPathMap.findExample(pathString);
+	    IcePath icePath = new IcePath(pathString, repr, example, 0.0);
+	    icePaths.add(icePath);
+	}
+	return icePaths;
     }
 
     public List<IcePath> getCorpusRelPaths (String corpusName, String relationName) {

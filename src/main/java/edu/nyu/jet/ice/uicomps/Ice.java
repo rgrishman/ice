@@ -67,10 +67,17 @@ public class Ice {
 			InputStream yamlInputStream = new FileInputStream(yamlFile);
 			YamlDecoder dec = new YamlDecoder(yamlInputStream);
 			FileNameSchema.setWD(new String ((String)dec.readObject()));
+			String kashrut = FileNameSchema.getCacheRoot();
+			System.out.println("Ice.java: " + Integer.toString(new File(kashrut).listFiles().length) + " directories in cache" );
 			corpora = new TreeMap((Map) dec.readObject());
+			System.out.println("Loaded corpora");
+			System.out.println("Ice.java: " + Integer.toString(corpora.size()) + " corpora");
+			System.out.println("Ice.java: " + Integer.toString(new File(kashrut).listFiles().length) + " directories in cache" );
 			entitySets = new TreeMap((Map) dec.readObject());
 			relations = new TreeMap((Map) dec.readObject());
 			dec.close();
+			System.out.println("Closed yaml file");
+			System.out.println("Ice.java: " + Integer.toString(new File(kashrut).listFiles().length) + " directories in cache" );
 		} catch (IOException e) {
 			System.out.println("Did not load config file " + configFile);
 		}

@@ -79,6 +79,7 @@ public class Bootstrap {
 		String[] splitPaths = seedPath.split(":::");
 		return initMulti(splitPaths, reprFileName, patternFileName);
 	} 
+
 	public List<IcePath> initMulti(String[] splitPaths, String reprFileName, String patternFileName) {
 		System.out.println("Bootstrap.initMulti( , " + reprFileName + ", " + patternFileName + ")");
 		pathMatcher = new PathMatcher();
@@ -86,12 +87,13 @@ public class Bootstrap {
 			DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
             List<String> allPaths = new ArrayList<String>();
             for (String p : splitPaths) {
-				System.out.println(p);
+				System.out.println("Finding paths for " + p);
 //                if (firstSeedPath == null) {
 //                    firstSeedPath = depPathMap.findPath(seedPath);
 //                }
                 List<String> currentPaths = depPathMap.findPath(p);
                 if (currentPaths != null) {
+					System.out.println("  found " + Integer.toString(currentPaths.size()) + " paths");
                     for (String currentPath : currentPaths) {
                         String[] parts = currentPath.split("--");
                         //firstSeedPath = parts[1].trim();
