@@ -30,23 +30,23 @@ public class IceCLI {
     public static void main(String[] args) {
         // create Options object
         Options options = new Options();
-        Option inputDir = Option.builder().longOpt("inputDir").hasArg().argName("inputDirName")
-                .desc("Location of new corpus").build();
-        Option background = Option.builder().longOpt("background").hasArg().argName("backgroundCorpusName")
-                .desc("Name of the background corpus").build();
-        Option filter = Option.builder().longOpt("filter").hasArg().argName("filterFileExtension")
-                .desc("File extension to process: sgm, txt, etc.").build();
-        Option entityIndexCutoff = Option.builder().longOpt("entityIndexCutoff").hasArg().argName("cutoff")
-                .desc("Cutoff of entity index: 1.0-25.0").build();
-        Option numOfProcessesOpt = Option.builder().longOpt("processes").hasArg().argName("numOfProcesses")
-                .desc("Num of parallel processes when adding and preprocessing corpus").build();
+        Option inputDir = OptionBuilder.withLongOpt("inputDir").hasArg().withArgName("inputDirName")
+                .withDescription("Location of new corpus").create("i");
+        Option background = OptionBuilder.withLongOpt("background").hasArg().withArgName("backgroundCorpusName")
+                .withDescription("Name of the background corpus").create("b");
+        Option filter = OptionBuilder.withLongOpt("filter").hasArg().withArgName("filterFileExtension")
+                .withDescription("File extension to process: sgm, txt, etc.").create("f");
+        Option entityIndexCutoff = OptionBuilder.withLongOpt("entityIndexCutoff").hasArg().withArgName("cutoff")
+                .withDescription("Cutoff of entity index: 1.0-25.0").create("e");
+        Option numOfProcessesOpt = OptionBuilder.withLongOpt("processes").hasArg().withArgName("numOfProcesses")
+                .withDescription("Num of parallel processes when adding and preprocessing corpus").create("p");
         options.addOption(inputDir);
         options.addOption(background);
         options.addOption(filter);
         options.addOption(entityIndexCutoff);
         options.addOption(numOfProcessesOpt);
 
-        CommandLineParser parser = new DefaultParser();
+        CommandLineParser parser = new GnuParser();
         try {
             CommandLine cmd = parser.parse(options, args);
             String[] arguments = cmd.getArgs();
