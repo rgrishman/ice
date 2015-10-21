@@ -638,6 +638,65 @@ public class IcePreprocessor extends Thread {
         }
     }
 
+    /**
+     * Add time and number annotations for bootstrapping
+     * TIMEX will be annotated as <ENAMEX TYPE="TIME"/>
+     * NUMBER will be annotated as <ENAMEX TYPE="NUMBER"/>
+     *
+     * @param doc
+     * @param cacheDir
+     * @param inputDir
+     * @param inputFile
+     * @throws IOException
+     */
+    public static void addNumberAndTime(Document doc,
+                                         String cacheDir,
+                                         String inputDir,
+                                         String inputFile) throws IOException {
+        String txtFileName = inputDir + File.separator + inputFile;
+        if (!(new File(txtFileName)).exists()) {
+            return;
+        }
+        List<Annotation> existingNames = doc.annotationsOfType("ENAMEX");
+        if (existingNames == null) {
+            existingNames = new ArrayList<Annotation>();
+        }
+
+        // Add TIMEX
+        List<Annotation> timeExps = doc.annotationsOfType("TIMEX2");
+        if (timeExps != null) {
+            for (Annotation timeExp : timeExps) {
+                if (!isCrossedWithList(timeExp, existingNames)) {
+                    Annotation timeAnn = new Annotation("ENAMEX",
+                            new Span(timeExp.start(), timeExp.end()),
+                            new FeatureSet("TYPE", "TIME",
+                                    "val", timeExp.get("VAL"),
+                                    "mType", "TIME"));
+                    doc.addAnnotation(timeAnn);
+                    existingNames.add(timeAnn);
+                }
+            }
+        }
+
+        // Now add numbers
+        List<Annotation> tokens = doc.annotationsOfType("token");
+        if (tokens != null) {
+            for (Annotation token : tokens) {
+                 if (token.get("intValue") != null &&
+                         !isCrossedWithList(token, existingNames)) {
+                     Annotation numberAnn = new Annotation("ENAMEX",
+                             new Span(token.start(), token.end()),
+                             new FeatureSet("TYPE", "NUMBER",
+                                     "val", token.get("intValue"),
+                                     "mType", "NUMBER"));
+                     doc.addAnnotation(numberAnn);
+                 }
+            }
+        }
+
+
+    }
+
     public static String getAceFileName(String cacheDir, String inputDir, String inputFile) {
         return cacheFileName(cacheDir, inputDir, inputFile) + ".ace";
     }
@@ -783,6 +842,15 @@ public class IcePreprocessor extends Thread {
         Integer n = map.get(s);
         if (n == null) n = 0;
         map.put(s, n + 1);
+    }
+
+    public static boolean isCrossedWithList(Annotation ann, List<Annotation> annotationList) {
+        for (Annotation annotationInList : annotationList) {
+            if (isCrossed(ann, annotationInList)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

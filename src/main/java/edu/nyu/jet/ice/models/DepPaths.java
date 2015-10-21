@@ -356,6 +356,7 @@ public class DepPaths {
 				IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
 				IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
 				IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
+				IcePreprocessor.addNumberAndTime(doc, cacheDir, inputDir, inputFile);
 				collectPaths(doc, relations, transformedRelations);
 				if (progressMonitor != null) {
 					progressMonitor.setProgress(docCount);
