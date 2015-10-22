@@ -29,7 +29,8 @@ public class DepPathRegularizer {
     }
 
     public DepPath regularize(DepPath p) {
-        DepPath result = new DepPath(p.start, p.end);
+        DepPath result =  new DepPath(p.start, p.end, p.arg1, p.arg2);
+
         SyntacticRelation prevRelation = null;
         for (SyntacticRelation r : p.relations) {
             if (r.type.equals("prep_of") &&

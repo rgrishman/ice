@@ -682,7 +682,7 @@ public class IcePreprocessor extends Thread {
         List<Annotation> tokens = doc.annotationsOfType("token");
         if (tokens != null) {
             for (Annotation token : tokens) {
-                 if (token.get("intValue") != null &&
+                 if (token.get("intvalue") != null &&
                          !isCrossedWithList(token, existingNames)) {
                      Annotation numberAnn = new Annotation("ENAMEX",
                              new Span(token.start(), token.end()),

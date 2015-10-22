@@ -264,7 +264,7 @@ public class DepPaths {
 		relationInstanceCounts.clear();
 		sourceDict.clear();
         linearizationDict.clear();
-		DepTransformer transformer = new DepTransformer("trace");
+		DepTransformer transformer = new DepTransformer("yes");
 		transformer.setUsePrepositionTransformation(false);
 		if (args.length != 7 && args.length != 8) {
 			System.err.println ("DepCounter requires 7 arguments:");
@@ -347,11 +347,11 @@ public class DepPaths {
 						relations.deepCopy(), doc.fullSpan());
 				relations = transformedRelations;
 
-				System.err.println("RELATIONS BEFORE ADDING INVERSE:");
-				System.err.println(relations);
+				//System.err.println("RELATIONS BEFORE ADDING INVERSE:");
+				//System.err.println(relations);
 				relations.addInverses();
-				System.err.println("RELATIONS AFTER ADDING INVERSE");
-				System.err.println(relations);
+				//System.err.println("RELATIONS AFTER ADDING INVERSE");
+				//System.err.println(relations);
 				// IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
 				IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
 				IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
@@ -451,14 +451,16 @@ public class DepPaths {
             for (int i = 0; i < localNames.size(); i++) {
                 for (int j = 0; j < localNames.size(); j++) {
                     if (i == j) continue;
-                    int h1 = localHeadSpans.get(i).start();
-                    int h2 = localHeadSpans.get(j).start();
+                    Span h1 = localHeadSpans.get(i);
+                    Span h2 = localHeadSpans.get(j);
                     // - mention1 precedes mention2
-                    if (h1 >= h2) continue;
+                    if (h1.start() >= h2.start()) continue;
                     // - in same sentence
 //                    if (!sentences.inSameSentence(h1, h2)) continue;
                     // find and record dep path from head of m1 to head of m2
-                    DepPath path = buildSyntacticPathOnSpans(h1, h2, relations, localHeadSpans);
+                    DepPath path = buildSyntacticPathOnSpans(h1.start(), h2.start(),
+							localNames.get(i).span(), localNames.get(j).span(),
+							relations, localHeadSpans);
 //                    String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
 //                    if (path != null) {
 //                        path.setPath(pathText);
@@ -538,10 +540,11 @@ public class DepPaths {
      */
     public static DepPath buildSyntacticPathOnSpans
     (int fromPosn, int toPosn,
+	 Span arg1, Span arg2,
 	 SyntacticRelationSet relations,
 	 List<Span> localSpans) {
         Map<Integer, DepPath> path = new HashMap<Integer, DepPath>();
-        DepPath p = new DepPath(fromPosn, toPosn);
+        DepPath p = new DepPath(fromPosn, toPosn, arg1, arg2);
         int variable = 0;
         LinkedList<Integer> todo = new LinkedList<Integer>();
         todo.add(new Integer(fromPosn));

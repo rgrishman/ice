@@ -6,6 +6,7 @@ import Jet.Parser.SyntacticRelation;
 import Jet.Parser.SyntacticRelationSet;
 import Jet.Tipster.Annotation;
 import Jet.Tipster.Document;
+import Jet.Tipster.Span;
 import gnu.trove.TIntHashSet;
 
 import java.util.*;
@@ -18,9 +19,14 @@ import java.util.*;
  */
 public class DepPath {
 
+    public static final boolean DEBUG = false;
+
     // To store user-defined String representation. If path is set, toString() will return path,
     // otherwise, the string representation will be computed on-the-fly
     String path = null;
+
+    Span arg1 = null;
+    Span arg2 = null;
 
     // Dependency triples on the path
     List<SyntacticRelation> relations = new ArrayList<SyntacticRelation>();
@@ -31,19 +37,23 @@ public class DepPath {
 
     int end = -1;
 
-    private DepPath() {
-        super();
-    }
 
     /**
-     * Create a DepPath, with start and end points set.
-     * @param start span.start() of ARG1 (argument at one end of the path)
-     * @param end span.start() of ARG1 (argument at another end of the path)
+     * Constructor that allows the user to set spans for both arguments
+     * If arguments are set, the linearization process will avoid putting words
+     * in arguments on the linearized path.
+     *
+     * @param fromPosn start position of the head of arg1
+     * @param toPosn start poistion of the head of arg2
+     * @param arg1 Full span of the first argument
+     * @param arg2 Span of the second argument
      */
-    public DepPath(int start, int end) {
+    public DepPath(int fromPosn, int toPosn, Span arg1, Span arg2) {
         super();
-        this.start = start;
-        this.end   = end;
+        this.start = fromPosn;
+        this.end = toPosn;
+        this.arg1 = arg1;
+        this.arg2 = arg2;
     }
 
     /**
@@ -91,9 +101,7 @@ public class DepPath {
      * @return A new DepPath
      */
     public DepPath extend(SyntacticRelation r) {
-        DepPath p = new DepPath();
-        p.start = this.start;
-        p.end = this.end;
+        DepPath p = new DepPath(this.start, this.end, this.arg1, this.arg2);
         for (SyntacticRelation rel : this.relations) {
             p.append(rel);
         }
@@ -251,18 +259,26 @@ public class DepPath {
                         lastWord.equals("or") ||
                         lastWord.equals("and") ||
                         lastWord.equals(""))) {
-                    linearizedPath.append(targetWord).append(" ");
-                    lastWord = targetWord.toLowerCase().trim();
+
+                        linearizedPath.append(targetWord).append(" ");
+                        lastWord = targetWord.toLowerCase().trim();
                 }
             }
             else {
                 // add word on the heap to the linearized path
                 if (!targetWord.toLowerCase().trim().equals(lastWord)
                         || targetWord.toUpperCase().equals(targetWord)) {
-                    linearizedPath.append(targetWord);
-                    lastWord = targetWord.toLowerCase().trim();
-                    if (targetWord.length() > 0) {
-                        linearizedPath.append(" ");
+                    Span targetSpan = new Span(node.targetPosn, node.targetPosn+1);
+
+                    if (targetWord.toUpperCase().equals(targetWord) ||
+                            arg1 == null ||
+                            arg2 == null ||
+                            (!targetSpan.within(arg1) && !targetSpan.within(arg2))) {
+                        linearizedPath.append(targetWord);
+                        lastWord = targetWord.toLowerCase().trim();
+                        if (targetWord.length() > 0) {
+                            linearizedPath.append(" ");
+                        }
                     }
                 }
             }
@@ -291,7 +307,9 @@ public class DepPath {
             SyntacticRelationSet candidates = relations.getRelationsFrom(r.targetPosn);
             for (SyntacticRelation candidate : candidates) {
                 if (candidate.virtual) {
-                    System.err.println("Skipped virtual node: " + candidate);
+                    if (DEBUG) {
+                        System.err.println("Skipped virtual node: " + candidate);
+                    }
                 }
                 if (!candidate.virtual && (
                         candidate.type.startsWith("dobj") ||
