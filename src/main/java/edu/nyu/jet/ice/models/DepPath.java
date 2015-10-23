@@ -144,13 +144,21 @@ public class DepPath {
     public String toString() {
         if (path == null) {
             StringBuilder sb = new StringBuilder();
+            int len = 0;
             for (int i = 0; i < relations.size(); i++) {
-                if (i > 0) {
-                    sb.append(":");
-                }
-                sb.append(relations.get(i).type);
-                if (i < relations.size() - 1) {
-                    sb.append(":").append(relations.get(i).targetWord.replaceAll(":", "_"));
+                Span targetSpan = new Span(relations.get(i).targetPosn, relations.get(i).targetPosn+1);
+                if (i == relations.size() - 1 ||
+                        arg1 == null ||
+                        arg2 == null ||
+                        !targetSpan.within(arg1) && !targetSpan.within(arg2)) {
+                    if (len > 0) {
+                        sb.append(":");
+                    }
+                    sb.append(relations.get(i).type);
+                    if (i < relations.size() - 1) {
+                        sb.append(":").append(relations.get(i).targetWord.replaceAll(":", "_"));
+                    }
+                    len++;
                 }
             }
             return AnchoredPath.lemmatizePath(sb.toString());
