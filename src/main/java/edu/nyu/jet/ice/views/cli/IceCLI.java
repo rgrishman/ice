@@ -209,6 +209,13 @@ public class IceCLI {
                 }
                 mergeSplit(corpusName, numOfProcesses);
             }
+            else if (action.equals("addCorpusFrom")) {
+                int numOfProcesses = 1;
+                init();
+                validateCorpus(corpusName);
+                Ice.selectCorpus(corpusName);
+                // TODO: merge corpus
+            }
             else if (action.equals("setBackgroundFor")) {
                 init();
                 validateCorpus(corpusName);
