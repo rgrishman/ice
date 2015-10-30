@@ -237,7 +237,6 @@ public class IcePreprocessor extends Thread {
                     // process document
                     Ace.monocase = Ace.allLowerCase(doc);
                     Control.processDocument(doc, null, docCount == -1, docCount);
-
                     Ace.tagReciprocalRelations(doc);
                     String docId = Ace.getDocId(doc);
                     if (docId == null)
@@ -252,14 +251,14 @@ public class IcePreprocessor extends Thread {
                             new BufferedWriter(
                                     new FileWriter(getAceFileName(cacheDir, inputDir, inputFile)))), doc);
                     // ---------------
-                    SyntacticRelationSet relations = null;
+                    IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
                     saveENAMEX(doc, getNamesFileName(cacheDir, inputDir, inputFile));
                     savePOS(doc, getPosFileName(cacheDir, inputDir, inputFile));
                     saveJetExtents(aceDoc, getJetExtentsFileName(cacheDir, inputDir, inputFile));
                     saveNPs(doc, getNpsFileName(cacheDir, inputDir, inputFile));
                     doc.removeAnnotationsOfType("ENAMEX");
                     doc.removeAnnotationsOfType("entity");
-                    relations = DepParser.parseDocument(doc);
+                    SyntacticRelationSet relations = doc.relations;
                     saveSyntacticRelationSet(relations, getDepFileName(cacheDir, inputDir, inputFile));
 
                     if (relations == null) {
@@ -486,7 +485,10 @@ public class IcePreprocessor extends Thread {
         List<Annotation> names = doc.annotationsOfType("ENAMEX");
         if (names != null) {
             for (Annotation name : names) {
-                pw.println(String.format("%s\t%d\t%d", name.get("TYPE"), name.start(), name.end()));
+                pw.println(String.format("%s\t%d\t%d\t%s\t%s",
+                        name.get("TYPE"), name.start(), name.end(),
+                        name.get("val") != null ? name.get("val") : doc.text(name).replaceAll("\\s+", " ").trim(),
+                        name.get("mType") != null ? name.get("mType") : name.get("TYPE")));
             }
         }
         pw.close();
@@ -505,11 +507,20 @@ public class IcePreprocessor extends Thread {
         existingNames = existingNames == null ? new ArrayList<Annotation>() : existingNames;
         while ((line = br.readLine()) != null) {
             String[] parts = line.split("\\t");
+            if (parts.length != 5) {
+                System.err.println("Format error in ENAMEX cache:" + inputFileName);
+                System.err.println("\tline:" + line);
+                continue;
+            }
             String type = parts[0];
             int start = Integer.valueOf(parts[1]);
             int end = Integer.valueOf(parts[2]);
-            Annotation newAnn = new Annotation("ENAMEX", new Span(start, end), new FeatureSet("TYPE", type));
-            Annotation lowercasedAnn = new Annotation("enamex", new Span(start, end), new FeatureSet("TYPE", type));
+            String val  = parts[3].trim();
+            String mType = parts[4].trim();
+            Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
+                    new FeatureSet("TYPE", type, "val", val, "mType", mType));
+            Annotation lowercasedAnn = new Annotation("enamex", new Span(start, end),
+                    new FeatureSet("TYPE", type, "val", val, "mType", mType));
 
             boolean conflict = false;
             for (Annotation existingAnn : existingNames) {
@@ -529,78 +540,6 @@ public class IcePreprocessor extends Thread {
         return cacheFileName(cacheDir, inputDir, inputFile) + ".names";
     }
 
-    public static void loadENAMEX(Document doc, String cacheDir, String inputDir, String inputFile,
-                                  PatternSet patternSet) throws IOException {
-
-
-        String inputFileName = getNamesFileName(cacheDir, inputDir, inputFile);
-        BufferedReader br = new BufferedReader(new FileReader(inputFileName));
-        String line = null;
-        List<Annotation> existingNames = doc.annotationsOfType("ENAMEX");
-        existingNames = existingNames == null ? new ArrayList<Annotation>() : existingNames;
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
-            String type = parts[0];
-            int start = Integer.valueOf(parts[1]);
-            int end = Integer.valueOf(parts[2]);
-            Annotation newAnn = new Annotation("ENAMEX", new Span(start, end), new FeatureSet("TYPE", type));
-            // Annotation lowercasedAnn = new Annotation("enamex", new Span(start, end), new FeatureSet("TYPE", type));
-
-            boolean conflict = false;
-            for (Annotation existingAnn : existingNames) {
-                if (isCrossed(newAnn, existingAnn)) {
-                    conflict = true;
-                }
-            }
-            if (!conflict) {
-                doc.addAnnotation(newAnn);
-                // doc.addAnnotation(lowercasedAnn);
-            }
-        }
-        br.close();
-        List<Annotation> names = doc.annotationsOfType("ENAMEX");
-        if (names != null) {
-            for (Annotation name : names) {
-                String type = (String) name.get("TYPE");
-                if (type != null) {
-                    Annotation lowercasedAnn = new Annotation("enamex",
-                            new Span(name.start(), name.end()),
-                            new FeatureSet("TYPE", type));
-                    doc.addAnnotation(lowercasedAnn);
-                }
-            }
-        }
-        List<Annotation> sentences = doc.annotationsOfType("sentence");
-        if (sentences != null) {
-            for (Annotation sentence : sentences) {
-                patternSet.apply(doc, sentence.span());
-            }
-        }
-        List<Annotation> qnames = doc.annotationsOfType("qenamex");
-        if (qnames != null) {
-            for (Annotation qname : qnames) {
-                Annotation name = (Annotation) qname.get("name");
-                if (name != null) {
-                    String type = (String) name.get("TYPE");
-                    doc.removeAnnotation(name);
-                    List<Annotation> upperENAMEX = doc.annotationsAt(name.start());
-                    for (Annotation enamex : upperENAMEX) {
-                        if (enamex.end() == name.end()) {
-                            doc.removeAnnotation(enamex);
-                        }
-                    }
-                    if (type != null) {
-                        doc.addAnnotation(new Annotation("ENAMEX", qname.span(),
-                                new FeatureSet("TYPE", type)));
-                    }
-                    // System.err.println("Merged:" + doc.text(qname));
-                } else {
-                    // System.err.println("Skipped:" + doc.text(qname));
-                }
-            }
-        }
-    }
-
     public static void loadAdditionalMentions(Document doc,
                                               String cacheDir,
                                               String inputDir,
@@ -618,7 +557,7 @@ public class IcePreprocessor extends Thread {
             for (AceEntity aceEntity : aceDocument.entities) {
                 String val = "";
                 if (aceEntity.names != null && aceEntity.names.size() > 0) {
-                    val = aceEntity.names.get(0).text;
+                    val = aceEntity.names.get(0).text.replaceAll("\\s+", " ").trim();
                 } else {
                     break;
                 }
