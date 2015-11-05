@@ -513,7 +513,7 @@ public class IcePreprocessor extends Thread {
         existingNames = existingNames == null ? new ArrayList<Annotation>() : existingNames;
         while ((line = br.readLine()) != null) {
             String[] parts = line.split("\\t");
-            if (parts.length != 5) {
+            if (parts.length != 5 && parts.length != 3) {
                 System.err.println("Format error in ENAMEX cache:" + inputFileName);
                 System.err.println("\tline:" + line);
                 continue;
@@ -521,8 +521,8 @@ public class IcePreprocessor extends Thread {
             String type = parts[0];
             int start = Integer.valueOf(parts[1]);
             int end = Integer.valueOf(parts[2]);
-            String val  = parts[3].trim();
-            String mType = parts[4].trim();
+            String val  = parts.length == 5 ? parts[3].trim() : "UNK";
+            String mType = parts.length == 5 ? parts[4].trim() : "UNK";
             Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
                     new FeatureSet("TYPE", type, "val", val, "mType", mType));
             Annotation lowercasedAnn = new Annotation("enamex", new Span(start, end),
