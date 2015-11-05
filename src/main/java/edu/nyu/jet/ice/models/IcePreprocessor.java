@@ -280,28 +280,10 @@ public class IcePreprocessor extends Thread {
 
             // Do word count now
             if (Ice.selectedCorpus != null) {
-                String[] docFileNames = null;
-                try {
-                    docFileNames = IceUtils.readLines(FileNameSchema.getDocListFileName(Ice.selectedCorpus.name));
-                } catch (IOException e) {
-                    e.printStackTrace(System.err);
-                    return;
-                }
                 if (progressMonitor != null) {
                     progressMonitor.setNote("Counting words and relations...");
                 }
-                System.err.println("Counting words...");
-                if (!isCanceled && (progressMonitor == null || !progressMonitor.isCanceled())) {
-                    String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
-                    TermCounter counter = TermCounter.prepareRun("onomaprops",
-                            Arrays.asList(docFileNames),
-                            Ice.selectedCorpus.directory,
-                            Ice.selectedCorpus.filter,
-                            wordCountFileName,
-                            null);
-                    counter.run();
-                    Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
-                }
+                if (countWords(isCanceled)) return;
                 System.err.println("Finding dependency paths...");
                 if (!isCanceled && (progressMonitor == null || !progressMonitor.isCanceled())) {
                     RelationFinder finder = new RelationFinder(
@@ -323,6 +305,30 @@ public class IcePreprocessor extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean countWords(boolean isCanceled) {
+        String[] docFileNames = null;
+        try {
+            docFileNames = IceUtils.readLines(FileNameSchema.getDocListFileName(Ice.selectedCorpus.name));
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            return true;
+        }
+        System.err.println("Counting words...");
+        if (!isCanceled) {
+            // && (progressMonitor == null || !progressMonitor.isCanceled())
+            String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
+            TermCounter counter = TermCounter.prepareRun("onomaprops",
+                    Arrays.asList(docFileNames),
+                    Ice.selectedCorpus.directory,
+                    Ice.selectedCorpus.filter,
+                    wordCountFileName,
+                    null);
+            counter.run();
+            Ice.selectedCorpus.wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
+        }
+        return false;
     }
 
 
