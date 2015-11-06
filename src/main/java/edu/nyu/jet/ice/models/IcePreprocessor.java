@@ -167,52 +167,6 @@ public class IcePreprocessor extends Thread {
         }
         try {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
-//            if (Ice.selectedCorpus != null) {
-            //
-            // ***** make separate method *****
-            //
-            // copy source files into "sources" directory
-            //
-//                List<String> newFileNames = new ArrayList<String>();
-//                String newDirName = //selectedCorpusDir
-//                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
-//                        + File.separator + "sources";
-//                File newDir = new File(newDirName);
-//                newDir.mkdirs();
-//                while ((docName = docListReader.readLine()) != null) {
-//                    String inputFile;
-//                    if ("*".equals(inputSuffix.trim())) {
-//                        inputFile = docName;
-//                    } else {
-//                        inputFile = docName + "." + inputSuffix;
-//                    }
-//                    String from = File.separator;
-//                    if (from.equals("\\")) {
-//                        from = "\\\\";
-//                    }
-//                    String newInputFile = inputFile.replaceAll(from, "_");
-//                    String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
-//                    if (!inputSuffix.equals(".sgm")) {
-//                        content = content.replaceAll(">", " ");
-//                        content = content.replaceAll("<", " ");
-//                    }
-//                    PrintWriter newFileWriter =
-//                            new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
-//                    newFileWriter.print(content);
-//                    newFileWriter.close();
-//                    newFileNames.add(newInputFile);
-//                }
-//                String docListFileName = Ice.selectedCorpus != null ? Ice.selectedCorpus.docListFileName :
-//                        selectedCorpusName + "_DocList";
-//                createNewFileList(newFileNames, newDirName, docListFileName);
-//                this.docList = docListFileName; // Ice.selectedCorpus.docListFileName;
-//                if (Ice.selectedCorpus != null) {
-//                    Ice.selectedCorpus.docListFileName = docListFileName;
-//                    Ice.selectedCorpus.directory = newDirName;
-//                }
-//                this.inputDir = newDirName; //Ice.selectedCorpus.directory;
-//                docListReader = new BufferedReader(new FileReader(docList));
-//            }
             boolean isCanceled = false;
             docCount = 0;
             System.out.println();
