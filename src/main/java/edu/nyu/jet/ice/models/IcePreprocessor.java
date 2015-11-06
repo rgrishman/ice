@@ -205,7 +205,7 @@ public class IcePreprocessor extends Thread {
                             new BufferedWriter(
                                     new FileWriter(getAceFileName(cacheDir, inputDir, inputFile)))), doc);
                     // ---------------
-                    IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
+                    // IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
                     saveENAMEX(doc, getNamesFileName(cacheDir, inputDir, inputFile));
                     savePOS(doc, getPosFileName(cacheDir, inputDir, inputFile));
                     saveJetExtents(aceDoc, getJetExtentsFileName(cacheDir, inputDir, inputFile));
@@ -445,14 +445,26 @@ public class IcePreprocessor extends Thread {
         List<Annotation> names = doc.annotationsOfType("ENAMEX");
         if (names != null) {
             for (Annotation name : names) {
-                pw.println(String.format("%s\t%d\t%d\t%s\t%s",
-                        name.get("TYPE"), name.start(), name.end(),
-                        name.get("val") != null ? name.get("val") : doc.text(name).replaceAll("\\s+", " ").trim(),
-                        name.get("mType") != null ? name.get("mType") : name.get("TYPE")));
+                pw.println(String.format("%s\t%d\t%d",
+                        name.get("TYPE"), name.start(), name.end()));
             }
         }
         pw.close();
     }
+
+//    public static void saveENAMEX(Document doc, String fileName) throws IOException {
+//        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+//        List<Annotation> names = doc.annotationsOfType("ENAMEX");
+//        if (names != null) {
+//            for (Annotation name : names) {
+//                pw.println(String.format("%s\t%d\t%d\t%s\t%s",
+//                        name.get("TYPE"), name.start(), name.end(),
+//                        name.get("val") != null ? name.get("val") : doc.text(name).replaceAll("\\s+", " ").trim(),
+//                        name.get("mType") != null ? name.get("mType") : name.get("TYPE")));
+//            }
+//        }
+//        pw.close();
+//    }
 
     /**
      * regenerate <CODE>ENAMEX</CODE> and generate <CODE>enamex</CODE> annotations from
@@ -478,9 +490,9 @@ public class IcePreprocessor extends Thread {
             String val  = parts.length == 5 ? parts[3].trim() : "UNK";
             String mType = parts.length == 5 ? parts[4].trim() : "UNK";
             Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
-                    new FeatureSet("TYPE", type, "val", val, "mType", mType));
+                    new FeatureSet("TYPE", type));
             Annotation lowercasedAnn = new Annotation("enamex", new Span(start, end),
-                    new FeatureSet("TYPE", type, "val", val, "mType", mType));
+                    new FeatureSet("TYPE", type));
 
             boolean conflict = false;
             for (Annotation existingAnn : existingNames) {

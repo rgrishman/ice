@@ -75,7 +75,7 @@ public class EventTrees {
             doc.stretchAll();
             Ace.monocase = Ace.allLowerCase(doc);
             Control.processDocument(doc, null, docCount == -1, docCount);
-            IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
+            // IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
             List<Annotation> sentences = doc.annotationsOfType("sentence");
             List<Annotation> names = doc.annotationsOfType("ENAMEX");
             if (names == null) {
