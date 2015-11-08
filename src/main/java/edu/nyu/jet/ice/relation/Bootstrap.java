@@ -178,10 +178,12 @@ public class Bootstrap {
 
         for (String sp : seedPaths) {
             List<AnchoredPath> posPaths = pathSet.getByPath(sp);
-            for (AnchoredPath p : posPaths) {
-                seedPathInstances.add(new BootstrapAnchoredPath(p,
-                        sp,
-                        BootstrapAnchoredPathType.POSITIVE));
+            if (posPaths != null) {
+                for (AnchoredPath p : posPaths) {
+                    seedPathInstances.add(new BootstrapAnchoredPath(p,
+                            sp,
+                            BootstrapAnchoredPathType.POSITIVE));
+                }
             }
             // should we bootstrap negative paths?
             if (USE_NEGATIVE) {
