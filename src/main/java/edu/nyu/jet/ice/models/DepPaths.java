@@ -57,6 +57,9 @@ public class DepPaths {
 
     public static final int MAX_MENTIONS_IN_SENTENCE = 50;
 
+    // skip first x sentences at the beginning. 0: keep all; 1: skip first sentence
+    public static final int SKIPPED_SENTENCES_AT_BEGINNING = 0;
+
     public static ProgressMonitorI progressMonitor = null;
 
     public static DepPathRegularizer depPathRegularizer = new DepPathRegularizer();
@@ -238,7 +241,7 @@ public class DepPaths {
             // (> MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH characters);
             // 3) sentence with quotes, and 4) sentence with parenthesis
 
-            if (sentCount == 1) continue;
+            if (sentCount == SKIPPED_SENTENCES_AT_BEGINNING) continue;
             if (sentence.end() - sentence.start() > MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH) continue;
             String sentText = doc.text(sentence);
             if (sentText.contains("(") || sentText.contains(")") || sentText.contains("[") || sentText.contains("]") ||
