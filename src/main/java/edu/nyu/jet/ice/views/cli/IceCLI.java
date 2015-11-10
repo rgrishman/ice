@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.views.cli;
 
+import Jet.JetTest;
 import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.entityset.EntitySetIndexer;
 import edu.nyu.jet.ice.models.Corpus;
@@ -11,11 +12,13 @@ import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProcessFarm;
 import edu.nyu.jet.ice.views.swing.SwingEntitiesPanel;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 
-import java.io.File;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 
 
@@ -40,11 +43,17 @@ public class IceCLI {
                 .withDescription("Cutoff of entity index: 1.0-25.0").create("e");
         Option numOfProcessesOpt = OptionBuilder.withLongOpt("processes").hasArg().withArgName("numOfProcesses")
                 .withDescription("Num of parallel processes when adding and preprocessing corpus").create("p");
+        Option targetDir = OptionBuilder.withLongOpt("targetDir").hasArg().withArgName("targetDirForCreateFrom")
+                .withDescription("Directory for the new corpus, when combining old corpora").create("t");
+        Option fromCorporaOpt = OptionBuilder.withLongOpt("fromCorpora").hasArg().withArgName("fromCorpora")
+                .withDescription("Names for the corpora to be merged").create("s");
         options.addOption(inputDir);
         options.addOption(background);
         options.addOption(filter);
         options.addOption(entityIndexCutoff);
         options.addOption(numOfProcessesOpt);
+        options.addOption(targetDir);
+        options.addOption(fromCorporaOpt);
 
         CommandLineParser parser = new GnuParser();
         try {
@@ -210,11 +219,87 @@ public class IceCLI {
                 mergeSplit(corpusName, numOfProcesses);
             }
             else if (action.equals("addCorpusFrom")) {
-                int numOfProcesses = 1;
+                String corpusDir  = cmd.getOptionValue("targetDir");
+                String filterName = cmd.getOptionValue("filter");
+                String fromCorporaStr = cmd.getOptionValue("fromCorpora");
+                if (corpusDir == null || filterName == null || fromCorporaStr == null) {
+                    System.err.println("--targetDir --filter must be set for the addCorpusFrom action.");
+                    printHelp(options);
+                    System.exit(-1);
+                }
+                String[] fromCorpora = fromCorporaStr.split(",");
+
                 init();
-                validateCorpus(corpusName);
+                // validateCorpus(corpusName);
+                for (String fromCorpusName : fromCorpora) {
+                    validateCorpus(fromCorpusName);
+                }
+
                 Ice.selectCorpus(corpusName);
-                // TODO: merge corpus
+                try {
+                    // create directory first
+                    File dir = new File(corpusDir);
+                    dir.mkdirs();
+
+                    // create cache directory
+                    String targetCacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
+                    File targetCacheDirFile = new File(targetCacheDir);
+                    targetCacheDirFile.mkdirs();
+                    if (copyApfDTD(targetCacheDir)) return;
+
+                    // create docList file
+                    String docListFileName = FileNameSchema.getDocListFileName(corpusName);
+                    PrintWriter docListFileWriter = new PrintWriter(new FileWriter(docListFileName));
+
+                    // create all links and write docListFile
+                    for (String fromCorpusName : fromCorpora) {
+
+                        String fromDir = Ice.corpora.get(fromCorpusName).directory;
+                        String fromDocListFileName = Ice.corpora.get(fromCorpusName).docListFileName;
+                        String sourceCacheDir = FileNameSchema.getPreprocessCacheDir(fromCorpusName);
+                        BufferedReader br = new BufferedReader(new FileReader(fromDocListFileName));
+                        String line = null;
+                        while ((line = br.readLine()) != null) {
+                            String targetSourceFileName = (fromDir + "/" + line).replaceAll("/", "_");
+                            docListFileWriter.println(targetSourceFileName);
+                            targetSourceFileName = targetSourceFileName + "." + filterName;
+                            File targetSourceFile = new File(corpusDir + "/" + targetSourceFileName);
+                            if (targetSourceFile.exists()) {
+                                targetSourceFile.delete();
+                            }
+                            String sourceSourceFileName = line + "." + filterName;
+                            // create link for source file
+                            Path target = (targetSourceFile).toPath();
+                            Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();
+                            try {
+                                Files.createLink(target, source);
+                                // now create links to cache files
+                                linkCache(sourceCacheDir, targetCacheDir,
+                                        fromDir, corpusDir,
+                                        sourceSourceFileName, targetSourceFileName);
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        br.close();;
+                    }
+
+                    docListFileWriter.close();
+                    Corpus newCorpus = new Corpus(corpusName);
+
+                    Ice.corpora.put(corpusName, newCorpus);
+                    Ice.selectCorpus(corpusName);
+                    Ice.selectedCorpus.setDirectory(corpusDir);
+                    Ice.selectedCorpus.setFilter(filterName);
+                    Ice.selectedCorpus.setDocListFileName(docListFileName);
+                    saveStatus();
+                }
+                catch(Exception e) {
+                    e.printStackTrace();
+                    printHelp(options);
+                    System.exit(-1);
+                }
             }
             else if (action.equals("setBackgroundFor")) {
                 init();
@@ -325,6 +410,19 @@ public class IceCLI {
         }
     }
 
+    public static boolean copyApfDTD(String targetCacheDir) throws IOException {
+        Properties props = new Properties();
+        props.load(new FileReader("parseprops"));
+        try {
+            FileUtils.copyFile(new File(props.getProperty("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
+                    new File(targetCacheDir + File.separator + "apf.v5.1.1.dtd"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Merge preprocessed splits for a corpus by creating hard links for each
      * cache file
@@ -336,6 +434,13 @@ public class IceCLI {
         String origPreprocessDir = FileNameSchema.getPreprocessCacheDir(origCorpusName);
         File origPreprocessDirFile = new File(origPreprocessDir);
         origPreprocessDirFile.mkdirs();
+        try {
+            copyApfDTD(origPreprocessDir);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
         String suffixName = Ice.selectedCorpus.filter;
 
         for (int i = 1; i < numOfProcesses + 1; i++) {
@@ -347,66 +452,9 @@ public class IceCLI {
                 String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                 for (String docName : docList) {
                     docName = docName + "." + Ice.selectedCorpus.filter;
-                    String sourceFileName = IcePreprocessor.getAceFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    String targetFileName = IcePreprocessor.getAceFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    Path target = (new File(targetFileName)).toPath();
-                    Path source = (new File(sourceFileName)).toPath();
-                    Files.createLink(target, source);
-                    sourceFileName = IcePreprocessor.getDepFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getDepFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    target = (new File(targetFileName)).toPath();
-                    source = (new File(sourceFileName)).toPath();
-                    Files.createLink(target, source);
-                    sourceFileName = IcePreprocessor.getJetExtentsFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getJetExtentsFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    target = (new File(targetFileName)).toPath();
-                    source = (new File(sourceFileName)).toPath();
-                    Files.createLink(target, source);
-                    sourceFileName = IcePreprocessor.getNamesFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getNamesFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    target = (new File(targetFileName)).toPath();
-                    source = (new File(sourceFileName)).toPath();
-                    Files.createLink(target, source);
-                    sourceFileName = IcePreprocessor.getNpsFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getNpsFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    target = (new File(targetFileName)).toPath();
-                    source = (new File(sourceFileName)).toPath();
-                    Files.createLink(target, source);
-                    sourceFileName = IcePreprocessor.getPosFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getPosFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    target = (new File(targetFileName)).toPath();
-                    source = (new File(sourceFileName)).toPath();
-                    Files.createLink(target, source);
+                    linkCache(origPreprocessDir, currentPreprocessDir,
+                            Ice.selectedCorpus.directory, Ice.selectedCorpus.directory,
+                            docName, docName);
                 }
             }
             catch (Exception e) {
@@ -414,6 +462,107 @@ public class IceCLI {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void linkCache(String sourceCacheDir,
+                                 String targetCacheDir,
+                                 String sourceSourceDir,
+                                 String targetSourceDir,
+                                 String sourceDocName,
+                                 String targetDocName) throws IOException {
+        String sourceFileName = IcePreprocessor.getAceFileName(sourceCacheDir,
+                sourceSourceDir,
+                sourceDocName
+        );
+        String targetFileName = IcePreprocessor.getAceFileName(targetCacheDir,
+                targetSourceDir,
+                targetDocName);
+        File targetFile = new File(targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        Path target = (new File(targetFileName)).toPath();
+        Path source = (new File(sourceFileName)).toPath();
+        Files.createLink(target, source);
+
+        sourceFileName = IcePreprocessor.getDepFileName(sourceCacheDir,
+                sourceSourceDir,
+                sourceDocName
+        );
+        targetFileName = IcePreprocessor.getDepFileName(targetCacheDir,
+                targetSourceDir,
+                targetDocName);
+        targetFile = new File(targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        target = (new File(targetFileName)).toPath();
+        source = (new File(sourceFileName)).toPath();
+        Files.createLink(target, source);
+
+
+        sourceFileName = IcePreprocessor.getJetExtentsFileName(sourceCacheDir,
+                sourceSourceDir,
+                sourceDocName
+        );
+        targetFileName = IcePreprocessor.getJetExtentsFileName(targetCacheDir,
+                targetSourceDir,
+                targetDocName);
+        targetFile = new File(targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        target = (new File(targetFileName)).toPath();
+        source = (new File(sourceFileName)).toPath();
+        Files.createLink(target, source);
+
+
+        sourceFileName = IcePreprocessor.getNamesFileName(sourceCacheDir,
+                sourceSourceDir,
+                sourceDocName
+        );
+        targetFileName = IcePreprocessor.getNamesFileName(targetCacheDir,
+                targetSourceDir,
+                targetDocName);
+        targetFile = new File(targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        target = (new File(targetFileName)).toPath();
+        source = (new File(sourceFileName)).toPath();
+        Files.createLink(target, source);
+
+
+        sourceFileName = IcePreprocessor.getNpsFileName(sourceCacheDir,
+                sourceSourceDir,
+                sourceDocName
+        );
+        targetFileName = IcePreprocessor.getNpsFileName(targetCacheDir,
+                targetSourceDir,
+                targetDocName);
+        targetFile = new File(targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        target = (new File(targetFileName)).toPath();
+        source = (new File(sourceFileName)).toPath();
+        Files.createLink(target, source);
+
+
+        sourceFileName = IcePreprocessor.getPosFileName(sourceCacheDir,
+                sourceSourceDir,
+                sourceDocName
+        );
+        targetFileName = IcePreprocessor.getPosFileName(targetCacheDir,
+                targetSourceDir,
+                targetDocName);
+        targetFile = new File(targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        target = (new File(targetFileName)).toPath();
+        source = (new File(sourceFileName)).toPath();
+        Files.createLink(target, source);
     }
 
     public static String splitCorpusName(String corpusName, int splitCount) {
@@ -444,7 +593,8 @@ public class IceCLI {
 
     private static void validateCorpus(String corpusName) {
         if (!Ice.corpora.containsKey(corpusName)) {
-            System.err.println("corpusName does not exist. Please pick a corpus from the list below:");
+            System.err.println(String.format("corpusName:%s does not exist. Please pick a corpus from the list below:",
+                corpusName));
             printCorporaList();
             System.exit(-1);
         }
