@@ -269,7 +269,7 @@ public class IceCLI {
                             }
                             String sourceSourceFileName = line + "." + filterName;
                             // create link for source file
-                            Path target = (targetSourceFile).toPath();
+                            Path target = targetSourceFile.getCanonicalFile().toPath();
                             Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();
                             try {
                                 Files.createSymbolicLink(target, source);
@@ -482,7 +482,7 @@ public class IceCLI {
             targetFile.delete();
         }
         Path target = (new File(targetFileName)).toPath();
-        Path source = (new File(sourceFileName)).toPath();
+        Path source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
 
         sourceFileName = IcePreprocessor.getDepFileName(sourceCacheDir,
@@ -497,7 +497,7 @@ public class IceCLI {
             targetFile.delete();
         }
         target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).toPath();
+        source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
 
 
@@ -513,7 +513,7 @@ public class IceCLI {
             targetFile.delete();
         }
         target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).toPath();
+        source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
 
 
@@ -529,7 +529,7 @@ public class IceCLI {
             targetFile.delete();
         }
         target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).toPath();
+        source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
 
 
@@ -545,7 +545,7 @@ public class IceCLI {
             targetFile.delete();
         }
         target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).toPath();
+        source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
 
 
@@ -561,7 +561,7 @@ public class IceCLI {
             targetFile.delete();
         }
         target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).toPath();
+        source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
     }
 
