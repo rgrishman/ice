@@ -263,13 +263,13 @@ public class IceCLI {
                             String targetSourceFileName = (fromDir + "/" + line).replaceAll("/", "_");
                             docListFileWriter.println(targetSourceFileName);
                             targetSourceFileName = targetSourceFileName + "." + filterName;
-                            File targetSourceFile = new File(corpusDir + "/" + targetSourceFileName);
+                            File targetSourceFile = (new File(corpusDir + "/" + targetSourceFileName)).getCanonicalFile();
                             if (targetSourceFile.exists()) {
                                 targetSourceFile.delete();
                             }
                             String sourceSourceFileName = line + "." + filterName;
                             // create link for source file
-                            Path target = targetSourceFile.getCanonicalFile().toPath();
+                            Path target = targetSourceFile.toPath();
                             Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();
                             try {
                                 Files.createSymbolicLink(target, source);
@@ -477,13 +477,8 @@ public class IceCLI {
         String targetFileName = IcePreprocessor.getAceFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        File targetFile = new File(targetFileName);
-        if (targetFile.exists()) {
-            targetFile.delete();
-        }
-        Path target = (new File(targetFileName)).toPath();
-        Path source = (new File(sourceFileName)).getCanonicalFile().toPath();
-        Files.createSymbolicLink(target, source);
+        linkFile(sourceFileName, targetFileName);
+
 
         sourceFileName = IcePreprocessor.getDepFileName(sourceCacheDir,
                 sourceSourceDir,
@@ -492,13 +487,8 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getDepFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        targetFile = new File(targetFileName);
-        if (targetFile.exists()) {
-            targetFile.delete();
-        }
-        target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).getCanonicalFile().toPath();
-        Files.createSymbolicLink(target, source);
+        linkFile(sourceFileName, targetFileName);
+
 
 
         sourceFileName = IcePreprocessor.getJetExtentsFileName(sourceCacheDir,
@@ -508,13 +498,8 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getJetExtentsFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        targetFile = new File(targetFileName);
-        if (targetFile.exists()) {
-            targetFile.delete();
-        }
-        target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).getCanonicalFile().toPath();
-        Files.createSymbolicLink(target, source);
+        linkFile(sourceFileName, targetFileName);
+
 
 
         sourceFileName = IcePreprocessor.getNamesFileName(sourceCacheDir,
@@ -524,13 +509,8 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getNamesFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        targetFile = new File(targetFileName);
-        if (targetFile.exists()) {
-            targetFile.delete();
-        }
-        target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).getCanonicalFile().toPath();
-        Files.createSymbolicLink(target, source);
+        linkFile(sourceFileName, targetFileName);
+
 
 
         sourceFileName = IcePreprocessor.getNpsFileName(sourceCacheDir,
@@ -540,13 +520,8 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getNpsFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        targetFile = new File(targetFileName);
-        if (targetFile.exists()) {
-            targetFile.delete();
-        }
-        target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).getCanonicalFile().toPath();
-        Files.createSymbolicLink(target, source);
+        linkFile(sourceFileName, targetFileName);
+
 
 
         sourceFileName = IcePreprocessor.getPosFileName(sourceCacheDir,
@@ -556,12 +531,17 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getPosFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        targetFile = new File(targetFileName);
+        linkFile(sourceFileName, targetFileName);
+
+    }
+
+    private static void linkFile(String sourceFileName, String targetFileName) throws IOException {
+        File targetFile = (new File(targetFileName)).getCanonicalFile();
         if (targetFile.exists()) {
             targetFile.delete();
         }
-        target = (new File(targetFileName)).toPath();
-        source = (new File(sourceFileName)).getCanonicalFile().toPath();
+        Path target = targetFile.toPath();
+        Path source = (new File(sourceFileName)).getCanonicalFile().toPath();
         Files.createSymbolicLink(target, source);
     }
 
