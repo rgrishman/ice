@@ -264,13 +264,14 @@ public class IceCLI {
                             docListFileWriter.println(targetSourceFileName);
                             targetSourceFileName = targetSourceFileName + "." + filterName;
                             File targetSourceFile = (new File(corpusDir + "/" + targetSourceFileName)).getCanonicalFile();
-                            if (targetSourceFile.exists()) {
-                                targetSourceFile.delete();
-                            }
+//                            if (targetSourceFile.exists()) {
+//                                targetSourceFile.delete();
+//                            }
                             String sourceSourceFileName = line + "." + filterName;
                             // create link for source file
                             Path target = targetSourceFile.toPath();
                             Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();
+                            Files.deleteIfExists(target);
                             try {
                                 Files.createSymbolicLink(target, source);
                                 // now create links to cache files
@@ -537,11 +538,9 @@ public class IceCLI {
 
     private static void linkFile(String sourceFileName, String targetFileName) throws IOException {
         File targetFile = (new File(targetFileName)).getCanonicalFile();
-        if (targetFile.exists()) {
-            targetFile.delete();
-        }
         Path target = targetFile.toPath();
         Path source = (new File(sourceFileName)).getCanonicalFile().toPath();
+        Files.deleteIfExists(target);
         Files.createSymbolicLink(target, source);
     }
 
