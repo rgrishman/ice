@@ -272,7 +272,7 @@ public class IceCLI {
                             Path target = (targetSourceFile).toPath();
                             Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();
                             try {
-                                Files.createLink(target, source);
+                                Files.createSymbolicLink(target, source);
                                 // now create links to cache files
                                 linkCache(sourceCacheDir, targetCacheDir,
                                         fromDir, corpusDir,
@@ -483,7 +483,7 @@ public class IceCLI {
         }
         Path target = (new File(targetFileName)).toPath();
         Path source = (new File(sourceFileName)).toPath();
-        Files.createLink(target, source);
+        Files.createSymbolicLink(target, source);
 
         sourceFileName = IcePreprocessor.getDepFileName(sourceCacheDir,
                 sourceSourceDir,
@@ -498,7 +498,7 @@ public class IceCLI {
         }
         target = (new File(targetFileName)).toPath();
         source = (new File(sourceFileName)).toPath();
-        Files.createLink(target, source);
+        Files.createSymbolicLink(target, source);
 
 
         sourceFileName = IcePreprocessor.getJetExtentsFileName(sourceCacheDir,
@@ -514,7 +514,7 @@ public class IceCLI {
         }
         target = (new File(targetFileName)).toPath();
         source = (new File(sourceFileName)).toPath();
-        Files.createLink(target, source);
+        Files.createSymbolicLink(target, source);
 
 
         sourceFileName = IcePreprocessor.getNamesFileName(sourceCacheDir,
@@ -530,7 +530,7 @@ public class IceCLI {
         }
         target = (new File(targetFileName)).toPath();
         source = (new File(sourceFileName)).toPath();
-        Files.createLink(target, source);
+        Files.createSymbolicLink(target, source);
 
 
         sourceFileName = IcePreprocessor.getNpsFileName(sourceCacheDir,
@@ -546,7 +546,7 @@ public class IceCLI {
         }
         target = (new File(targetFileName)).toPath();
         source = (new File(sourceFileName)).toPath();
-        Files.createLink(target, source);
+        Files.createSymbolicLink(target, source);
 
 
         sourceFileName = IcePreprocessor.getPosFileName(sourceCacheDir,
@@ -562,7 +562,7 @@ public class IceCLI {
         }
         target = (new File(targetFileName)).toPath();
         source = (new File(sourceFileName)).toPath();
-        Files.createLink(target, source);
+        Files.createSymbolicLink(target, source);
     }
 
     public static String splitCorpusName(String corpusName, int splitCount) {
