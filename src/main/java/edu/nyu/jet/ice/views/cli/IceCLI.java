@@ -30,6 +30,9 @@ import java.util.Properties;
  */
 public class IceCLI {
 
+    // TODO: switch this to on unless cache is already linked
+    public static final boolean SHOULD_LINK_CACHE = false;
+
     public static void main(String[] args) {
         // create Options object
         Options options = new Options();
@@ -270,14 +273,16 @@ public class IceCLI {
                             String sourceSourceFileName = line + "." + filterName;
                             // create link for source file
                             Path target = targetSourceFile.toPath();
-                            Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();
+                            Path source = (new File(fromDir + "/" + sourceSourceFileName)).getCanonicalFile().toPath();
                             Files.deleteIfExists(target);
                             try {
                                 Files.createSymbolicLink(target, source);
                                 // now create links to cache files
-                                linkCache(sourceCacheDir, targetCacheDir,
-                                        fromDir, corpusDir,
-                                        sourceSourceFileName, targetSourceFileName);
+                                if (SHOULD_LINK_CACHE) {
+                                    linkCache(sourceCacheDir, targetCacheDir,
+                                            fromDir, corpusDir,
+                                            sourceSourceFileName, targetSourceFileName);
+                                }
                             }
                             catch (Exception e) {
                                 e.printStackTrace();
