@@ -351,7 +351,7 @@ public class Bootstrap {
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
         }
-
+        System.err.println("Bootstrapper.DIVERSIFY:" + DIVERSIFY);
     }
 
     public double minDistanceToSet(String path, Set<String> pathSet) {
