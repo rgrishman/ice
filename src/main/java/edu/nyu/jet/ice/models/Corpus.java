@@ -562,7 +562,7 @@ public class Corpus {
     public static List<String> getTerms(String termFile, int limit, ListFilter tf) {
         List<String> topTerms = new ArrayList<String>();
         int k = 0;
-        DepPathMap depPathMap = DepPathMap.getInstance();
+        // DepPathMap depPathMap = DepPathMap.getInstance();
         boolean displayRelation = false;
         if (tf != null && tf instanceof RelationFilter) {
             // depPathMap.clear();
@@ -576,10 +576,10 @@ public class Corpus {
             if (exampleFile.exists() && !exampleFile.isDirectory()) {
                 exampleReader = new BufferedReader(new FileReader(exampleFile));
             }
-            boolean shouldReload = !depPathMap.load();
-            if (shouldReload) {
-                depPathMap.clear();
-            }
+//            boolean shouldReload = !depPathMap.load();
+//            if (shouldReload) {
+//                depPathMap.clear();
+//            }
             while (true) {
                 String term = reader.readLine();
                 String example = "";
@@ -589,7 +589,7 @@ public class Corpus {
                 if (term == null) break;
                 if (tf != null && !tf.filter(term)) continue;
                 if (displayRelation) {
-                    String[] parts = term.split("\t");
+                    String[] parts = term.split(":::");
                     if (example.indexOf("|||") > -1) {
                         example = example.split("\\|\\|\\|")[1].trim();
                     }
@@ -600,7 +600,8 @@ public class Corpus {
 //                        }
 //                    }
 //                    else {
-                        String repr = depPathMap.findRepr(parts[1]);
+                    //TODO: load dependency representation here
+                        String repr = ""; //depPathMap.findRepr(parts[1]);
                         if (repr != null) {
                             topTerms.add(parts[0] + "\t" + repr);
                         }
@@ -613,10 +614,10 @@ public class Corpus {
                 if (k >= limit) break;
             }
 			reader.close();
-            if (displayRelation && shouldReload) {
-                depPathMap.persist();
-                System.err.println("DepPathMap saved.");
-            }
+//            if (displayRelation && shouldReload) {
+//                depPathMap.persist();
+//                System.err.println("DepPathMap saved.");
+//            }
             if (null != exampleReader) {
     			exampleReader.close();
             }
