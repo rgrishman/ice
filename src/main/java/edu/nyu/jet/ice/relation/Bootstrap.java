@@ -265,10 +265,9 @@ public class Bootstrap {
                 argPairsForP.add(ap.arg1 + ":" + ap.arg2);
             }
             //  arguments are similar to existing paths
-            double argScore = Math.log(argPairsForP.size())*(double)sharedCount.get(p)/argPairsForP.size();
-            // 1 - (double)sharedCount.get(p)/argPairsForP.size() + 0.1;
+            double argScore = 1 - (double)sharedCount.get(p)/argPairsForP.size();
             // how close the path is to positive seeds accoring to edit distance
-            double posScore = 0.1; // minDistanceToSet(p, seedPaths);
+            double posScore = minDistanceToSet(p, seedPaths);
             // how close the path is to negative seeds
             double negScore = 0.1; // minDistanceToSet(p, rejects);
             int    patternLength = 1 + p.split(":").length;
@@ -283,7 +282,7 @@ public class Bootstrap {
             // confusion score can be an arbitrary combination of the scores above.
             double confusionScore  = Math.max(Math.max(nearestNeighborConfusion, borderConfusion), argConfusion);
             if (!USE_NEGATIVE) {
-                confusionScore = argScore; //1/posScore;
+                confusionScore = 1/posScore;
             }
 
             String fullp = arg1Type + " -- " + p + " -- " + arg2Type;

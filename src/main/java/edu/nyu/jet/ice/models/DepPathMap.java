@@ -15,9 +15,9 @@ import java.util.*;
 public class DepPathMap {
     private static DepPathMap instance = null;
 
-    private TreeMap<String, String> pathReprMap = new TreeMap<String, String>();
-    private TreeMap<String, List<String>> reprPathMap = new TreeMap<String, List<String>>();
-    private TreeMap<String, String> pathExampleMap = new TreeMap<String, String>();
+    private HashMap<String, String> pathReprMap = new HashMap<String, String>();
+    private HashMap<String, List<String>> reprPathMap = new HashMap<String, List<String>>();
+    private HashMap<String, String> pathExampleMap = new HashMap<String, String>();
     private DepPathMap() { }
     private String previousFileName = null;
 
@@ -50,7 +50,7 @@ public class DepPathMap {
     }
 
     public String findRepr(String path) {
-        return pathReprMap.get(lemmatize(path));
+        return pathReprMap.get(path);
     }
 
     public List<String> findPath(String repr) {
@@ -58,7 +58,7 @@ public class DepPathMap {
     }
 
     public String findExample(String path) {
-        return pathExampleMap.get(lemmatize(path));
+        return pathExampleMap.get(path);
     }
 
     public void clear() {
@@ -173,13 +173,13 @@ public class DepPathMap {
         return true;
     }
 
-    private String lemmatize(String path) {
-        String[] parts = path.split(" -- ");
-        if (parts.length != 3) {
-            return null;
-        }
-        return parts[0] + " -- " + AnchoredPath.lemmatizePath(parts[1]) + " -- " + parts[2];
-    }
+//    private String lemmatize(String path) {
+//        String[] parts = path.split(" -- ");
+//        if (parts.length != 3) {
+//            return null;
+//        }
+//        return parts[0] + " -- " + AnchoredPath.lemmatizePath(parts[1]) + " -- " + parts[2];
+//    }
 
 
     /**
