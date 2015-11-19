@@ -129,8 +129,8 @@ public class Bootstrap {
             //seedPaths.add(firstSeedPath);
             seedPaths.addAll(allPaths);
             // Using SimAchoredPathSet
-            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
-//            pathSet = new AnchoredPathSet(patternFileName);
+//            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
+            pathSet = new AnchoredPathSet(patternFileName);
             bootstrap(arg1Type, arg2Type);
         }
         catch (IOException e) {
