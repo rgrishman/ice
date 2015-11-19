@@ -18,6 +18,7 @@ import edu.nyu.jet.ice.utils.Ratio;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
+import gnu.trove.TObjectIntHashMap;
 
 //import java.nio.file.Files;
 //import java.nio.file.Paths;
@@ -49,6 +50,7 @@ public class Corpus {
     public TermFilter termFilter = new TermFilter();
     static public RelationFilter relationFilter = new RelationFilter();
     public EntitySetBuilder entitySetBuilder = new EntitySetBuilder();
+    public TObjectIntHashMap<String> pathCountMap = new TObjectIntHashMap<String>();
 
     // property methods
     public String getName() {
