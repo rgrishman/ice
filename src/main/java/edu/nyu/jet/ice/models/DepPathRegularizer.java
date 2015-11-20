@@ -7,12 +7,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Regularizer for DepPath
+ *  Regularizer for DepPath:  deletes quantity constructs such as 'pound of X'
+ *  from dependency paths.
  *
  * @author yhe
  * @version 1.0
  */
 public class DepPathRegularizer {
+
+    /**
+     *  set of quantity words
+     */
 
     public Set<String> quantifiers = new HashSet<String>();
 
@@ -27,6 +32,10 @@ public class DepPathRegularizer {
         quantifiers.add("pound");
         quantifiers.add("amount");
     }
+
+    /**
+     *  Returns dependency path 'p' with quantity phrase 'Q of X' reduced to 'X'.
+     */
 
     public DepPath regularize(DepPath p) {
         DepPath result =  new DepPath(p.start, p.end, p.arg1, p.arg2);

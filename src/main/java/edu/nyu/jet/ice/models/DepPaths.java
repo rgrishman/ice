@@ -77,17 +77,17 @@ public class DepPaths {
 
     /**
      * counts the number of instances of each dependency triple in a set
-     * of files.  Invoked by <br>
-     * DepCounter  propsFile docList inputDir inputSuffix outputFile
-     * <p/>
-     * propsFile     Jet properties file
-     * docList       file containing list of documents to be processed, 1 per line
-     * inputDir      directory containing files to be processed
-     * inputSuffix   file extension to be added to document name to obtain name of input file
-     * outputFile    file to contain counts of dependency relations
-     * typeOutputFile    file to contain counts of dependency relations
-     * sourceDictFile file to save source sentences for given dependency paths
-     * cacheDir (optional) cache of preprocessed files
+     * of files.  Invoked by <br><br>
+     * <tt> DepPaths  propsFile docList inputDir inputSuffix outputFile </tt>
+     * <br><br>
+     * <tt> propsFile     </tt> Jet properties file                                                       <br>
+     * <tt> docList       </tt> file containing list of documents to be processed, 1 per line             <br>
+     * <tt> inputDir      </tt> directory containing files to be processed                                <br>
+     * <tt> inputSuffix   </tt> file extension to be added to document name to obtain name of input file  <br>
+     * <tt> outputFile    </tt> file to contain counts of dependency relations                            <br>
+     * <tt> typeOutputFile </tt> file to contain counts of dependency relations                           <br>
+     * <tt> sourceDictFile </tt> file to save source sentences for given dependency paths                 <br>
+     * <tt> cacheDir      </tt> (optional) cache of preprocessed files
      */
 
     public static void main(String[] args) throws IOException {
@@ -288,6 +288,10 @@ public class DepPaths {
         return mention.jetExtent.start() >= sentence.start() &&
                 mention.jetExtent.end() <= sentence.end();
     }
+
+    /**
+     *  returns true if 'mention' is in 'sentence'.
+     */
 
     public static boolean annotationInSentence(Annotation mention, Annotation sentence) {
         return mention.start() >= sentence.start() &&

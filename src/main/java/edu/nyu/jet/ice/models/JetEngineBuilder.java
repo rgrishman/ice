@@ -5,6 +5,11 @@ import edu.nyu.jet.ice.uicomps.Ice;
 import java.util.*;
 import java.io.*;
 
+/**
+ *  writes files to be read by Jet containing information on
+ *  entity sets and relations.
+ */
+
 public class JetEngineBuilder {
 
     static Properties props;
