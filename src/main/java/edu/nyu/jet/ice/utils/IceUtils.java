@@ -12,6 +12,7 @@ import Jet.Tipster.Document;
 import Jet.Tipster.Span;
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
+import gnu.trove.TObjectIntHashMap;
 
 import java.io.*;
 import java.util.*;
@@ -243,6 +244,32 @@ public class IceUtils {
             }
         }
         return count;
+    }
+
+    /**
+     * load a text file in format COUNT\tSTRING
+     * @param countFile the count file
+     * @return
+     */
+    public static TObjectIntHashMap<String> loadCountFile(String countFile) throws IOException {
+        TObjectIntHashMap<String> result = new TObjectIntHashMap<String>();
+        File f = new File(countFile);
+        if (!f.exists()) {
+            System.err.print(countFile + " does not exist.");
+            return result;
+        }
+        BufferedReader br = new BufferedReader(new FileReader(countFile));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            String[] parts = line.split("\\t");
+            if (parts.length == 2) {
+                int count = Integer.valueOf(parts[0]);
+                String content = parts[1].trim();
+                result.put(content, count);
+            }
+        }
+        br.close();
+        return result;
     }
 
 

@@ -111,7 +111,7 @@ public class DepPaths {
         String inputSuffix = args[3];
         String outputFile = args[4];
         String typeOutputFile = args[5];
-        String sourceDictFile = args[6];
+        // String sourceDictFile = args[6];
         String cacheDir = args.length == 8 ? args[7] :
                 FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
 
@@ -194,19 +194,19 @@ public class DepPaths {
             typeWriter = new PrintWriter(new FileWriter(typeOutputFile));
             String relationReprFile = outputFile.substring(0, outputFile.length() - 1) + "Repr";
             PrintWriter relationReprWriter = new PrintWriter(new FileWriter(relationReprFile));
-            PrintWriter sourceDictWriter = new PrintWriter(new FileWriter(sourceDictFile));
+//            PrintWriter sourceDictWriter = new PrintWriter(new FileWriter(sourceDictFile));
             for (String r : relationInstanceCounts.keySet()) {
                 writer.println(relationInstanceCounts.get(r) + "\t" + r);
             }
             for (String r : relationTypeCounts.keySet()) {
                 typeWriter.println(relationTypeCounts.get(r) + "\t" + r);
-                sourceDictWriter.println(relationTypeCounts.get(r) + "\t" + r + " ||| " + sourceDict.get(r));
+//                sourceDictWriter.println(relationTypeCounts.get(r) + "\t" + r + " ||| " + sourceDict.get(r));
                 relationReprWriter.println(r + ":::" + linearizationDict.get(r) + ":::" + sourceDict.get(r));
             }
             writer.close();
             typeWriter.close();
             relationReprWriter.close();
-            sourceDictWriter.close();
+//            sourceDictWriter.close();
 
         }
     }
