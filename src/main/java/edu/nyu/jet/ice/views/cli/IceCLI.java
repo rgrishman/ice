@@ -221,12 +221,12 @@ public class IceCLI {
                 }
                 mergeSplit(corpusName, numOfProcesses);
             }
-            else if (action.equals("addCorpusFrom")) {
+            else if (action.equals("mergeCorporaInto")) {
                 String corpusDir  = cmd.getOptionValue("targetDir");
                 String filterName = cmd.getOptionValue("filter");
                 String fromCorporaStr = cmd.getOptionValue("fromCorpora");
                 if (corpusDir == null || filterName == null || fromCorporaStr == null) {
-                    System.err.println("--targetDir --filter must be set for the addCorpusFrom action.");
+                    System.err.println("--targetDir --filter must be set for the mergeCorporaInto action.");
                     printHelp(options);
                     System.exit(-1);
                 }
@@ -636,7 +636,7 @@ public class IceCLI {
     private static void printHelp(Options options) {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("IceCLI ACTION CORPUS [OPTIONS]\n" +
-                        "ACTION=addCorpus|setBackgroundFor|findEntities|indexEntities|findPhrases",
+                        "ACTION=addCorpus|mergeCorporaInto|setBackgroundFor|findEntities|indexEntities|findPhrases",
                 options);
     }
 
