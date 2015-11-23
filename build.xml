@@ -32,6 +32,7 @@
                 <include name="guava-18.0.jar" />
                 <include name="la4j-0.4.9.jar" />
                 <include name="miglayout-swing-4.2.jar" />
+                <include name="miglayout-core-4.2.jar" />
                 <include name="jet-all-1.8.1.jar" />
             </fileset>
         </path>
@@ -45,6 +46,7 @@
                 <include name="guava-18.0.jar" />
                 <include name="la4j-0.4.9.jar" />
                 <include name="miglayout-swing-4.2.jar" />
+                <include name="miglayout-core-4.2.jar" />
                 <include name="jet-all-1.8.1.jar" />
             </fileset>
         </path>
@@ -145,6 +147,7 @@
                 <include name="guava-18.0.jar" />
                 <include name="la4j-0.4.9.jar" />
                 <include name="miglayout-swing-4.2.jar" />
+                <include name="miglayout-core-4.2.jar" />
                 <include name="jet-all-1.8.1.jar" />
             </fileset>
         </unjar>
