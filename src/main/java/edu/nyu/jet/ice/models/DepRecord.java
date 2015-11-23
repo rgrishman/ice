@@ -26,7 +26,7 @@ public class DepRecord {
         this.count = count;
     }
 
-    public List<DepRecord> loadFromFile(String relationReprFile, TObjectIntHashMap<String> typedRelationCountMap)
+    public List<DepRecord> loadFromFile(String relationReprFile, TObjectIntHashMap typedRelationCountMap)
             throws IOException {
         BufferedReader r = new BufferedReader(new FileReader(relationReprFile));
         String line = null;

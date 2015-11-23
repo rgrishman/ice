@@ -251,8 +251,8 @@ public class IceUtils {
      * @param countFile the count file
      * @return
      */
-    public static TObjectIntHashMap<String> loadCountFile(String countFile) throws IOException {
-        TObjectIntHashMap<String> result = new TObjectIntHashMap<String>();
+    public static TObjectIntHashMap loadCountFile(String countFile) throws IOException {
+        TObjectIntHashMap result = new TObjectIntHashMap();
         File f = new File(countFile);
         if (!f.exists()) {
             System.err.print(countFile + " does not exist.");
