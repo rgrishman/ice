@@ -83,5 +83,5 @@ Then, from the working directory, run
 
 # User Manual
 
-Please refer to [Iceman](docs/iceman.html) for usage.
+Please refer to [Iceman](docs/iceman.md) for usage.
 
