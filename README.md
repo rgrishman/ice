@@ -1,4 +1,4 @@
-# ATTENTION: This is a pre-release version of Ice. Use at your own risk.
+# ICE: Integrated Customization Environment for Information Extraction
 
 Licensed under the Apache 2.0 license.
 
