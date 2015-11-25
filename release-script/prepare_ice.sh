@@ -3,7 +3,7 @@
 JET_PACKAGE=http://cs.nyu.edu/grishman/jet/jet-150509.tar.gz
 PARSER_MODEL=http://cs.nyu.edu/grishman/jet/parseModel.gz
 NE_MODELS=http://cs.nyu.edu/grishman/jet/AceOntoMeneModel.gz
-ICE_JAR=ICE-0.2.0-jar-with-dependencies.jar
+ICE_JAR=ice-all.jar
 export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
 echo "Fetching Jet package..."
 curl $JET_PACKAGE > jet.tar.gz
@@ -40,7 +40,7 @@ cp ice/docs/* docs/
 rm docs/*.md
 cp ice/LICENSE ./
 cp ice/COPYRIGHT ./
-cp ice/target/$ICE_JAR ./
+cp ice/$ICE_JAR ./
 cp ice/src/scripts/runice.sh ./
 cp ice/src/scripts/runtagger.sh ./
 cp ice/src/props/* ./
