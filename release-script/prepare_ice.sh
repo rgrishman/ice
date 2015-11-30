@@ -5,8 +5,8 @@ PARSER_MODEL=http://cs.nyu.edu/grishman/jet/parseModel.gz
 NE_MODELS=http://cs.nyu.edu/grishman/jet/AceOntoMeneModel.gz
 ICE_JAR=ice-all.jar
 export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
-echo "Fetching Jet package..."
-curl $JET_PACKAGE > jet.tar.gz
+# echo "Fetching Jet package..."
+# curl $JET_PACKAGE > jet.tar.gz
 echo "Fetching parser model..."
 curl $PARSER_MODEL > parseModel.gz
 echo "Fetching NE tagger models..."
@@ -30,7 +30,7 @@ rm -rf test
 git clone https://github.com/ivanhe/ice.git
 cd ice
 # Temporary: Should use master branch
-git checkout master
+git checkout rc-dec15
 ant
 perl ../../Markdown_1.0.1/Markdown.pl README.md > README.html
 cd ..
