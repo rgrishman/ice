@@ -30,7 +30,7 @@ rm -rf test
 git clone https://github.com/ivanhe/ice.git
 cd ice
 # Temporary: Should use master branch
-git checkout rc-dec15
+# git checkout rc-dec15
 ant
 perl ../../Markdown_1.0.1/Markdown.pl README.md > README.html
 cd ..
