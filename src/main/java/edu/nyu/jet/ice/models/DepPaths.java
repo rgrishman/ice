@@ -57,6 +57,9 @@ public class DepPaths {
 
     public static final int MAX_MENTIONS_IN_SENTENCE = 50;
 
+    // skip first x sentences at the beginning. 0: keep all; 1: skip first sentence
+    public static final int SKIPPED_SENTENCES_AT_BEGINNING = 0;
+
     public static ProgressMonitorI progressMonitor = null;
 
     public static DepPathRegularizer depPathRegularizer = new DepPathRegularizer();
@@ -77,17 +80,17 @@ public class DepPaths {
 
     /**
      * counts the number of instances of each dependency triple in a set
-     * of files.  Invoked by <br><br>
-     * <tt> DepPaths  propsFile docList inputDir inputSuffix outputFile </tt>
-     * <br><br>
-     * <tt> propsFile     </tt> Jet properties file                                                       <br>
-     * <tt> docList       </tt> file containing list of documents to be processed, 1 per line             <br>
-     * <tt> inputDir      </tt> directory containing files to be processed                                <br>
-     * <tt> inputSuffix   </tt> file extension to be added to document name to obtain name of input file  <br>
-     * <tt> outputFile    </tt> file to contain counts of dependency relations                            <br>
-     * <tt> typeOutputFile </tt> file to contain counts of dependency relations                           <br>
-     * <tt> sourceDictFile </tt> file to save source sentences for given dependency paths                 <br>
-     * <tt> cacheDir      </tt> (optional) cache of preprocessed files
+     * of files.  Invoked by <br>
+     * DepPaths      propsFile docList inputDir inputSuffix outputFile
+     * <p/>
+     * propsFile     Jet properties file
+     * docList       file containing list of documents to be processed, 1 per line
+     * inputDir      directory containing files to be processed
+     * inputSuffix   file extension to be added to document name to obtain name of input file
+     * outputFile    file to contain counts of dependency relations
+     * typeOutputFile    file to contain counts of dependency relations
+     * sourceDictFile file to save source sentences for given dependency paths
+     * cacheDir (optional) cache of preprocessed files
      */
 
     public static void main(String[] args) throws IOException {
@@ -108,7 +111,7 @@ public class DepPaths {
         String inputSuffix = args[3];
         String outputFile = args[4];
         String typeOutputFile = args[5];
-        String sourceDictFile = args[6];
+        // String sourceDictFile = args[6];
         String cacheDir = args.length == 8 ? args[7] :
                 FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
 
@@ -142,7 +145,7 @@ public class DepPaths {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
-                System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+                System.out.println("Collecting dependency paths in document " + docCount + ": " + inputFile);
                 ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
                 doc.setAllTags(true);
                 doc.open();
@@ -191,19 +194,19 @@ public class DepPaths {
             typeWriter = new PrintWriter(new FileWriter(typeOutputFile));
             String relationReprFile = outputFile.substring(0, outputFile.length() - 1) + "Repr";
             PrintWriter relationReprWriter = new PrintWriter(new FileWriter(relationReprFile));
-            PrintWriter sourceDictWriter = new PrintWriter(new FileWriter(sourceDictFile));
+//            PrintWriter sourceDictWriter = new PrintWriter(new FileWriter(sourceDictFile));
             for (String r : relationInstanceCounts.keySet()) {
                 writer.println(relationInstanceCounts.get(r) + "\t" + r);
             }
             for (String r : relationTypeCounts.keySet()) {
                 typeWriter.println(relationTypeCounts.get(r) + "\t" + r);
-                sourceDictWriter.println(relationTypeCounts.get(r) + "\t" + r + " ||| " + sourceDict.get(r));
+//                sourceDictWriter.println(relationTypeCounts.get(r) + "\t" + r + " ||| " + sourceDict.get(r));
                 relationReprWriter.println(r + ":::" + linearizationDict.get(r) + ":::" + sourceDict.get(r));
             }
             writer.close();
             typeWriter.close();
             relationReprWriter.close();
-            sourceDictWriter.close();
+//            sourceDictWriter.close();
 
         }
     }
@@ -219,6 +222,11 @@ public class DepPaths {
         return "o";
     }
 
+    /**
+     *  generates dependency paths between all pairs of ENAMEXs appearing
+     *  in the same sentence of document 'doc'.  These paths are then
+     *  recorded by 'recordPaths'.  
+     */
 
     static void collectPaths(Document doc,
                              SyntacticRelationSet relations,
@@ -238,7 +246,7 @@ public class DepPaths {
             // (> MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH characters);
             // 3) sentence with quotes, and 4) sentence with parenthesis
 
-            if (sentCount == 1) continue;
+            if (sentCount == SKIPPED_SENTENCES_AT_BEGINNING) continue;
             if (sentence.end() - sentence.start() > MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH) continue;
             String sentText = doc.text(sentence);
             if (sentText.contains("(") || sentText.contains(")") || sentText.contains("[") || sentText.contains("]") ||
@@ -289,14 +297,19 @@ public class DepPaths {
                 mention.jetExtent.end() <= sentence.end();
     }
 
-    /**
-     *  returns true if 'mention' is in 'sentence'.
-     */
-
     public static boolean annotationInSentence(Annotation mention, Annotation sentence) {
         return mention.start() >= sentence.start() &&
                 mention.end() <= sentence.end();
     }
+
+    /**
+     *  records dependency path 'path' from 'mention1' to 'mention2' as follows:
+     *  <ul>
+     *  <li> with its actual arguments, in 'relationInstanceCounts'            </li>
+     *  <li> with its argument types, in 'relationTypeCounts'                  </li>
+     *  <li> with its argument types, in 'sourceDict' and 'linearizationDict'  </li>
+     *  </ul>
+     */
 
     static void recordPath(Document doc, Annotation sentence, SyntacticRelationSet relations,
                            Annotation mention1, DepPath path, Annotation mention2) {
@@ -319,7 +332,6 @@ public class DepPaths {
                 mention2.get("mType").equals("PRO")) {
             m2Val = ((String) mention2.get("val")).replaceAll("\\s+", " ").trim();
         }
-        // String source = inputDir + "/" + inputFile + " | " + start + " | " + end;
         String source = pathText(doc, sentence, mention1, mention2);
 
         count(relationInstanceCounts, m1Val + " -- " + regularizedPath + " -- " + m2Val);
@@ -411,6 +423,10 @@ public class DepPaths {
         map.put(s, n + 1);
     }
 
+    /**
+     *  returns text of 'sentence' with 'mention1' and 'mention2' enclosed in brackets.
+     *  This is the form in which examples of relations are presented to the user.
+     */
 
     static String pathText(Document doc, Annotation sentence,
                            Annotation mention1, Annotation mention2) {

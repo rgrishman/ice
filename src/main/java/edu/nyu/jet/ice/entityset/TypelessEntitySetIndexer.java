@@ -140,14 +140,13 @@ public class TypelessEntitySetIndexer {
                 if (!("*".equals(inputSuffix.trim()))) {
                     inputFile = inputFile + "." + inputSuffix;
                 }
-				System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
+				System.out.println ("\nIndexing terms in document " + docCount + ": " + inputFile);
 				ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
 				doc.setAllTags(true);
 				doc.open();
 				// process document
 				Ace.monocase = Ace.allLowerCase(doc);
 				Control.processDocument(doc, null, false, docCount);
-				System.err.println("Jet control finished");
 
 				SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
 						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),

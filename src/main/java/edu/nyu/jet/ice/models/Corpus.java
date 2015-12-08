@@ -29,6 +29,15 @@ import javax.swing.border.*;
 import java.awt.event.*;
 import java.util.List;
 
+/**
+ *  a corpus (set of documents) for ICE.
+ *
+ *  A corpus is specified by the root directory of a directory tree and
+ *  a file extension filter:  it consists of all non-directory files under the
+ *  root with a matching extension.  Exception:  if the filter is "*", all
+ *  files are included, regardless of extension.
+ */
+
 public class Corpus {
 
     // properties
@@ -495,6 +504,11 @@ public class Corpus {
         IceUtils.numsort(infile, outfile);
     }
 
+    /**
+     *  returns an array containing the paths (relative to the root of
+     *  the directory tree for this corpus) of all the documents in the corpus.
+     */
+
     String[] buildDocumentList() {
         if (directory.equals("?") || filter.equals("?")) return null;
         //File dir = new File(directory);
@@ -571,28 +585,28 @@ public class Corpus {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(termFile));
             // System.out.println("TERMFILE: " + termFile);
-            File exampleFile = new File(termFile + ".source.dict");
-            BufferedReader exampleReader = null;
-            if (exampleFile.exists() && !exampleFile.isDirectory()) {
-                exampleReader = new BufferedReader(new FileReader(exampleFile));
-            }
+//            File exampleFile = new File(termFile + ".source.dict");
+//            BufferedReader exampleReader = null;
+//            if (exampleFile.exists() && !exampleFile.isDirectory()) {
+//                exampleReader = new BufferedReader(new FileReader(exampleFile));
+//            }
             boolean shouldReload = !depPathMap.load();
             if (shouldReload) {
                 depPathMap.clear();
             }
             while (true) {
                 String term = reader.readLine();
-                String example = "";
-                if (exampleReader != null) {
-                    example = exampleReader.readLine();
-                }
+//                String example = "";
+//                if (exampleReader != null) {
+//                    example = exampleReader.readLine();
+//                }
                 if (term == null) break;
                 if (tf != null && !tf.filter(term)) continue;
                 if (displayRelation) {
                     String[] parts = term.split("\t");
-                    if (example.indexOf("|||") > -1) {
-                        example = example.split("\\|\\|\\|")[1].trim();
-                    }
+//                    if (example.indexOf("|||") > -1) {
+//                        example = example.split("\\|\\|\\|")[1].trim();
+//                    }
 //                    if (shouldReload) {
 //                        if (parts.length == 2 &&
 //                                depPathMap.addPath(parts[1], example) == DepPathMap.AddStatus.SUCCESSFUL) {
@@ -617,9 +631,9 @@ public class Corpus {
                 depPathMap.persist();
                 System.err.println("DepPathMap saved.");
             }
-            if (null != exampleReader) {
-    			exampleReader.close();
-            }
+//            if (null != exampleReader) {
+//    			exampleReader.close();
+//            }
         } catch (IOException e) {
             System.out.println("IOException");
         }

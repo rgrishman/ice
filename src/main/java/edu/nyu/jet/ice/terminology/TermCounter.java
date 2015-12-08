@@ -98,7 +98,7 @@ public class TermCounter extends Thread {
                 } else {
                     inputFile = docName + "." + inputSuffix;
                 }
-                System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+                System.out.println("\nCounting terms in document " + docCount + ": " + inputFile);
                 ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
                 doc.setAllTags(true);
                 doc.open();
