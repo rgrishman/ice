@@ -23,6 +23,7 @@ import opennlp.model.FileEventStream;
 import opennlp.model.OnePassDataIndexer;
 import org.ho.yaml.YamlDecoder;
 import org.la4j.vector.sparse.CompressedVector;
+import org.la4j.Vector;
 
 import java.io.*;
 import java.util.*;
@@ -205,20 +206,20 @@ public class TypelessEntitySetIndexer {
 		}
 	}
 
-    private static void updateContextWithPMI(Map<String, org.la4j.vector.Vector> counter) {
+    private static void updateContextWithPMI(Map<String, org.la4j.Vector> counter) {
         if (counter.size() == 0) return;
         double denominator = 0;
         int featureLength    = 0;
-        for (org.la4j.vector.Vector v : counter.values()) {
+        for (org.la4j.Vector v : counter.values()) {
             denominator += v.sum();
             if (featureLength == 0) featureLength = v.length();
         }
-        org.la4j.vector.Vector priors = new CompressedVector(featureLength);
-        for (org.la4j.vector.Vector v : counter.values()) {
+        org.la4j.Vector priors = new CompressedVector(featureLength);
+        for (org.la4j.Vector v : counter.values()) {
             priors = priors.add(v);
         }
         priors = priors.divide(denominator);
-        for (org.la4j.vector.Vector v : counter.values()) {
+        for (org.la4j.Vector v : counter.values()) {
             denominator = v.sum();
             for (int i = 0; i < v.length(); i++) {
                 double val   = v.get(i);
@@ -230,7 +231,7 @@ public class TypelessEntitySetIndexer {
         }
     }
 
-    private static void writeVector(String s, org.la4j.vector.Vector v, PrintWriter w) {
+    private static void writeVector(String s, org.la4j.Vector v, PrintWriter w) {
         w.print(s);
         for (int i = 0; i < v.length(); i++) {
             if (v.get(i) > 0.1) {
@@ -240,7 +241,7 @@ public class TypelessEntitySetIndexer {
         w.println();
     }
 
-    private static void writeVectorInfo(String s, org.la4j.vector.Vector v, String[] contextLabels, PrintWriter w) {
+    private static void writeVectorInfo(String s, org.la4j.Vector v, String[] contextLabels, PrintWriter w) {
         w.print(s);
         for (int i = 0; i < v.length(); i++) {
             if (v.get(i) > 0.1) {
