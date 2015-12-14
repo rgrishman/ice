@@ -22,10 +22,10 @@ Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
 Ace.RelationModel.fileName = ../acedata/iceRelationModel
 #################################
 #
-# processDocument      = sentenceSplit, sentence:processSentence
+processDocument      = sentenceSplit, sentence:processSentence
 processSentence      = tokenize, lexLookup, pruneTags, tagPOS, \
-                        tagNames, chunk, \
-                        pat(names), pat(othernames), ng:processNG, pat(fusePo    ssessive), \
-                        pat(vgroups), pat(particles), pat(np), pat(np), pat(c    onj), \
-                        pat(vp), pat(rnv), pat(s), depParse, resolve
+                       tagNames, chunk, \
+                       pat(names), pat(othernames), ng:processNG, pat(fusePossessive), \
+                       pat(vgroups), pat(particles), pat(np), pat(np), pat(conj), \
+                       pat(vp), pat(rnv), pat(s), depParse, resolve
 processNG            = pat(ng-chunks)

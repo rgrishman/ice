@@ -59,7 +59,7 @@
     <target name="compile" depends="prepare">
         <javac srcdir="${src.dir}"
                destdir="${build.dir}"
-               target="1.5"
+               target="1.7"
                encoding="UTF-8"
                classpathref="build.classpath"
                optimize="${optimize}"
