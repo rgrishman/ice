@@ -30,7 +30,7 @@ rm -rf test
 git clone https://github.com/ivanhe/ice.git
 cd ice
 # Temporary: Should use master branch
-git checkout master
+# git checkout rc-dec15
 ant
 perl ../../Markdown_1.0.1/Markdown.pl README.md > README.html
 cd ..
@@ -43,6 +43,8 @@ cp ice/COPYRIGHT ./
 cp ice/$ICE_JAR ./
 cp ice/src/scripts/runice.sh ./
 cp ice/src/scripts/runtagger.sh ./
+cp ice/src/scripts/icecli ./
+cp ice/src/scripts/icecli6 ./
 cp ice/src/props/* ./
 cp ice/src/models/data/* ./data/
 touch acedata/ice_onoma.dict
@@ -50,6 +52,8 @@ touch acedata/EDTypesFromUser.dict
 touch acedata/iceRelationModel
 chmod u+x runice.sh
 chmod u+x runtagger.sh
+chmod u+x icecli6
+chmod u+x icecli
 rm -rf ice
 cd ..
 rm -rf Markdown*
