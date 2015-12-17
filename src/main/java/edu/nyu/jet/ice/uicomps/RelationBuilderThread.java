@@ -46,7 +46,8 @@ public class RelationBuilderThread extends Thread {
             frame.rankedList.revalidate();
             frame.rankedList.repaint();
         } catch (Exception e) {
-            System.out.println("Exception in Jet.RelationAL.Bootstrap " + e);
+            System.err.println("Exception in Jet.RelationAL.Bootstrap: ");
+            e.printStackTrace();
         }
     }
 }

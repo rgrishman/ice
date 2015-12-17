@@ -10,3 +10,8 @@ target/
 *.save
 tmp/
 .DS_Store/
+build/
+report/
+docs/api
+ice-all-0.2.1.jar
+ice-all.jar

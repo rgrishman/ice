@@ -139,10 +139,12 @@ public class JetEngineBuilder {
         pw = new PrintWriter(new FileWriter(fileName + ".neg"));
         for (IceRelation rs : relations) {
             List<String> paths = rs.getNegPaths();
-            String type = rs.getName();
-            for (String path : paths) {
-                String pattern = path.replaceAll(" -- ", "--");
-                pw.println(pattern + "\t" + type);
+            if (rs != null) {
+                String type = rs.getName();
+                for (String path : paths) {
+                    String pattern = path.replaceAll(" -- ", "--");
+                    pw.println(pattern + "\t" + type);
+                }
             }
         }
         pw.close();

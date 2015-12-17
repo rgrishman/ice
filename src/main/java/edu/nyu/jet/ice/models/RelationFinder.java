@@ -10,7 +10,6 @@ import java.io.IOException;
 /**
  * count all dependency paths in corpus.
  */
-
 public class RelationFinder extends Thread {
 
     String[] args;
@@ -56,7 +55,7 @@ public class RelationFinder extends Thread {
             DepPaths.progressMonitor = relationProgressMonitor;
             DepPaths.main(args);
             Corpus.sort("temp", types);
-            Corpus.sort("temp.source.dict", types + ".source.dict");
+            // Corpus.sort("temp.source.dict", types + ".source.dict");
             depPathMap.forceLoad();
 			if(area != null) {
 				Corpus.displayTerms(types, 40, area, Corpus.relationFilter);

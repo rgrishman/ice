@@ -42,7 +42,9 @@ public class DepPathRegularizer {
 
         SyntacticRelation prevRelation = null;
         for (SyntacticRelation r : p.relations) {
-            if (r.type.equals("prep_of") &&
+            // prep_of: when using transformation
+            // prep: when not using transformation
+            if ((r.type.equals("prep_of") || r.type.equals("prep")) &&
                     quantifiers.contains(
                             stemmer.getStem(r.sourceWord.trim().toLowerCase(), "NN")) &&
                     prevRelation != null) {
@@ -54,7 +56,14 @@ public class DepPathRegularizer {
                 if (prevRelation != null) {
                     result.append(prevRelation);
                 }
-                prevRelation = r;
+                if ((r.type.equals("prep_of-1") || r.type.equals("prep-1")) &&
+                        quantifiers.contains(
+                                stemmer.getStem(r.targetWord.trim().toLowerCase(), "NN"))) {
+                    prevRelation = null;
+                }
+                else {
+                    prevRelation = r;
+                }
             }
         }
         if (prevRelation != null) {

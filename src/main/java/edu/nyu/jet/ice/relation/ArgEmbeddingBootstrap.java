@@ -303,6 +303,7 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
         int count = 0;
         for (IcePath icePath : scoreList) {
             double simScore = minDistanceToSet(icePath.getPath(), foundPatternStrings);
+            System.err.println("SimScore for " + icePath.toString() + " " + simScore);
             boolean isValid = count > SCREEN_LINES ||
                     !existingReprs.contains(icePath.getRepr()) &&
                             (!DIVERSIFY ||
@@ -316,6 +317,7 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
                     count++;
                 }
                 else {
+                    System.err.println("filtered out for diversity: " + icePath.toString());
                     buffer.add(icePath);
                 }
             }

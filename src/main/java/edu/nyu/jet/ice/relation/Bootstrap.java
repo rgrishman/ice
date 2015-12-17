@@ -129,8 +129,8 @@ public class Bootstrap {
             //seedPaths.add(firstSeedPath);
             seedPaths.addAll(allPaths);
             // Using SimAchoredPathSet
-            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
-//            pathSet = new AnchoredPathSet(patternFileName);
+//            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
+            pathSet = new AnchoredPathSet(patternFileName);
             bootstrap(arg1Type, arg2Type);
         }
         catch (IOException e) {
@@ -178,10 +178,12 @@ public class Bootstrap {
 
         for (String sp : seedPaths) {
             List<AnchoredPath> posPaths = pathSet.getByPath(sp);
-            for (AnchoredPath p : posPaths) {
-                seedPathInstances.add(new BootstrapAnchoredPath(p,
-                        sp,
-                        BootstrapAnchoredPathType.POSITIVE));
+            if (posPaths != null) {
+                for (AnchoredPath p : posPaths) {
+                    seedPathInstances.add(new BootstrapAnchoredPath(p,
+                            sp,
+                            BootstrapAnchoredPathType.POSITIVE));
+                }
             }
             // should we bootstrap negative paths?
             if (USE_NEGATIVE) {
@@ -267,7 +269,7 @@ public class Bootstrap {
             // how close the path is to positive seeds accoring to edit distance
             double posScore = minDistanceToSet(p, seedPaths);
             // how close the path is to negative seeds
-            double negScore = minDistanceToSet(p, rejects);
+            double negScore = 0.1; // minDistanceToSet(p, rejects);
             int    patternLength = 1 + p.split(":").length;
             // if the path is equally close to positive and negative paths
             double nearestNeighborConfusion     = 1 - Math.abs(posScore - negScore);
@@ -320,6 +322,7 @@ public class Bootstrap {
         int count = 0;
         for (IcePath icePath : scoreList) {
             double simScore = minDistanceToSet(icePath.getPath(), foundPatternStrings);
+            System.err.println("SimScore for " + icePath.toString() + " " + simScore);
             boolean isValid = count > SCREEN_LINES ||
                     !existingReprs.contains(icePath.getRepr()) &&
                             (!DIVERSIFY ||
@@ -333,6 +336,7 @@ public class Bootstrap {
                     count++;
                 }
                 else {
+                    System.err.println("filtered out for diversity: " + icePath.toString());
                     buffer.add(icePath);
                 }
             }
@@ -347,7 +351,7 @@ public class Bootstrap {
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
         }
-
+        System.err.println("Bootstrapper.DIVERSIFY:" + DIVERSIFY);
     }
 
     public double minDistanceToSet(String path, Set<String> pathSet) {

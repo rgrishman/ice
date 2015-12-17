@@ -2,6 +2,7 @@ package edu.nyu.jet.ice.views.swing;
 
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.DepPathMap;
+import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
 import edu.nyu.jet.ice.uicomps.Ice;
@@ -121,6 +122,10 @@ public class SwingEntitiesPanel extends JPanel implements Refreshable {
     public void findTerms() {
         String termFileName = FileNameSchema.getTermsFileName(Ice.selectedCorpusName);
         try {
+            File f = new File(FileNameSchema.getWordCountFileName(Ice.selectedCorpusName));
+            if (!f.exists() || !f.isFile()) {
+                IcePreprocessor.countWords(false);
+            }
             TermRanker.rankTerms(FileNameSchema.getWordCountFileName(Ice.selectedCorpusName),
                     Ice.corpora.get(Ice.selectedCorpus.backgroundCorpus).wordCountFileName, 
 		    termFileName);

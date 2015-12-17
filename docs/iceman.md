@@ -229,6 +229,16 @@ directory using apw-nov (which already exists in ICE) as background with 8 paral
 
     icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov --processes 8
 
+### The _mergeCorporaInto_ action
+
+This action allows us build a large corpus from several small processes corpora. All corpora should have
+the same filter (file extension). This action only works for Java 7+.
+
+The following command merges 3 corpora apw, afp, and xin into a large corpus, which we call "three". Symlinks
+to all source files will be created in the threeDir/ directory.
+ 
+     icecli mergeCorporaInto three --targeDir threeDir --filter sgm --fromCorpora apw,afp,xin
+
 ### The _setBackgroundFor_ action 
 
 This action set the background corpus of a given corpus in ICE. The following command set the background corpus
