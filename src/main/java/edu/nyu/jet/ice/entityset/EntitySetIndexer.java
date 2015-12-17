@@ -26,6 +26,7 @@ import opennlp.model.Event;
 import opennlp.model.FileEventStream;
 import opennlp.model.OnePassDataIndexer;
 import org.la4j.vector.sparse.CompressedVector;
+import org.la4j.Vector;
 
 /**
  * Index entity feature vectors for set expansion
@@ -206,13 +207,13 @@ public class EntitySetIndexer {
 					String contextLabel = contextLabels[i];
 					contextMap.put(contextLabel, i+1);          /* TObjectIntHashMap will return 0 for not found */
 				}
-				Map<String, org.la4j.vector.Vector> counter = new HashMap<String, org.la4j.vector.Vector>();
+				Map<String, org.la4j.Vector> counter = new HashMap<String, org.la4j.Vector>();
 				for (Event e : allEvents) {
 					String word = e.getOutcome();
 					if (!counter.containsKey(word)) {
 						counter.put(word, new CompressedVector(contextLabels.length));
 					}
-					org.la4j.vector.Vector v = counter.get(word);
+					org.la4j.Vector v = counter.get(word);
 					for (String context : e.getContext()) {
 						int contextIdx = contextMap.get(context)-1;
 						v.set(contextIdx, v.get(contextIdx) + 1);
@@ -246,20 +247,20 @@ public class EntitySetIndexer {
 		}
 	}
 
-    private static void updateContextWithPMI(Map<String, org.la4j.vector.Vector> counter) {
+    private static void updateContextWithPMI(Map<String, org.la4j.Vector> counter) {
         if (counter.size() == 0) return;
         double denominator = 0;
         int featureLength    = 0;
-        for (org.la4j.vector.Vector v : counter.values()) {
+        for (org.la4j.Vector v : counter.values()) {
             denominator += v.sum();
             if (featureLength == 0) featureLength = v.length();
         }
-        org.la4j.vector.Vector priors = new CompressedVector(featureLength);
-        for (org.la4j.vector.Vector v : counter.values()) {
+        org.la4j.Vector priors = new CompressedVector(featureLength);
+        for (org.la4j.Vector v : counter.values()) {
             priors = priors.add(v);
         }
         priors = priors.divide(denominator);
-        for (org.la4j.vector.Vector v : counter.values()) {
+        for (org.la4j.Vector v : counter.values()) {
             denominator = v.sum();
             for (int i = 0; i < v.length(); i++) {
                 double val   = v.get(i);
@@ -271,7 +272,7 @@ public class EntitySetIndexer {
         }
     }
 
-    private static void writeVector(String s, org.la4j.vector.Vector v, PrintWriter w) {
+    private static void writeVector(String s, org.la4j.Vector v, PrintWriter w) {
         w.print(s);
         for (int i = 0; i < v.length(); i++) {
             if (v.get(i) > 0.1) {
@@ -281,7 +282,7 @@ public class EntitySetIndexer {
         w.println();
     }
 
-    private static void writeVectorInfo(String s, org.la4j.vector.Vector v, String[] contextLabels, PrintWriter w) {
+    private static void writeVectorInfo(String s, org.la4j.Vector v, String[] contextLabels, PrintWriter w) {
         w.print(s);
         for (int i = 0; i < v.length(); i++) {
             if (v.get(i) > 0.1) {

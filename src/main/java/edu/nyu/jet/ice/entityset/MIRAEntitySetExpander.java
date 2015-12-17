@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.entityset;
 
-import org.la4j.vector.Vector;
+import org.la4j.Vector;
 import org.la4j.vector.sparse.CompressedVector;
 
 import java.util.*;

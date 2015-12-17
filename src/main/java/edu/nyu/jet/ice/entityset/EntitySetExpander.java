@@ -3,8 +3,8 @@ package edu.nyu.jet.ice.entityset;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
-import org.la4j.vector.Vector;
-import org.la4j.vector.Vectors;
+import org.la4j.Vector;
+import org.la4j.Vectors;
 import org.la4j.vector.sparse.CompressedVector;
 
 import java.io.BufferedReader;
