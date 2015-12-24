@@ -43,6 +43,10 @@ public class EntitySetBuilder {
     }
     public static JFrame currentFrame = Ice.mainFrame;
 
+	public EntitySetBuilder() {
+
+	}
+
     public void buildIndex(double cutoff, String inType) {
 
         Corpus selectedCorpus = Ice.selectedCorpus;

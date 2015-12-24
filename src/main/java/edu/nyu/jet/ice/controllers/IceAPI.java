@@ -96,7 +96,13 @@ public class IceAPI {
     }
 
     public Corpus getCorpus (String corpusName) {
-	return Ice.corpora.get(corpusName);
+	Corpus corpus = null;
+	if (null != corpusName || Ice.corpora.containsKey(corpusName)) {
+	    corpus = Ice.corpora.get(corpusName);
+	} else {
+	    log.error("Can't retrieve corpus " + corpusName);
+	}
+	return corpus;
     }
 
     public SortedMap<String, Corpus> getCorpora() {

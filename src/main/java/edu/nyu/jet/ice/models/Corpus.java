@@ -20,8 +20,6 @@ import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
 
-//import java.nio.file.Files;
-//import java.nio.file.Paths;
 import java.awt.*;
 import java.util.*;
 import java.io.*;
@@ -78,11 +76,16 @@ public class Corpus {
     }
 
     public void setFilter(String s) {
-        String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
-        //Files.createDirectory(Paths.get(corpusInfoDirectory));
-        File dir = new File(corpusInfoDirectory);
-        dir.mkdirs();
         filter = s;
+	}
+	
+	public void makeDirectory() {
+		if (name != null) {
+			String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
+			System.out.println("Creating directory " + corpusInfoDirectory);
+			File dir = new File(corpusInfoDirectory);
+			dir.mkdirs();
+		}
     }
 
     public int getNumberOfDocs() {
@@ -196,6 +199,7 @@ public class Corpus {
     }
 
     public Corpus() {
+		System.out.println("New corpus with blank constructor");
     }
 
     //List<JRadioButton> backgroundCorpusButtons = new ArrayList<JRadioButton>();

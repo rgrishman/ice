@@ -21,6 +21,9 @@ public class RelationFilter extends ListFilter {
 	public JCheckBox sententialPatternCheckBox;
     JTextArea area = null;
 
+	public RelationFilter() {
+
+	}
 
 	/**
 	 *  return true if 'term' is a selected part of speech
