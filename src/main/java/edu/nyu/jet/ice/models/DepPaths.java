@@ -164,12 +164,7 @@ public class DepPaths {
                         relations.deepCopy(), doc.fullSpan());
                 relations = transformedRelations;
 
-                //System.err.println("RELATIONS BEFORE ADDING INVERSE:");
-                //System.err.println(relations);
                 relations.addInverses();
-                //System.err.println("RELATIONS AFTER ADDING INVERSE");
-                //System.err.println(relations);
-                // IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile, patternSet);
                 IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
                 IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
                 IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
@@ -250,19 +245,16 @@ public class DepPaths {
             if (sentence.end() - sentence.start() > MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH) continue;
             String sentText = doc.text(sentence);
             if (sentText.contains("(") || sentText.contains(")") || sentText.contains("[") || sentText.contains("]") ||
-                    sentText.contains("{") || sentText.contains("}") || sentText.contains("\"") ||
-                    sentText.contains("'")) {
+                    sentText.contains("{") || sentText.contains("}") || sentText.contains("\"")) {
                 continue;
             }
-
 
             List<Annotation> localNames = new ArrayList<Annotation>();
             List<Span> localHeadSpans = new ArrayList<Span>();
             for (Annotation name : names) {
                 if (annotationInSentence(name, sentence)) {
                     localNames.add(name);
-                    localHeadSpans.add(
-                            IcePreprocessor.findTermHead(doc, name, relations).span());
+                    localHeadSpans.add(IcePreprocessor.findTermHead(doc, name, relations).span());
                 }
             }
             if (localNames.size() > MAX_MENTIONS_IN_SENTENCE) {
@@ -276,16 +268,10 @@ public class DepPaths {
                     Span h2 = localHeadSpans.get(j);
                     // - mention1 precedes mention2
                     if (h1.start() >= h2.start()) continue;
-                    // - in same sentence
-//                    if (!sentences.inSameSentence(h1, h2)) continue;
                     // find and record dep path from head of m1 to head of m2
                     DepPath path = buildSyntacticPathOnSpans(h1.start(), h2.start(),
                             localNames.get(i).span(), localNames.get(j).span(),
                             relations, localHeadSpans);
-//                    String pathText = buildPathStringOnSpans(h1, h2, relations, localHeadSpans);
-//                    if (path != null) {
-//                        path.setPath(pathText);
-//                    }
                     recordPath(doc, sentence, relations, localNames.get(i), path, localNames.get(j));
                 }
             }
@@ -365,12 +351,16 @@ public class DepPaths {
     /**
      * returns the syntactic path from the anchor to an argument. path is not allowed if
      * one of localMentions is on the path (but not at the beginning or end of the path)
+     * @param  fromPosn   start of path
+     * @param  toPosn     end of path
+     * @param  arg1       span of first arg
+     * @param  arg2       span of second arg
+     * @param  relations  dependency relations
+     * @param  localSpans list of spans of entities in this sentence
      */
-    public static DepPath buildSyntacticPathOnSpans
-    (int fromPosn, int toPosn,
-     Span arg1, Span arg2,
-     SyntacticRelationSet relations,
-     List<Span> localSpans) {
+
+    public static DepPath buildSyntacticPathOnSpans (int fromPosn, int toPosn,
+     Span arg1, Span arg2, SyntacticRelationSet relations, List<Span> localSpans) {
         Map<Integer, DepPath> path = new HashMap<Integer, DepPath>();
         DepPath p = new DepPath(fromPosn, toPosn, arg1, arg2);
         int variable = 0;
