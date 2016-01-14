@@ -13,14 +13,13 @@ import edu.nyu.jet.ice.utils.ProcessFarm;
 import edu.nyu.jet.ice.views.swing.SwingEntitiesPanel;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
+import org.ho.yaml.YamlDecoder;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Properties;
-
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 /**
  * Command line interface for running Ice processing tasks.
@@ -28,10 +27,12 @@ import java.util.Properties;
  * @author yhe
  * @version 1.0
  */
+
 public class IceCLI {
 
+    static String branch;
     // TODO: switch this to on unless cache is already linked
-    public static final boolean SHOULD_LINK_CACHE = false;
+    public static final boolean SHOULD_LINK_CACHE = true;
 
     public static void main(String[] args) {
         // create Options object
@@ -50,6 +51,10 @@ public class IceCLI {
                 .withDescription("Directory for the new corpus, when combining old corpora").create("t");
         Option fromCorporaOpt = OptionBuilder.withLongOpt("fromCorpora").hasArg().withArgName("fromCorpora")
                 .withDescription("Names for the corpora to be merged").create("s");
+	Option branchOpt = OptionBuilder.withLongOpt("branch").hasArg().withArgName("branch")
+                .withDescription("Yaml file for saving and restoring status").create("y");
+	Option fromBranch = OptionBuilder.withLongOpt("fromBranch").hasArg().withArgName("fromBranch")
+                .withDescription("Names for the corpora to be merged").create("g");
         options.addOption(inputDir);
         options.addOption(background);
         options.addOption(filter);
@@ -57,6 +62,8 @@ public class IceCLI {
         options.addOption(numOfProcessesOpt);
         options.addOption(targetDir);
         options.addOption(fromCorporaOpt);
+        options.addOption(branchOpt);
+        options.addOption(fromBranch);
 
         CommandLineParser parser = new GnuParser();
         try {
@@ -69,6 +76,8 @@ public class IceCLI {
             }
             String action  = arguments[0];
             String corpusName  = arguments[1];
+	    branch = cmd.getOptionValue("branch");
+	    if (branch == null) branch = "ice";
 
             if (action.equals("addCorpus")) {
                 int numOfProcesses = 1;
@@ -253,7 +262,7 @@ public class IceCLI {
                     // create docList file
                     String docListFileName = FileNameSchema.getDocListFileName(corpusName);
                     PrintWriter docListFileWriter = new PrintWriter(new FileWriter(docListFileName));
-
+		    int docCount = 0;
                     // create all links and write docListFile
                     for (String fromCorpusName : fromCorpora) {
 
@@ -265,30 +274,33 @@ public class IceCLI {
                         while ((line = br.readLine()) != null) {
                             String targetSourceFileName = (fromDir + "/" + line).replaceAll("/", "_");
                             docListFileWriter.println(targetSourceFileName);
+			    docCount++;
                             targetSourceFileName = targetSourceFileName + "." + filterName;
-                            File targetSourceFile = (new File(corpusDir + "/" + targetSourceFileName)).getCanonicalFile();
-//                            if (targetSourceFile.exists()) {
-//                                targetSourceFile.delete();
-//                            }
+                            File targetSourceFile = (new File(corpusDir + "/" + targetSourceFileName)); //.getCanonicalFile();
                             String sourceSourceFileName = line + "." + filterName;
                             // create link for source file
                             Path target = targetSourceFile.toPath();
-                            Path source = (new File(fromDir + "/" + sourceSourceFileName)).getCanonicalFile().toPath();
+                            Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();; //.getCanonicalFile().toPath();
                             Files.deleteIfExists(target);
                             try {
-                                Files.createSymbolicLink(target, source);
+                                // Files.createSymbolicLink(target, source);
+                                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
                                 // now create links to cache files
                                 if (SHOULD_LINK_CACHE) {
-                                    linkCache(sourceCacheDir, targetCacheDir,
-                                            fromDir, corpusDir,
-                                            sourceSourceFileName, targetSourceFileName);
+                                    // linkCache(sourceCacheDir, targetCacheDir,
+                                            // fromDir, corpusDir,
+                                            // sourceSourceFileName, targetSourceFileName);
+                                copyCache (sourceCacheDir, targetCacheDir,
+					   fromDir, corpusDir,
+					   sourceSourceFileName, targetSourceFileName);
                                 }
                             }
                             catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
-                        br.close();;
+                        br.close();
+			readSplitCounts(fromCorpusName);
                     }
 
                     docListFileWriter.close();
@@ -299,6 +311,7 @@ public class IceCLI {
                     Ice.selectedCorpus.setDirectory(corpusDir);
                     Ice.selectedCorpus.setFilter(filterName);
                     Ice.selectedCorpus.setDocListFileName(docListFileName);
+		    writeMergedCounts(docCount, corpusName);
                     saveStatus();
                 }
                 catch(Exception e) {
@@ -397,8 +410,41 @@ public class IceCLI {
                 }
                 saveStatus();
                 System.err.println("Phrases extracted successfully.");
-            }
-            else {
+
+            } else if (action.equals("import")) {
+		String fromBranchName = cmd.getOptionValue("fromBranch");
+		if (fromBranchName == null) {
+       	            System.err.println("--fromBranch must be set for the import action.");
+              	    System.exit(-1);
+         	}
+         	File fromBranchFile = new File(fromBranchName + ".yml");
+                if (!fromBranchFile.exists() || fromBranchFile.isDirectory()) {
+                    System.err.println("Cannot find exporting branch.");
+                    System.exit(-1);
+		}
+            	if (Ice.corpora.containsKey(corpusName)) {
+                    System.err.println("Corpus already exists.");
+                    System.exit(-1);
+	        }
+	        init();
+		try {
+	            InputStream yamlInputStream = new FileInputStream(fromBranchFile);
+	            YamlDecoder dec = new YamlDecoder(yamlInputStream);
+	            Map foreignCorpora = new TreeMap((Map) dec.readObject());
+	            dec.close();
+	            if (foreignCorpora.get(corpusName) == null) {
+		        System.err.println("Corpus not found on exporter.");
+		        System.exit(-1);
+	            }
+	            Ice.corpora.put(corpusName, (Corpus) foreignCorpora.get(corpusName));
+	        } catch (IOException e) {
+	            System.err.println("Unable to read " + fromBranchFile + " from exporter.");
+		    System.exit(-1);
+		}
+	        saveStatus();
+	        System.err.println("Corpus imported successfully.");
+
+            } else {
                 System.err.println("Invalid action: " + action);
                 printHelp(options);
                 System.exit(-1);
@@ -458,19 +504,27 @@ public class IceCLI {
                 String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                 for (String docName : docList) {
                     docName = docName + "." + Ice.selectedCorpus.filter;
-                    linkCache(origPreprocessDir, currentPreprocessDir,
+                    copyCache(currentPreprocessDir, origPreprocessDir, 
                             Ice.selectedCorpus.directory, Ice.selectedCorpus.directory,
                             docName, docName);
                 }
+		readSplitCounts(currentCorpusName);
             }
             catch (Exception e) {
                 System.err.println("Problem merging split " + i);
                 e.printStackTrace();
             }
         }
+	try {
+	    writeMergedCounts(0, origCorpusName);
+        } catch (Exception e) {
+                System.err.println("Problem merging split ");
+                e.printStackTrace();
+        }
+	saveStatus();
     }
 
-    public static void linkCache(String sourceCacheDir,
+    public static void copyCache(String sourceCacheDir,
                                  String targetCacheDir,
                                  String sourceSourceDir,
                                  String targetSourceDir,
@@ -483,7 +537,7 @@ public class IceCLI {
         String targetFileName = IcePreprocessor.getAceFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        linkFile(sourceFileName, targetFileName);
+        copyFile(sourceFileName, targetFileName);
 
 
         sourceFileName = IcePreprocessor.getDepFileName(sourceCacheDir,
@@ -493,7 +547,7 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getDepFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        linkFile(sourceFileName, targetFileName);
+        copyFile(sourceFileName, targetFileName);
 
 
 
@@ -504,7 +558,7 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getJetExtentsFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        linkFile(sourceFileName, targetFileName);
+        copyFile(sourceFileName, targetFileName);
 
 
 
@@ -515,7 +569,7 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getNamesFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        linkFile(sourceFileName, targetFileName);
+        copyFile(sourceFileName, targetFileName);
 
 
 
@@ -526,7 +580,7 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getNpsFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        linkFile(sourceFileName, targetFileName);
+        copyFile(sourceFileName, targetFileName);
 
 
 
@@ -537,16 +591,144 @@ public class IceCLI {
         targetFileName = IcePreprocessor.getPosFileName(targetCacheDir,
                 targetSourceDir,
                 targetDocName);
-        linkFile(sourceFileName, targetFileName);
+        copyFile(sourceFileName, targetFileName);
 
     }
 
-    private static void linkFile(String sourceFileName, String targetFileName) throws IOException {
-        File targetFile = (new File(targetFileName)).getCanonicalFile();
+    private static void copyFile(String sourceFileName, String targetFileName) throws IOException {
+        File targetFile = (new File(targetFileName)); //.getCanonicalFile();
         Path target = targetFile.toPath();
-        Path source = (new File(sourceFileName)).getCanonicalFile().toPath();
-        Files.deleteIfExists(target);
-        Files.createSymbolicLink(target, source);
+        Path source = (new File(sourceFileName)).toPath(); //.getCanonicalFile().toPath();
+        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    // Tables for holding the combined word counts and relations from a set of splits.
+
+    static Map<String, String> wordCount = new HashMap<String, String>();
+    static Map<String, Integer> relationCount = new HashMap<String, Integer>();
+    static Map<String, Integer> relationTypeCount = new HashMap<String, Integer>();
+    static Map<String, String> relationRepr = new HashMap<String, String>();
+
+    /**
+     *  Read the word count and relation files from one of the split directories.
+     */
+
+    public static void readSplitCounts (String corpusName) throws IOException {
+        String wordCountFileName = FileNameSchema.getWordCountFileName(corpusName);
+	System.out.println("Reading " + wordCountFileName);
+        BufferedReader wordReader = new BufferedReader (new FileReader (wordCountFileName));
+	// skip header on file
+        wordReader.readLine();
+        wordReader.readLine();
+        wordReader.readLine();
+        String line;
+        while ((line = wordReader.readLine()) != null) {
+	    String f[] = line.split("\t", 2);
+            String word = f[0];
+	    String counts = f[1];
+            if (wordCount.get(word) == null) {
+	        wordCount.put(word, counts);
+	    } else {
+	        wordCount.put(word, wordCount.get(word) + "\t" + counts);
+	    }
+        }
+        wordReader.close();
+
+	String relationFileName = FileNameSchema.getRelationsFileName(corpusName);
+	System.out.println("Reading " + relationFileName);
+        BufferedReader relationReader = new BufferedReader (new FileReader (relationFileName));
+        while ((line = relationReader.readLine()) != null) {
+	    String f[] = line.split("\t", 2);
+	    int count = 0;
+	    try {
+            	count = Integer.valueOf(f[0]);
+	    } catch (NumberFormatException e) {
+		System.out.println ("Error in " + relationFileName);
+	    }
+	    String relation = f[1];
+            if (relationCount.get(relation) == null) {
+	        relationCount.put(relation, count);
+	    } else {
+	        relationCount.put(relation, relationCount.get(relation) + count);
+	    }
+        }
+        relationReader.close();
+
+	String relationTypesFileName = FileNameSchema.getRelationTypesFileName(corpusName);
+	System.out.println("Reading " + relationTypesFileName);
+        BufferedReader relationTypesReader = new BufferedReader (new FileReader (relationTypesFileName));
+        while ((line = relationTypesReader.readLine()) != null) {
+	    String f[] = line.split("\t", 2);
+	    int count = 0;
+	    try {
+            	count = Integer.valueOf(f[0]);
+	    } catch (NumberFormatException e) {
+		System.out.println ("Error in " + relationTypesFileName);
+	    }
+	    String relation = f[1];
+            if (relationTypeCount.get(relation) == null) {
+	        relationTypeCount.put(relation, count);
+	    } else {
+	        relationTypeCount.put(relation, relationTypeCount.get(relation) + count);
+	    }
+        }
+        relationTypesReader.close();
+
+	String relationReprFileName = FileNameSchema.getRelationReprFileName(corpusName);
+	System.out.println("Reading " + relationReprFileName);
+        BufferedReader relationReprReader = new BufferedReader (new FileReader (relationReprFileName));
+        while ((line = relationReprReader.readLine()) != null) {
+	    String f[] = line.split(":::", 2);
+	    String relation = f[0];
+	    String repr = f[1];
+	    relationRepr.put(relation, repr);
+        }
+        relationReprReader.close();
+    }
+
+    /**
+     *  Write the result of combining the word counts and relation patterns from all
+     *  the splits.
+     */
+
+    public static void writeMergedCounts (int docCount, String corpusName) throws IOException {
+        Corpus mergedCorpus = Ice.corpora.get(corpusName);
+        String wordCountFileName = FileNameSchema.getWordCountFileName(corpusName);
+	System.out.println("Writing " + wordCountFileName);
+        PrintWriter wordWriter = new PrintWriter (new FileWriter (wordCountFileName));
+        wordWriter.println("# DOC_COUNT\n# TERM DOC_FREQS");
+        wordWriter.println(docCount);
+        for (String word : wordCount.keySet()) {
+	    wordWriter.println(word + "\t" + wordCount.get(word));
+        }
+	wordWriter.close();
+	mergedCorpus.wordCountFileName = wordCountFileName;
+
+        String relationsFileName = FileNameSchema.getRelationsFileName(corpusName);
+	System.out.println("Writing " + relationsFileName);
+        PrintWriter relationsWriter = new PrintWriter (new FileWriter (relationsFileName));
+        for (String relation : relationCount.keySet()) {
+	    relationsWriter.println(relationCount.get(relation) + "\t" + relation);
+        }
+	relationsWriter.close();
+	mergedCorpus.relationInstanceFileName = relationsFileName;
+
+        String relationTypesFileName = FileNameSchema.getRelationTypesFileName(corpusName);
+	System.out.println("Writing " + relationTypesFileName);
+        PrintWriter relationTypesWriter = new PrintWriter (new FileWriter (relationTypesFileName));
+        for (String relation : relationTypeCount.keySet()) {
+	    relationTypesWriter.println(relationTypeCount.get(relation) + "\t" + relation);
+        }
+	relationTypesWriter.close();
+	mergedCorpus.relationTypeFileName = relationTypesFileName;
+
+        String relationReprFileName = FileNameSchema.getRelationReprFileName(corpusName);
+	System.out.println("Writing " + relationReprFileName);
+        PrintWriter relationReprWriter = new PrintWriter (new FileWriter (relationReprFileName));
+        for (String relation : relationRepr.keySet()) {
+	    relationReprWriter.println(relation + ":::" + relationRepr.get(relation));
+        }
+	relationReprWriter.close();
     }
 
     public static String splitCorpusName(String corpusName, int splitCount) {
@@ -604,7 +786,7 @@ public class IceCLI {
 
     private static void saveStatus() {
         try {
-            Nice.saveStatus();
+            Nice.saveStatus(branch);
         }
         catch (Exception e) {
             System.err.println("Unable to save status. Please check if the ice config file is writable.");
@@ -629,7 +811,7 @@ public class IceCLI {
     public static void init() {
         Nice.printCover();
         Properties iceProperties = Nice.loadIceProperties();
-        Nice.initIce();
+        Nice.initIce(branch);
         //Nice.loadPathMatcher(iceProperties);
     }
 

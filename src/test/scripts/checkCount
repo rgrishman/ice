@@ -1,0 +1,6 @@
+#!/bin/tcsh
+set var=`ls $1 | wc -l`
+set var=$var[1]
+if ($var != $2) then
+    echo "error:  size of $1 is $var , should be $2"
+endif

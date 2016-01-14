@@ -1,0 +1,6 @@
+#!/bin/tcsh
+set var=`wc -l $1`
+set var=$var[1]
+if ($var != $2) then
+    echo "error:  length of $1 is $var , should be $2"
+endif

@@ -1,0 +1,35 @@
+#!/bin/tcsh
+#
+#  validation script for icecli
+#
+pwd
+rm ice.yml
+\rm -r cache
+#
+# create a few small corpora (2 and 3 are identical)
+#
+icecli addCorpus tinyCorpus2 --inputDir /misc/proteus107/grishman/ice/ice/src/test/resources/tinyCorpus2 --filter txt
+icecli addCorpus tinyCorpus3 --inputDir /misc/proteus107/grishman/ice/ice/src/test/resources/tinyCorpus3 --filter txt 
+icecli addCorpus tinyCorpus4 --inputDir /misc/proteus107/grishman/ice/ice/src/test/resources/tinyCorpus4 --filter txt
+#
+#  test mergeCorporaInto
+#
+icecli mergeCorporaInto mergedCorpus1 --targetDir mergedDocs1 --filter txt --fromCorpora tinyCorpus2,tinyCorpus3
+icecli mergeCorporaInto mergedCorpus2 --targetDir mergedDocs2 --filter txt --fromCorpora tinyCorpus2,tinyCorpus4
+#
+#  test addCorpus with multiple processes
+# 
+icecli addCorpus tinyCorpusPar --inputDir /misc/proteus107/grishman/ice/ice/src/test/resources/tinyCorpus2 --filter txt --processes 2
+#
+checkLength cache/tinyCorpus2/docList 4
+checkLength cache/tinyCorpusPar/docList 4
+checkCount cache/tinyCorpus2/preprocess 25 
+checkCount cache/tinyCorpusPar/preprocess 25
+checkLength cache/mergedCorpus1/docList 8
+checkLength cache/mergedCorpus2/docList 8
+checkLength cache/mergedCorpus1/counts 13      # 3 header + 4 gpe + 4 person + 2 nn
+checkLength cache/mergedCorpus2/counts 18      # 3 header + 8 gpe + 4 person + 3 nn
+checkLength cache/mergedCorpus1/Relations 4    #  one 'lives' relation in each doc
+checkCount mergedDocs1 8
+checkCount mergedDocs2 8
+checkCount cache/mergedCorpus1/preprocess 49

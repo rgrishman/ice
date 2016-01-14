@@ -40,14 +40,18 @@ public class Nice {
     public SwingRelationsPanel relationsPanel;
     public static Nice instance;
 
-    public static void saveStatus() throws FileNotFoundException {
-        File yamlFile = new File("ice.yml");
+    public static void saveStatus(String branch) throws FileNotFoundException {
+        File yamlFile = new File(branch + ".yml");
         OutputStream yamlOutputStream = new FileOutputStream(yamlFile);
         YamlEncoder enc = new YamlEncoder(yamlOutputStream);
         enc.writeObject(Ice.corpora);
         enc.writeObject(Ice.entitySets);
         enc.writeObject(Ice.relations);
         enc.close();
+    }
+
+    public static void saveStatus() throws FileNotFoundException {
+	saveStatus("ice");
     }
 
     public void setCorpusPanel(SwingCorpusPanel corpusPanel) {
@@ -106,9 +110,9 @@ public class Nice {
         reassemble();
     }
 
-    public static void initIce() {
+    public static void initIce(String branch) {
         try {
-            File yamlFile = new File("ice.yml");
+            File yamlFile = new File(branch + ".yml");
             InputStream yamlInputStream = new FileInputStream(yamlFile);
             YamlDecoder dec = new YamlDecoder(yamlInputStream);
             Ice.corpora = new TreeMap((Map) dec.readObject());
@@ -116,11 +120,15 @@ public class Nice {
             Ice.relations = new TreeMap((Map) dec.readObject());
             dec.close();
         } catch (IOException e) {
-            System.err.println("Did not load ice.yml.");
+            System.err.println("Did not load " + branch + ".yml.");
         }
         if (!Ice.corpora.isEmpty()) {
             Ice.selectCorpus(Ice.corpora.firstKey());
         }
+    }
+
+    public static void initIce() {
+	initIce("ice");
     }
 
     public static void loadPathMatcher(Properties iceProperties) {
