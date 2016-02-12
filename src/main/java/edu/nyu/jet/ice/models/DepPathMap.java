@@ -8,10 +8,12 @@ import java.io.*;
 import java.util.*;
 
 /**
- * DepPathMap maintains a map between depPaths and linearizations. It originally computes linearizations
- * for each path and saves it. Linearization is currently handled by the DepPath class, so DepPathMap only
+ * DepPathMap maintains maps between depPaths, linearizations, and example sentences. 
+ * It originally computed linearizations and saved them for each path. Linearization 
+ * is currently handled by the DepPath class, so DepPathMap only
  * handles serialization/deserialization of the map.
  */
+
 public class DepPathMap {
     private static DepPathMap instance = null;
 
@@ -49,13 +51,28 @@ public class DepPathMap {
         return instance;
     }
 
+    /**
+     *  Given a dependency path, returns its linearization as
+     *  an English phrase, or <CODE>null</CODE> if this path does
+     *  not occur in the current corpus.
+     */
+
     public String findRepr(String path) {
         return pathReprMap.get(path);
     }
 
+    /**
+     *  Given a linearized English phrase derived from a
+     *  dependency path in the selected corpus, returns the original path.
+     */
+
     public List<String> findPath(String repr) {
         return reprPathMap.get(normalizeRepr(repr));
     }
+
+    /**
+     *  Given a dependency path in the current corpus, returns an
+     *  example sentence containing tha path.
 
     public String findExample(String path) {
         return pathExampleMap.get(path);
@@ -79,6 +96,11 @@ public class DepPathMap {
         }
     }
 
+    /**
+     *  Saves the mapping between paths, linearizations, and examples for the
+     *  currently selected corpus to a file.
+     */
+
     public void persist() {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         try {
@@ -97,6 +119,11 @@ public class DepPathMap {
         }
     }
 
+    /**
+     *  Loads the mappings between paths, linearizations, and examples for the
+     *  currently selected corpus.
+     */
+
     public boolean forceLoad() {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
@@ -114,9 +141,6 @@ public class DepPathMap {
                 String path = parts[0];
                 String repr = parts[1];
                 String example = parts[2];
-//                if (repr.equals("PERSON sell DRUGS")) {
-//                    System.err.println(path + " <> " + repr);
-//                }
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
@@ -134,6 +158,12 @@ public class DepPathMap {
         previousFileName = fileName;
         return true;
     }
+
+    /**
+     *  Loads the mappings between paths, linearizations, and examples for the
+     *  currently selected corpus from a file.  Skips the load if the mappings
+     *  have been previously loaded from the same file.
+     */
 
     public boolean load() {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
@@ -152,9 +182,6 @@ public class DepPathMap {
                 String path = parts[0];
                 String repr = parts[1];
                 String example = parts[2];
-//                if (repr.equals("PERSON sell DRUGS")) {
-//                    System.err.println(path + " <> " + repr);
-//                }
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
@@ -173,23 +200,13 @@ public class DepPathMap {
         return true;
     }
 
-//    private String lemmatize(String path) {
-//        String[] parts = path.split(" -- ");
-//        if (parts.length != 3) {
-//            return null;
-//        }
-//        return parts[0] + " -- " + AnchoredPath.lemmatizePath(parts[1]) + " -- " + parts[2];
-//    }
-
-
     /**
      Normalize the internal copy of DepPath representation: all lowercase, single space, trimmed.
      Used by find and add.
      */
+
     public static String normalizeRepr(String repr) {
         return repr.toLowerCase().replaceAll("\\s+", " ").trim();
     }
-
-
 
 }
