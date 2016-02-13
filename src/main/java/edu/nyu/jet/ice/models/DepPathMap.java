@@ -73,6 +73,7 @@ public class DepPathMap {
     /**
      *  Given a dependency path in the current corpus, returns an
      *  example sentence containing tha path.
+     */
 
     public String findExample(String path) {
         return pathExampleMap.get(path);
