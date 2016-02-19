@@ -159,6 +159,12 @@ public class Bootstrap {
         this.progressMonitor = progressMonitor;
     }
 
+    /**
+     *  Starting from a set of seed paths, generate a ranked list of candidate paths
+     *  to be displayed and (if approved by the user) added to the path set
+     *  for this relation.
+     */
+
     private void bootstrap(String arg1Type, String arg2Type) {
         // DEBUG = Show various distance scores (used to select instances) in tooltip
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
@@ -315,7 +321,15 @@ public class Bootstrap {
             scoreList.add(icePath);
         }
 
+        //
+        // sort the patterns by score
+        //
         Collections.sort(scoreList);
+        //
+        // filter the pattern set:
+        //   satisfy diversity requirements (on first screen-full of patterns
+        //   drop paths which have thesame linearization as higher-ranked paths
+        //
         List<IcePath> buffer = new ArrayList<IcePath>();
         Set<String>   existingReprs = new HashSet<String>();
         Set<String>   foundPatternStrings = new HashSet<String>();
@@ -352,6 +366,12 @@ public class Bootstrap {
             progressMonitor.setProgress(5);
         }
         System.err.println("Bootstrapper.DIVERSIFY:" + DIVERSIFY);
+        //
+        //  if a RelationOracle is present, use it to classify examples
+        //
+        if (RelationOracle.exists()) {
+            RelationOracle.label(foundPatterns);
+        }
     }
 
     public double minDistanceToSet(String path, Set<String> pathSet) {
