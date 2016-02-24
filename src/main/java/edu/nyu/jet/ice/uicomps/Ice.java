@@ -26,43 +26,43 @@ import org.ho.yaml.*;
 
 public class Ice {
 
-	public static SortedMap<String, Corpus> corpora = new TreeMap<String, Corpus> ();
-	public static SortedMap<String, IceEntitySet> entitySets = new TreeMap<String, IceEntitySet>();
-	public static SortedMap<String, IceRelation> relations = new TreeMap<String, IceRelation>();
-	public static Corpus selectedCorpus = null;
-	public static String selectedCorpusName = null;
+    public static SortedMap<String, Corpus> corpora = new TreeMap<String, Corpus> ();
+    public static SortedMap<String, IceEntitySet> entitySets = new TreeMap<String, IceEntitySet>();
+    public static SortedMap<String, IceRelation> relations = new TreeMap<String, IceRelation>();
+    public static Corpus selectedCorpus = null;
+    public static String selectedCorpusName = null;
 
-	static JTextField directoryField;
-	static JTextField filterField;
-	public static JFrame mainFrame;
+    static JTextField directoryField;
+    static JTextField filterField;
+    public static JFrame mainFrame;
 
     public static Properties iceProperties = new Properties();
 
-	public static void main (String[] args) {
-		try {
+    public static void main (String[] args) {
+        try {
             ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
             toolTipManager.setDismissDelay(7500);
-			File yamlFile = new File("ice.yml");
-			InputStream yamlInputStream = new FileInputStream(yamlFile);
-			YamlDecoder dec = new YamlDecoder(yamlInputStream);
-			corpora = new TreeMap((Map) dec.readObject());
-			entitySets = new TreeMap((Map) dec.readObject());
-			relations = new TreeMap((Map) dec.readObject());
-			dec.close();
-		} catch (IOException e) {
-			System.out.println("Did not load ice.yml.");
-		}
-		if (!corpora.isEmpty())
-			selectCorpus (corpora.firstKey());
-		mainFrame = new JFrame();
-		Container contentPane = mainFrame.getContentPane();
-		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.X_AXIS));
-		assembleFrame(contentPane);
+            File yamlFile = new File("ice.yml");
+            InputStream yamlInputStream = new FileInputStream(yamlFile);
+            YamlDecoder dec = new YamlDecoder(yamlInputStream);
+            corpora = new TreeMap((Map) dec.readObject());
+            entitySets = new TreeMap((Map) dec.readObject());
+            relations = new TreeMap((Map) dec.readObject());
+            dec.close();
+        } catch (IOException e) {
+            System.out.println("Did not load ice.yml.");
+        }
+        if (!corpora.isEmpty())
+            selectCorpus (corpora.firstKey());
+        mainFrame = new JFrame();
+        Container contentPane = mainFrame.getContentPane();
+        contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.X_AXIS));
+        assembleFrame(contentPane);
 
-		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		mainFrame.pack();
-		mainFrame.setVisible(true);
-	}
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.pack();
+        mainFrame.setVisible(true);
+    }
 
 	static void assembleFrame (Container contentPane) {
 		Box entityPipeline = Box.createHorizontalBox();
@@ -90,9 +90,9 @@ public class Ice {
 	public static void selectCorpus (String corpus) {
 		selectedCorpusName = corpus;
 		selectedCorpus = corpora.get(selectedCorpusName);
-        if (mainFrame != null) {
-            updateFrame();
-        }
+                if (mainFrame != null) {
+                        updateFrame();
+                }
 	}
 
 	public static void updateFrame () {
