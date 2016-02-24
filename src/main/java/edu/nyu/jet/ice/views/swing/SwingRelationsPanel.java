@@ -259,7 +259,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                         List<String> paths = depPathMap.findPath(relationInstance);
                         if (paths == null) {
                             JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                                    "The provided path is invalid.",
+                                    "The provided path does not appear in the corpus.",
                                     "Dependency Path Error",
                                     JOptionPane.ERROR_MESSAGE);
                             return;
@@ -296,7 +296,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 List<String> paths = depPathMap.findPath(relationInstance);
                 if (paths == null) {
                     JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                            "The provided path is invalid.",
+                            "The provided path does not appear in the corpus.",
                             "Dependency Path Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;
@@ -417,6 +417,15 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         relationList.setSelectedValue(iceRelation, true);
         currentRelation = iceRelation;
     }
+
+    /**
+     *  Use bootstrapping to build a model for a relation.
+     *
+     *  @param  inName  the name of the relation
+     *  @param  inSeed  the seed for bootstrapping this relation,
+     *                  consisting of one or more Englist expressions
+     *                  separated by ':::'
+     */
 
     public void buildRelation(String inName, String inSeed) {
 
