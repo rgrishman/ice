@@ -81,6 +81,15 @@ public class Bootstrap {
         return arg1Type;
     }
 
+    /**
+     *  Create a Bootstrap object.
+     *
+     *  @param  name          the class of bootstrpping strategy to be used
+     *  @param  progressMonitor
+     *  @param  relationName  the anme of the relation to be modeled
+     *
+     */
+
     public static Bootstrap makeBootstrap(String name, ProgressMonitorI progressMonitor, String relationName) {
         if (name.equals("ArgEmbeddingBootstrap")) {
             Bootstrap instance =  new ArgEmbeddingBootstrap(progressMonitor);
@@ -97,16 +106,22 @@ public class Bootstrap {
         return instance;
     }
 
+    /**
+     *  Initialize the process of bootstrapping to build a relation model,
+     *  creating an initial set of candidate paths.  These candidates are
+     *  returned throguh the variable <CODE>foundPatterns</CODE>.
+     *
+     *  @param  seedPath    one or more English expressions, separated by
+     *                      ':::', the seed for the bootstrapping
+     *  @param  patternFileName
+     */
+
     public List<IcePath> initialize(String seedPath, String patternFileName) {
         try {
             DepPathMap depPathMap = DepPathMap.getInstance();
             String[] splitPaths = seedPath.split(":::");
-//            String firstSeedPath = null;
             List<String> allPaths = new ArrayList<String>();
             for (String p : splitPaths) {
-//                if (firstSeedPath == null) {
-//                    firstSeedPath = depPathMap.findPath(seedPath);
-//                }
                 List<String> currentPaths = depPathMap.findPath(p);
                 if (currentPaths != null) {
                     for (String currentPath : currentPaths) {
@@ -120,7 +135,7 @@ public class Bootstrap {
             }
             if (allPaths.size() == 0) {
                 JOptionPane.showMessageDialog(Ice.mainFrame,
-                        "Seed is invalid. Choose another seed or run [find common patterns].",
+                        "Seed is invalid or not in corpus. Choose another seed or run [find common patterns].",
                         "Unable to proceed",
                         JOptionPane.WARNING_MESSAGE);
                 return foundPatterns;
@@ -139,6 +154,14 @@ public class Bootstrap {
         }
         return foundPatterns;
     }
+
+    /**
+     *  Perform the next iteration of bootstrapping to build a relation model
+     *  (in response to the Iterate button of the relation panel):  adds
+     *  <code>approvedPaths</CODE> to the set of positive seeds, adds
+     *  <CODE>rejctedPaths</CODE> to the set of negative seeds, and then
+     *  selects the next set of path candidates.
+     */
 
     public List<IcePath> iterate(List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
         addPathsToSeedSet(approvedPaths, seedPaths);
@@ -162,7 +185,7 @@ public class Bootstrap {
     /**
      *  Starting from a set of seed paths, generate a ranked list of candidate paths
      *  to be displayed and (if approved by the user) added to the path set
-     *  for this relation.
+     *  for this relation.  This list is returned in <CODE>foundPatterns</CODE>.
      */
 
     private void bootstrap(String arg1Type, String arg2Type) {
@@ -365,6 +388,10 @@ public class Bootstrap {
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
         }
+        if (foundPatterns.isEmpty()) {
+            JOptionPane.showMessageDialog(Ice.mainFrame, "Cannot suggest any [more] patterns.");
+            return;
+        }
         System.err.println("Bootstrapper.DIVERSIFY:" + DIVERSIFY);
         //
         //  if a RelationOracle is present, use it to classify examples
@@ -378,8 +405,8 @@ public class Bootstrap {
         double result = 1;
         for (String pathInSet : pathSet) {
             double score =
-                    pathMatcher.matchPaths("T1--" + path + "--T2", "T1--" + pathInSet + "--T2") /
-                            (pathInSet.split(":").length + 1);
+                pathMatcher.matchPaths("T1--" + path + "--T2", "T1--" + pathInSet + "--T2") /
+                (pathInSet.split(":").length + 1);
             if (score < result) {
                 result = score;
             }
