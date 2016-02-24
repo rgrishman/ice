@@ -261,6 +261,10 @@ public class IcePreprocessor extends Thread {
         }
     }
 
+    /**
+     *  Run process to generate aggregate counts of words in a corpus.
+     */
+
     public static boolean countWords(boolean isCanceled) {
         String[] docFileNames = null;
         try {
@@ -314,7 +318,7 @@ public class IcePreprocessor extends Thread {
      * part of preprocessing:  compute the local count of each potential term
      * (head of NP with preceding nouns and adjectives) in document <CODE>doc</CODE>
      * and save the result in file <CODE>fileName</CODE>.  File format:
-     * one term per line.
+     * one term per line.  Names [tagged with ENAMEX] are not included.
      */
     public static void saveNPs(Document doc, String fileName) throws IOException {
         List<Annotation> nps = doc.annotationsOfType("ng");
@@ -336,6 +340,11 @@ public class IcePreprocessor extends Thread {
         }
         pw.close();
     }
+
+    /**
+     *  Load from the 'nps' cache file the counts of all terms in docuemnt
+     *  <CODE>inputFile</CODE>.
+     */
 
     public static Map<String, Integer> loadNPs(String cacheDir, String inputDir, String inputFile) throws IOException {
         String inputFileName = getNpsFileName(cacheDir, inputDir, inputFile);
@@ -491,8 +500,6 @@ public class IcePreprocessor extends Thread {
             String mType = parts.length == 5 ? parts[4].trim() : "UNK";
             Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
                     new FeatureSet("TYPE", type));
-            Annotation lowercasedAnn = new Annotation("enamex", new Span(start, end),
-                    new FeatureSet("TYPE", type));
 
             boolean conflict = false;
             for (Annotation existingAnn : existingNames) {
@@ -502,7 +509,6 @@ public class IcePreprocessor extends Thread {
             }
             if (!conflict) {
                 doc.addAnnotation(newAnn);
-                doc.addAnnotation(lowercasedAnn);
             }
         }
         br.close();
@@ -511,6 +517,15 @@ public class IcePreprocessor extends Thread {
     public static String getNamesFileName(String cacheDir, String inputDir, String inputFile) {
         return cacheFileName(cacheDir, inputDir, inputFile) + ".names";
     }
+
+    /**
+     *  For each ACE entity which includes a named mention, tag all other
+     *  mentions of the entity with the same ENAMEX tag, including name
+     *  and ACE type.
+     *  <br>
+     *  This requires that ACEDocuments be saved during preprocessing, and
+     *  assumes that entity coreference does not change.
+     */
 
     public static void loadAdditionalMentions(Document doc,
                                               String cacheDir,
