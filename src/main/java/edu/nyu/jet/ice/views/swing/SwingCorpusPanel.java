@@ -38,8 +38,6 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
     private JTextField filterTextField = new JTextField();
     private JButton preprocessButton = new JButton("Preprocess");
     private JLabel statisticsLabel = new JLabel("Current corpus has 0 documents.");
-    private JButton saveProgressButton = new JButton("Save progress");
-    private JButton exportButton = new JButton("Export to Jet");
     private Nice controller;
     private SwingIceStatusPanel iceStatusPanel;
 
@@ -98,8 +96,6 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
         this.add(foregroundPanel, "cell 0 0");
         this.add(iceStatusPanel, "cell 1 0 1 2");
         this.add(backgroundPanel, "cell 0 1");
-        //this.add(saveProgressButton);
-        //this.add(exportButton);
 
         this.controller = controller;
 
@@ -207,18 +203,6 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                 }
             }
         });
-
-        saveProgressButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                SwingCorpusPanel.this.controller.saveProgress();
-            }
-        });
-
-        exportButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                SwingCorpusPanel.this.controller.export();
-            }
-        });
     }
 
     public void setCorporaList(java.util.List<String> names) {
@@ -236,17 +220,9 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
         corpusSelectionComboBox.setSelectedItem(name);
     }
 
-//    public void addCorpus(String corpusName) {
-//
-//    }
-
     public void setDirectory(String directory) {
         directoryTextField.setText(directory);
     }
-
-//    public void setFilter(String type) {
-//       filterTextField.setText(type);
-//    }
 
     public void setBackgroundList(java.util.List<String> names) {
         backgroundCorpusComboBox.removeAllItems();
