@@ -10,24 +10,26 @@ import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import Jet.JetTest;
 import Jet.Pat.Pat;
 import Jet.Refres.Resolve;
-import Jet.Tipster.Annotation;
-import Jet.Tipster.Document;
-import Jet.Tipster.ExternalDocument;
-import Jet.Tipster.Span;
+import Jet.Tipster.*;
 
 import java.io.*;
 import java.util.*;
 
 /**
- * Count terms based on NP
+ * Count terms in corpus.
  *
  * @author yhe
  * @version 1.0
  */
 public class TermCounter extends Thread {
+
+    // docCounter = number of documents in corpus containing this term
     private Map<String, Integer> docCounter = new HashMap<String, Integer>();
+    // freqCount = total frequency of this term in corpus
     private Map<String, Integer> freqCount = new HashMap<String, Integer>();
+    // rawCount = list of frequency of term in each document containing term
     private Map<String, List<Integer>> rawCount = new HashMap<String, List<Integer>>();
+
     private ProgressMonitorI progressMonitor = null;
     private static String[] stopWordsArr = new String[]{
             "a", "an", "and", "are", "as", "at", "be", "but", "by",
@@ -54,6 +56,10 @@ public class TermCounter extends Thread {
         docCounter.clear();
         freqCount.clear();
     }
+
+    /**
+     *  Process corpus and compute aggregate term counts.
+     */
 
     public void count(String propsFile,
                       List<String> docList,
@@ -119,7 +125,7 @@ public class TermCounter extends Thread {
     }
 
     /**
-     * Write absolute word frequencies in each document.
+     * Write aggregate term frequencies and frequencies in each document.
      *
      * Currently document level count information is not used. We record this information because the
      * term extraction algorithms in FUSE would use such information. e.g., some algorithms will prefer
@@ -146,7 +152,9 @@ public class TermCounter extends Thread {
     }
 
     /**
-     * Add document by loading count information from cache
+     * Update aggregate term count information with information on
+     * document <CODE>doc</CODE> obtained from cache.  Counts are
+     * combined for terms and names
      *
      * @param doc
      * @param cacheDir
@@ -156,6 +164,8 @@ public class TermCounter extends Thread {
     public void addDocument(Document doc, String cacheDir, String inputDir, String inputFile) {
 
         Map<String, Integer> localCount = new HashMap<String, Integer>();
+
+	// start with counts of terms
 
             try {
                 Map<String, Integer> loadedCount = IcePreprocessor.loadNPs(cacheDir, inputDir, inputFile);
@@ -167,6 +177,8 @@ public class TermCounter extends Thread {
             catch (IOException e) {
                 e.printStackTrace();
             }
+
+	// add in counts of names
 
         List<Annotation> names = doc.annotationsOfType("ENAMEX");
         if (names != null) {
@@ -196,6 +208,16 @@ public class TermCounter extends Thread {
         }
     }
 
+    /**
+     *  Computes a list of all possible terms contained within the noun
+     *  group with span <CODE>s</CODE> of document <CODE>doc</CODE>,
+     *  where a possible term consists of a series of nouns and
+     *  adjectives including the head (final token) of the noun group.
+     *  Tokens on a stopword list are also excluded, although this
+     *  may be redundant.  If the noun group includes a name (ENAMEX), 
+     *  an empty list is returned.
+     */
+
     public static List<String> extractPossibleTerms(Document doc, Span s) {
         List<String> terms = new ArrayList<String>();
         boolean isENAMEX = (doc.annotationsOfType("ENAMEX", s) != null);
@@ -210,7 +232,7 @@ public class TermCounter extends Thread {
             Annotation token = tokens.get(i);
             String pos = getPOS(doc, token);
             String tokenString = doc.text(token).replace("\\s+", " ").trim();
-            if ((pos.equals("n") || pos.startsWith("adj"))
+            if ((pos.equals("NN") || pos.equals("NNS") || pos.startsWith("JJ"))
                     && tokenString.length() > 1
                     && !stopWords.contains(tokenString)) {
                 termBuilder.insert(0, tokenString + " ");
@@ -226,9 +248,14 @@ public class TermCounter extends Thread {
         return terms;
     }
 
+    /**
+     *  returns the Penn tag for token <CODE>token</CODE>, or NN
+     *  if there is no Penn tag.
+     */
+
     private static String getPOS(Document doc, Annotation token) {
         String pos = "NN";
-        List<Annotation> posAnns = doc.annotationsOfType("constit", token.span());
+        List<Annotation> posAnns = doc.annotationsAt(token.start(), "tagger");
         if (posAnns != null) {
             pos = (String)posAnns.get(0).get("cat");
         }
