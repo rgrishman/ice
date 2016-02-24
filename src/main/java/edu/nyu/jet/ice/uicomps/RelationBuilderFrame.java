@@ -121,6 +121,10 @@ public class RelationBuilderFrame extends JFrame {
             }
         });
 
+        //
+        //  when Iterate button is pressed, collect pattern which have been
+        //  labeled YES or NO and start new thread for next bootstrapping iteration
+        //
         iterateButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
@@ -153,6 +157,8 @@ public class RelationBuilderFrame extends JFrame {
             }
         });
 
+        // saveButton:
+        //
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
