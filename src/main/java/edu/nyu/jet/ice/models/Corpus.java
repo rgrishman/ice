@@ -46,6 +46,7 @@ public class Corpus {
     public String filter;
     public int numberOfDocs;
     public String docListFileName;
+    public Map<String, String> preprocessCacheMap;
     // for term finder
     public String wordCountFileName;
     public String backgroundCorpus;

@@ -732,11 +732,45 @@ public class IcePreprocessor extends Thread {
     public static String cacheFileName(String cacheDir,
                                        String inputDir,
                                        String inputFile) {
+        Map<String, String> map = Ice.selectedCorpus.preprocessCacheMap;
+        if (map == null) {
+            map = loadPreprocessCacheMap();
+        }
+        if (! map.isEmpty()) {
+            String originalCorpusName = map.get(inputFile);
+            Corpus originalCorpus = Ice.corpora.get(originalCorpusName);
+            inputDir = originalCorpus.getDirectory();
+        }
         return cacheDir + File.separator
                 + inputDir.replaceAll("/", "_") + "_"
                 + inputFile.replaceAll("/", "_");
     }
 
+    public static Map<String, String> loadPreprocessCacheMap () {
+        try {
+            File f = new File (FileNameSchema.getPreprocessCacheMapFileName(Ice.selectedCorpusName));
+            if (f.exists()) {
+                Map<String, String> map = new HashMap<String, String>();
+                BufferedReader rdr = new BufferedReader(new FileReader(f));
+                String line;
+                while ((line = rdr.readLine()) != null) {
+                    String[] fields = line.split(":");
+                    if (fields.length != 2) {
+                        System.err.println("Invalid entry in preprocessCacheMap: " + line);
+                        continue;
+                    }
+                    map.put(fields[0], fields[1]);
+                }
+                return map;
+            } else {
+                // if no file, return empty map
+                return new HashMap<String, String>();
+            }
+        } catch (IOException e) {
+            System.out.println("error loading preprocessCacheMap: " + e);
+            return new HashMap<String, String>();
+        }
+    }
 
     static String normalizeWord(String word, String pos) {
         String np = word.replaceAll("[ \t]+", "_");

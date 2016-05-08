@@ -31,8 +31,6 @@ import java.util.*;
 public class IceCLI {
 
     static String branch;
-    // TODO: switch this to on unless cache is already linked
-    public static final boolean SHOULD_LINK_CACHE = true;
 
     public static void main(String[] args) {
         // create Options object
@@ -78,7 +76,9 @@ public class IceCLI {
             String corpusName  = arguments[1];
 	    branch = cmd.getOptionValue("branch");
 	    if (branch == null) branch = "ice";
-
+            //
+            // ----- a d d   C o r p u s -----
+            //
             if (action.equals("addCorpus")) {
                 int numOfProcesses = 1;
                 String inputDirName = cmd.getOptionValue("inputDir");
@@ -230,6 +230,11 @@ public class IceCLI {
                 }
                 mergeSplit(corpusName, numOfProcesses);
             }
+            //
+            // ----- m e r g e   C o r p o r a   I n t o -----
+            //
+            //       combines several corpora into one
+            //
             else if (action.equals("mergeCorporaInto")) {
                 String corpusDir  = cmd.getOptionValue("targetDir");
                 String filterName = cmd.getOptionValue("filter");
@@ -242,68 +247,58 @@ public class IceCLI {
                 String[] fromCorpora = fromCorporaStr.split(",");
 
                 init();
-                // validateCorpus(corpusName);
                 for (String fromCorpusName : fromCorpora) {
                     validateCorpus(fromCorpusName);
                 }
 
                 Ice.selectCorpus(corpusName);
                 try {
-                    // create directory first
-                    File dir = new File(corpusDir);
-                    dir.mkdirs();
-
-                    // create cache directory
+                    // create cache directory for new corpus
                     String targetCacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
                     File targetCacheDirFile = new File(targetCacheDir);
                     targetCacheDirFile.mkdirs();
                     if (copyApfDTD(targetCacheDir)) return;
 
-                    // create docList file
+                    // create docList and preprocessMap files
                     String docListFileName = FileNameSchema.getDocListFileName(corpusName);
                     PrintWriter docListFileWriter = new PrintWriter(new FileWriter(docListFileName));
+                    String preprocessCacheMapFileName = FileNameSchema.getPreprocessCacheMapFileName(corpusName);
+                    PrintWriter preprocessCacheMapFileWriter = new PrintWriter(new FileWriter(preprocessCacheMapFileName));
 		    int docCount = 0;
-                    // create all links and write docListFile
+                    // create docList and preprocessMap for new corpus
                     for (String fromCorpusName : fromCorpora) {
-
                         String fromDir = Ice.corpora.get(fromCorpusName).directory;
+                        Path fromDirPath = new File(fromDir).toPath();
+                        Path corpusDirPath = new File(corpusDir).toPath();
+                        Path relativePath = corpusDirPath.relativize(fromDirPath);
                         String fromDocListFileName = Ice.corpora.get(fromCorpusName).docListFileName;
-                        String sourceCacheDir = FileNameSchema.getPreprocessCacheDir(fromCorpusName);
                         BufferedReader br = new BufferedReader(new FileReader(fromDocListFileName));
-                        String line = null;
+                        String mapFileName = FileNameSchema.getPreprocessCacheMapFileName(fromCorpusName);
+                        File mapFile = new File(mapFileName);
+                        boolean mapFileExists = mapFile.exists();
+                        BufferedReader mapReader = null;
+                        if (mapFileExists)
+                            mapReader = new BufferedReader(new FileReader (mapFile));
+                        String line;
                         while ((line = br.readLine()) != null) {
-                            String targetSourceFileName = (fromDir + "/" + line).replaceAll("/", "_");
-                            docListFileWriter.println(targetSourceFileName);
+                            Path docPath  = relativePath.resolve(line);
+                            docListFileWriter.println(docPath);
+                            String preprocessedCorpus = fromCorpusName;
+                            if (mapFileExists) {
+                                String[] mapLine = mapReader.readLine().split(":");
+                                preprocessedCorpus = mapLine[1];
+                            }
+                            preprocessCacheMapFileWriter.println(docPath + ":" + preprocessedCorpus);
 			    docCount++;
-                            targetSourceFileName = targetSourceFileName + "." + filterName;
-                            File targetSourceFile = (new File(corpusDir + "/" + targetSourceFileName)); //.getCanonicalFile();
-                            String sourceSourceFileName = line + "." + filterName;
-                            // create link for source file
-                            Path target = targetSourceFile.toPath();
-                            Path source = (new File(fromDir + "/" + sourceSourceFileName)).toPath();; //.getCanonicalFile().toPath();
-                            Files.deleteIfExists(target);
-                            try {
-                                // Files.createSymbolicLink(target, source);
-                                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                                // now create links to cache files
-                                if (SHOULD_LINK_CACHE) {
-                                    // linkCache(sourceCacheDir, targetCacheDir,
-                                            // fromDir, corpusDir,
-                                            // sourceSourceFileName, targetSourceFileName);
-                                copyCache (sourceCacheDir, targetCacheDir,
-					   fromDir, corpusDir,
-					   sourceSourceFileName, targetSourceFileName);
-                                }
-                            }
-                            catch (Exception e) {
-                                e.printStackTrace();
-                            }
                         }
                         br.close();
-			readSplitCounts(fromCorpusName);
+                        if (mapFileExists)
+                            mapReader.close();
+                        readSplitCounts(fromCorpusName);
                     }
-
+                    // create new corpus
                     docListFileWriter.close();
+                    preprocessCacheMapFileWriter.close();
                     Corpus newCorpus = new Corpus(corpusName);
 
                     Ice.corpora.put(corpusName, newCorpus);
@@ -320,6 +315,9 @@ public class IceCLI {
                     System.exit(-1);
                 }
             }
+            //
+            // ----- s e t   B a c k g r o u n d   F o r -----
+            //
             else if (action.equals("setBackgroundFor")) {
                 init();
                 validateCorpus(corpusName);
@@ -330,6 +328,9 @@ public class IceCLI {
                 saveStatus();
                 System.err.println("Background corpus set successfully.");
             }
+            //
+            // ----- f i n d   E n t i t i e s -----
+            //
             else if (action.equals("findEntities")) {
                 init();
                 validateCorpus(corpusName);
@@ -462,6 +463,11 @@ public class IceCLI {
         }
     }
 
+    /**
+     *  Place a copy of the APF DTD in the 
+     *  cache directory to enable subsequent reading of the APF.
+     */
+
     public static boolean copyApfDTD(String targetCacheDir) throws IOException {
         Properties props = new Properties();
         props.load(new FileReader("parseprops"));
@@ -488,13 +494,12 @@ public class IceCLI {
         origPreprocessDirFile.mkdirs();
         try {
             copyApfDTD(origPreprocessDir);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         String suffixName = Ice.selectedCorpus.filter;
-
+        int docCount = 0;
         for (int i = 1; i < numOfProcesses + 1; i++) {
             try {
                 String currentCorpusName = splitCorpusName(corpusName, i);
@@ -507,6 +512,7 @@ public class IceCLI {
                     copyCache(currentPreprocessDir, origPreprocessDir, 
                             Ice.selectedCorpus.directory, Ice.selectedCorpus.directory,
                             docName, docName);
+                    docCount++;
                 }
 		readSplitCounts(currentCorpusName);
             }
@@ -516,10 +522,10 @@ public class IceCLI {
             }
         }
 	try {
-	    writeMergedCounts(0, origCorpusName);
+	    writeMergedCounts(docCount, origCorpusName);
         } catch (Exception e) {
-                System.err.println("Problem merging split ");
-                e.printStackTrace();
+            System.err.println("Problem merging split ");
+            e.printStackTrace();
         }
 	saveStatus();
     }
