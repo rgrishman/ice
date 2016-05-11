@@ -531,7 +531,7 @@ public class IceAPI {
 	    relation.setPaths(seedPaths);
 	    String seed = String.join(":::", paths);
 	    log.info("Getting IcePaths for seed " + seed);
-	    List<IcePath> icePaths = buildPathsFromStrings(corpusName, paths);
+	    List<IcePath> icePaths = buildPathsFromStrings(corpusName, paths, arg1, arg2);
 	    log.info("Retrieved " + Integer.toString(icePaths.size()) + " IcePaths.");
 	    relation.setIcePaths(icePaths);
 	} else {
@@ -540,13 +540,31 @@ public class IceAPI {
 	saveStateToDefault();
     }
 
+    public void removePath (String relationName, String fullPath) {
+	if (!Ice.relations.containsKey(relationName)) {
+	    log.error("Relation " + relationName + " not found!");
+	} else {
+	    IceRelation rel = Ice.relations.get(relationName);
+	    List<String> newPaths = new ArrayList<String>();
+	    List<IcePath> newIcePaths = new ArrayList<IcePath>();
+	    for (IcePath icePath: rel.getIcePaths() ) {
+		if (!icePath.getPath().equals(fullPath)) {
+		    newIcePaths.add(icePath);
+		    newPaths.add(simplePath(icePath.getPath()));
+		}
+	    }
+	    rel.setPaths(newPaths);
+	    rel.setIcePaths(newIcePaths);
+	}
+    }
+
     public void addPaths (String relationName, List<IcePath> icePathsToAdd) {
 	if (Ice.relations.containsKey(relationName)) {
 	    IceRelation rel = Ice.relations.get(relationName);
 	    List<String> paths = rel.getPaths();
 	    List<IcePath> icePaths = rel.getIcePaths();
 	    for (IcePath icePath: icePathsToAdd) {
-		paths.add(icePath.getPath());
+		paths.add(simplePath(icePath.getPath()));
 	    }
 	    icePaths.addAll(icePathsToAdd);
 
@@ -558,13 +576,13 @@ public class IceAPI {
     }
 
     public List<IcePath> buildRelation(String corpusName, String seed, ProgressMonitorI monitor) {
-	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
-        String patternFileName = FileNameSchema.getRelationsFileName(corpusName);
-        Bootstrap bootstrap = new Bootstrap(monitor);
-	List<IcePath> toReturn = bootstrap.initialize(seed, reprFileName, patternFileName);
+      String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
+      String patternFileName = FileNameSchema.getRelationsFileName(corpusName);
+      Bootstrap bootstrap = new Bootstrap(monitor);
+      List<IcePath> toReturn = bootstrap.initialize(seed, reprFileName, patternFileName);
 	
-	buildPaths(corpusName, toReturn);
-        return toReturn;
+      buildPaths(corpusName, toReturn);
+      return toReturn;
     }
 
     public List<IcePath> buildRelationMulti (String corpusName, List<IcePath> approvedPaths) {
@@ -578,7 +596,6 @@ public class IceAPI {
 	}
 	String[] splitPaths = paths.toArray(new String[paths.size()]);
 	List<IcePath> outputPaths = bootstrap.initMulti(splitPaths, reprFileName, patternFileName);
-	// buildPaths(corpusName, outputPaths);
         return outputPaths;
 
     }
@@ -638,9 +655,7 @@ public class IceAPI {
 	    List<IcePath> crPaths = new ArrayList<IcePath>();
 	    IceRelation rel = Ice.relations.get(relName);
 	    for (String pathStr: rel.getPaths() ) {
-		String fullPath = rel.getArg1type() +
-                    " -- " + pathStr + " -- " +
-                    rel.getArg2type();
+		String fullPath = fullPath(pathStr, rel.getArg1type(), rel.getArg2type());
 		String repr = depPathMap.findRepr(fullPath);
 		String example = depPathMap.findExample(fullPath);
 		IcePath path = new IcePath(fullPath, repr, example, 0);
@@ -651,26 +666,27 @@ public class IceAPI {
 	return corpusPaths;
     }
 
-    public void buildPaths (String corpusName, List<IcePath> paths) {
+    public void buildPaths (String corpusName, List<IcePath> icePaths) {
 	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
 	DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
-	for (IcePath path: paths) {
-	    String pathString = path.getPath();
-	    log.info("Building path for " + pathString);
-	    path.setRepr(depPathMap.findRepr(pathString));
-	    path.setExample(depPathMap.findExample(pathString));
+	for (IcePath icePath: icePaths) {
+	    String fullPath = icePath.getPath();
+	    log.info("Building path for " + fullPath);
+	    icePath.setRepr(depPathMap.findRepr(fullPath));
+	    icePath.setExample(depPathMap.findExample(fullPath));
 	}
 
     }
 
-    public List<IcePath> buildPathsFromStrings (String corpusName, List<String> paths) {
+    public List<IcePath> buildPathsFromStrings (String corpusName, List<String> paths, String arg1, String arg2) {
 	List<IcePath> icePaths = new ArrayList<IcePath>();
 	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
 	DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
 	for (String pathString: paths) {
-	    String repr = depPathMap.findRepr(pathString);
-	    String example = depPathMap.findExample(pathString);
-	    IcePath icePath = new IcePath(pathString, repr, example, 0.0);
+	    String fullPath = fullPath(pathString, arg1, arg2);
+	    String repr = depPathMap.findRepr(fullPath);
+	    String example = depPathMap.findExample(fullPath);
+	    IcePath icePath = new IcePath(fullPath, repr, example, 0.0);
 	    icePaths.add(icePath);
 	}
 	return icePaths;
@@ -694,9 +710,8 @@ public class IceAPI {
 	String reprFileName = FileNameSchema.getRelationReprFileName(corpusName);
 	DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
 	for (String pathStr: relation.getPaths() ) {
-	    String fullPath = relation.getArg1type() +
-		" -- " + pathStr + " -- " +
-		relation.getArg2type();
+	    String fullPath = fullPath(pathStr, relation.getArg1type(),
+				       relation.getArg2type());
 	    String repr = depPathMap.findRepr(fullPath);
 	    if (repr == null) {
 		log.error("Repr not found for path:" + fullPath);
@@ -710,5 +725,12 @@ public class IceAPI {
 
     }
 
+    public String fullPath (String path, String arg1type, String arg2type) {
+	return arg1type + " -- " + path + " -- " + arg2type;
+    }
+
+    public String simplePath (String fullPath) {
+	return fullPath.split("--")[1].trim();
+    }
 
 }

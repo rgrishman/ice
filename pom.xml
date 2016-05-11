@@ -82,6 +82,11 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.7.13</version>
     </dependency>
+    <dependency>
+      <groupId>net.sf.trove4j</groupId>
+      <artifactId>trove4j</artifactId>
+      <version>3.0.3</version>
+    </dependency>
 <!-- dependency>
         <groupId>edu.nyu.cs.proteus</groupId>
         <artifactId>Jet</artifactId>

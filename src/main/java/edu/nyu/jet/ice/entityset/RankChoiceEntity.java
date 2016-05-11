@@ -10,6 +10,9 @@ public class RankChoiceEntity extends Entity {
 
     private EntityDecision decision;
 
+    public RankChoiceEntity() {
+    }
+
     public RankChoiceEntity(String text) {
         super(text);
         decision = EntityDecision.UNDECIDED;

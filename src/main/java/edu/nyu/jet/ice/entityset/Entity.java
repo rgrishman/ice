@@ -13,6 +13,10 @@ public class Entity {
     private String type;
     private double score;
 
+    public Entity () {
+
+    }
+
     public Entity(String text) {
         this.text = text;
 	String[] textParts = text.split("/");

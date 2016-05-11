@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.models;
 
-import gnu.trove.TObjectDoubleHashMap;
+// import gnu.trove.TObjectDoubleHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 import java.text.DecimalFormat;
 
 /**
@@ -16,6 +17,7 @@ public class IcePath implements Comparable<IcePath> {
 
     private final DecimalFormat form = new DecimalFormat("0.000");
 
+    // ABG 2016 05 05: Note that this path is a FULL path, including both terms
     private String path;
     private String repr;
     private String example;
