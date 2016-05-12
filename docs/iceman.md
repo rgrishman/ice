@@ -1,6 +1,6 @@
-# Ice Manual
+# The ICE Manual
 
-*May 26, 2015*
+*September 5, 2015*
 
 ## Introduction
 
@@ -22,32 +22,31 @@ We go through the steps of adding a new corpus to the system, finding entities, 
 phrases, and building new relations. Each function can be completed in a panel of the Ice Swing GUI. Ice will bring us
 to the Corpus panel when started.
 
+ICE also provides a command line interface for possbily time-consuming tasks that do not require human intervention, so
+that we can run those tasks on a server without keeping a Swing GUI. This is discussed at the end of this manual.
+
 ## Starting Ice
 
 Unzip the package and run:
 
-    ./runice.sh
+    java -Xmx4g -cp ICE-0.2.0-jar-with-dependencies.jar edu.nyu.jet.ice.controllers.Nice
 
 ![The corpus panel](ice1.png)
 
 ## The Corpus Panel
 
-__Adding a new corpus__
+__ Adding a new corpus__
 
  A corpus is defined by a directory and a file extension.  The set of non-directory files dominated by that directory and ending in the specified extension constitute an ICE corpus. 
 
-To add a new corpus, first click *Add corpus* , then either enter the path of the
+To add a new corpus, first click *add corpus* , then either enter the path of the
 root directory of the corpus or click *browse* to select the directory where the
 files are located. You can apply a filter on the extension of the filename (e.g. sgm) 
 in the corresponding text filter;  You need to click "Apply" to apply the filter.
 
-Clicking "Preprocess" will start the preprocessing process, which is rather **slow**.
+Clicking "Apply" will start the preprocessing process, which is rather **slow**.
 This process will perform dependency parsing, name tagging, and coref resolution, and
 will save the result of these steps for use by the following components.
-
-As the first step of preprocessing, we remove characters not recognized by Ice and copy
-all documents to the cache directory. We process documents in the cache directory 
-in later steps. 
 
 __The background corpus__
 
@@ -76,9 +75,13 @@ __Finding salient terms__
 
 The first step in analyzing the corpus is to identify the salient terms --
 those which occur more frequently in this corpus than in a 'background 
-corpus'.  In the Entities panel, click *Find Entities*.  The result will be a list of terms
+corpus'.  This is done in two steps.  First you *count words* in the
+corpus; this produces raw word counts.  Then you select a background 
+corpus to compare against and *find terms*.  The result will be a list of terms
 ranked by their relative frequency in the two corpora (those with the 
 highest frequency appearing first).
+
+You can select to display nouns, names, verbs, or some combination.
 
 Note that, you can also index entities in this panel. This is necessary
 for building entity sets. Please refer to the next section for more information.
@@ -156,10 +159,12 @@ A pattern is a sequence of words connecting two entities of specified types. (Ac
 specifies the grammatical relation between these words, but this level of detail is hidden from the user.)  Because the
 pattern must connect two entities, defining new entity types can lead to new patterns connecting these entities.
 
-To find the most common phrases in a corpus, use the *ALl phrases* button. (
-If *Sentential phrases* is clicked, only patterns of the subject - verb - object form
+To find the most common patterns in a corpus, use the *Find common patterns* button. (
+If *Show only sentential patterns* is selected, only patterns of the subject - verb - object form
 are displayed.  This is useful for finding events.)
-Phrases will be ranked based on the ratio between their frequency in the current
+
+To find the patterns that are most specific to a domain, use the *Rank patterns* button.
+This will rank the patterns based on the ratio between their frequency in the current
 corpus and their frequency in the background corpus. This is similar to what the *Find entities*
 button does for entities.
 
@@ -189,11 +194,79 @@ Like building entity sets, you can choose whether you want to accept or reject a
 
  After returning to the Relations panel, click the *Save* button on the right of
   the entity set panel and then the *Save* button on the left of the entity set panel
-  to keep it in the Ice environment. If you manually edit the relations, you will
-  also need to click the right *Save* to save it to the relations, and click left
-  *Save* to save the relation to the system.
+  to keep it in the Ice environment.
 
  Finally, click *Persist* in the status panel to save the newly-built entities set to
  the ice.yml file, so that these entities will be available after Ice is closed and
   re-opened. Click *Export* to export all entity sets in the ice.yml file to Jet.
 
+## ICECLI: The Command Line Interface
+
+ICE also provides a command line interface for actions that do not require human intervention.
+This can be called in the following command:
+
+    icecli ACTION CORPUS [OPTIONS]
+        
+### The _addCorpus_ action
+
+This action adds a new corpus to the ICE system and preprocess it. It is a time-consuming action.
+To run this action, the directory of the new corpus and the desired file extension needs to be specified
+in options. We recommend setting the background corpus too, unless this is the first corpus in ICE.
+
+The following command creates a new corpus called deaatl, from txt files in the corpus/dea_processed/atl directory,
+and use apw-nov (which already exists in ICE) as background.
+
+    icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
+    
+### Parallel _addCorpus_ action
+
+When processing very large corpus on a server with abundant memory, it is possible to spawn multiple
+processes using the --processes option. It will start multiple icecli script to process input data
+in parallel. By default, each icecli script requires 4GB of memory.
+
+The following command creates a new corpus called deaatl, from txt files in the corpus/dea_processed/atl 
+directory using apw-nov (which already exists in ICE) as background with 8 parallel processes.
+
+    icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov --processes 8
+
+### The _mergeCorporaInto_ action
+
+This action allows us build a large corpus from several small processes corpora. All corpora should have
+the same filter (file extension). This action only works for Java 7+.
+
+The following command merges 3 corpora apw, afp, and xin into a large corpus, which we call "three". Symlinks
+to all source files will be created in the threeDir/ directory.
+ 
+     icecli mergeCorporaInto three --targeDir threeDir --filter sgm --fromCorpora apw,afp,xin
+
+### The _setBackgroundFor_ action 
+
+This action set the background corpus of a given corpus in ICE. The following command set the background corpus
+of deaatl to be apw-nov.
+
+    icecli setBackgroundFor deaatl --background apw-nov
+
+### The _findEntities_ action
+
+This command generates the entity list for the corpus deaatl. For this command to work, background corpus should
+be properly set first. The following command finds entities (domain-specific noun groups) in deaatl.
+
+    icecli findEntities deaatl
+
+### The _indexEntities_ action
+
+This command index entities in a given corpus. findEntities should be run at least once before this command can run
+successfully. We have the opportunity to set the cutoff here. With a higher cutoff, a smaller portion of more specific
+terms will be kept in the index. If the cutoff is not set, it defaults to 3.0. 
+
+The following command indexes entities in deaatl, and sets cutoff to 4.0.
+
+    icecli indexEntities deaatl --entityIndexCutoff 4.0
+
+### The _findPhrases_ action
+
+This command extract phrases (dependency paths) in a given corpus. If a background corpus is given in the ICE configuration,
+it will also generate a pattern ratio file, which contains a list of phrases ranked by their domain-specialty. The following
+command extracts phrases from deaatl.  
+
+    icecli findPhrases deaatl

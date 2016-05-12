@@ -10,14 +10,16 @@ Tags.fileName           = pos_hmm.txt
 NameTags.ME.fileName = ../acedata/AceOntoMeneModel
 WordClusters.fileName = brownClusters10-2014.txt
 Pattern.fileName1       = MEchunkPatterns.txt
-Pattern.quantifierFileName       = QuantifierPatterns.txt
 Ace.EDTtype.fileName     = ../acedata/EDT type dict 05.txt
 Ace.NameSubtypeModel.fileName     = ../acedata/ACEnameSubtypeModel 05.txt
+Pattern.quantifierFileName       = QuantifierPatterns.txt
+Timex.refTime = 2015-10-01
+Timex.rule = time_rules.yaml
 ##### ICE USER CONFIG FILES #####
 Onoma.fileName           = ../acedata/ice_onoma.dict
 Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
 Ace.RelationModel.fileName = ../acedata/iceRelationModel
 #################################
 #
-processDocument      = sentenceSplit, sentence:processSentence
-processSentence      = tokenize, lexLookup, tagNamesFromOnoma
+# processDocument      = sentenceSplit, sentence:processSentence
+processSentence      = tokenize, lexLookup, tagNamesFromOnoma, tagTimex

@@ -1,13 +1,8 @@
 package edu.nyu.jet.ice.relation;// -*- tab-width: 4 -*-
-//Title:        JET-ICE
-//Version:      1.72
-//Copyright:    Copyright (c) 2014
-//Author:       Ralph Grishman
-//Description:  A Java-based Information Extraction Tool -- Customization Environment
-
 
 import AceJet.AnchoredPath;
 import AceJet.AnchoredPathSet;
+import AceJet.SimAnchoredPathSet;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.PathMatcher;
@@ -29,7 +24,7 @@ import java.awt.GraphicsEnvironment;
 public class Bootstrap {
     public static boolean DEBUG     = true;
 
-    public static boolean DIVERSIFY = false;
+    public static boolean DIVERSIFY = true;
 
     public static PathMatcher pathMatcher = null;
 
@@ -43,6 +38,8 @@ public class Bootstrap {
 
     public static final int    SCREEN_LINES = 20;
 
+    public static final boolean USE_NEGATIVE = false; //TODO: configurable in props
+
     public List<IcePath> foundPatterns = new ArrayList<IcePath>();
 
     public Set<String> getSeedPaths() {
@@ -53,11 +50,21 @@ public class Bootstrap {
 
     private ProgressMonitorI progressMonitor = null;
 
+    private String relationName = "";
+
+    public String getRelationName() {
+        return relationName;
+    }
+
+    public void setRelationName(String relationName) {
+        this.relationName = relationName;
+    }
+
     Set<String> seedPaths = new HashSet<String>();
     Set<String> rejects = new HashSet<String>();
     AnchoredPathSet pathSet;
-    private String arg1Type = "";
-    private String arg2Type = "";
+    String arg1Type = "";
+    String arg2Type = "";
 
     public Bootstrap() {
 
@@ -75,6 +82,26 @@ public class Bootstrap {
         return arg1Type;
     }
 
+    public static Bootstrap makeBootstrap(String name, ProgressMonitorI progressMonitor, String relationName) {
+        if (name.equals("ArgEmbeddingBootstrap")) {
+            Bootstrap instance =  new ArgEmbeddingBootstrap(progressMonitor);
+            instance.relationName = relationName;
+            return instance;
+        }
+        if (name.equals("LexicalSimilarityBootstrap")) {
+            Bootstrap instance =  new LexicalSimilarityBootstrap(progressMonitor);
+            instance.relationName = relationName;
+            return instance;
+        }
+        Bootstrap instance = new Bootstrap(progressMonitor);
+        instance.relationName = relationName;
+        return instance;
+    }
+
+	/*
+	  ABG 20160511 I want to see how this new version deals with the
+	  reprFileName
+
     public List<IcePath> initialize(String seedPath, String reprFileName, String patternFileName) {
 		String[] splitPaths = seedPath.split(":::");
 		return initMulti(splitPaths, reprFileName, patternFileName);
@@ -83,6 +110,8 @@ public class Bootstrap {
 	public List<IcePath> initMulti(String[] splitPaths, String reprFileName, String patternFileName) {
 		System.out.println("Bootstrap.initMulti( , " + reprFileName + ", " + patternFileName + ")");
 		pathMatcher = new PathMatcher();
+*/
+    public List<IcePath> initialize(String seedPath, String patternFileName) {
         try {
 			DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
             List<String> allPaths = new ArrayList<String>();
@@ -119,6 +148,8 @@ public class Bootstrap {
             //seedPaths.add(args[0]);
             //seedPaths.add(firstSeedPath);
             seedPaths.addAll(allPaths);
+            // Using SimAchoredPathSet
+//            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
             pathSet = new AnchoredPathSet(patternFileName);
             bootstrap(arg1Type, arg2Type);
         }
@@ -149,9 +180,11 @@ public class Bootstrap {
     }
 
     private void bootstrap(String arg1Type, String arg2Type) {
+        // DEBUG = Show various distance scores (used to select instances) in tooltip
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
             DEBUG = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.debug"));
         }
+        // DIVERSIFY = Disallow similar paths in top 20
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.diversify") != null) {
             DIVERSIFY = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.diversify"));
         }
@@ -162,8 +195,10 @@ public class Bootstrap {
                 PathRelationExtractor.minThreshold * PathRelationExtractor.negDiscount * SCREEN_DIVERSITY_DISCOUNT;
         pathMatcher.updateCost(0.8, 0.3, 1.2);
         List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
+
         for (String sp : seedPaths) {
             List<AnchoredPath> posPaths = pathSet.getByPath(sp);
+<<<<<<< HEAD
 			// TODO figure out why some paths are coming up empty
 			if (null == posPaths || posPaths.size() < 1) {
 				System.err.println("No paths found for seedPath " + sp);
@@ -172,16 +207,28 @@ public class Bootstrap {
             for (AnchoredPath p : posPaths) {
                 seedPathInstances.add(new BootstrapAnchoredPath(p,
                         BootstrapAnchoredPathType.POSITIVE));
+=======
+            if (posPaths != null) {
+                for (AnchoredPath p : posPaths) {
+                    seedPathInstances.add(new BootstrapAnchoredPath(p,
+                            sp,
+                            BootstrapAnchoredPathType.POSITIVE));
+                }
+>>>>>>> upstream/master
             }
-            for (String rp : rejects) {
-                double sim = pathMatcher.matchPaths(arg1Type + "--" + sp + "--" + arg2Type,
-                        arg1Type + "--" + rp + "--" + arg2Type) / sp.split(":").length;
-                if (sim < minAllowedSimilarity) {
-                    System.err.println("Bootstrapping negative path:" + rp);
-                    List<AnchoredPath> negPaths = pathSet.getByPath(rp);
-                    for (AnchoredPath np : negPaths) {
-                        seedPathInstances.add(new BootstrapAnchoredPath(np,
-                                BootstrapAnchoredPathType.NEGATIVE));
+            // should we bootstrap negative paths?
+            if (USE_NEGATIVE) {
+                for (String rp : rejects) {
+                    double sim = pathMatcher.matchPaths(arg1Type + "--" + sp + "--" + arg2Type,
+                            arg1Type + "--" + rp + "--" + arg2Type) / sp.split(":").length;
+                    if (sim < minAllowedSimilarity) {
+                        System.err.println("Bootstrapping negative path:" + rp);
+                        List<AnchoredPath> negPaths = pathSet.getByPath(rp);
+                        for (AnchoredPath np : negPaths) {
+                            seedPathInstances.add(new BootstrapAnchoredPath(np,
+                                    rp,
+                                    BootstrapAnchoredPathType.NEGATIVE));
+                        }
                     }
                 }
             }
@@ -239,8 +286,7 @@ public class Bootstrap {
         // -- sharedCount = number of distinct argument pairs it shares
         // -- totalCount = total number of distinct arg pairs it appears with
         Map<String, Integer> sharedCount = new HashMap<String, Integer>();
-        // Map<String, Integer> totalCount = new HashMap<String, Integer>();
-        // Map<String, Integer> score = new HashMap<String, Integer>();
+
         List<IcePath> scoreList = new ArrayList<IcePath>();
         for (String p : shared.keySet()) {
             sharedCount.put(p, shared.get(p).size());
@@ -249,31 +295,27 @@ public class Bootstrap {
             for (AnchoredPath ap : pathSet.getByPath(p)) {
                 argPairsForP.add(ap.arg1 + ":" + ap.arg2);
             }
-            // totalCount.put(p, argPairsForP.size());
-//            score.put(p, 100 * sharedCount.get(p) / argPairsForP.size()
-//                    / (1 + p.split(":").length));
-            // score.put(p, (100 * sharedCount.get(p) - 90) / totalCount.get(p));
+            //  arguments are similar to existing paths
             double argScore = 1 - (double)sharedCount.get(p)/argPairsForP.size();
+            // how close the path is to positive seeds accoring to edit distance
             double posScore = minDistanceToSet(p, seedPaths);
-            double negScore = minDistanceToSet(p, rejects);
+            // how close the path is to negative seeds
+            double negScore = 0.1; // minDistanceToSet(p, rejects);
             int    patternLength = 1 + p.split(":").length;
+            // if the path is equally close to positive and negative paths
             double nearestNeighborConfusion     = 1 - Math.abs(posScore - negScore);
-            // double borderConfusion = 1 - Math.abs(posScore - PathRelationExtractor.minThreshold);
-            // double borderConfusion = posScore - PathRelationExtractor.minThreshold;
+
             double argConfusion    = Math.abs(argScore - posScore);
-            //if (borderConfusion > 0) {
-            //    borderConfusion = 1 - posScore + PathRelationExtractor.minThreshold / (1 - PathRelationExtractor.minThreshold);
-            //}
-            //else if (borderConfusion < 0) {
-            //    borderConfusion = posScore / PathRelationExtractor.minThreshold;
-            //}
+
             double borderConfusion = 0;
+
+            // In any case, candidate paths are ranked by the confusionScore they are assigned
+            // confusion score can be an arbitrary combination of the scores above.
             double confusionScore  = Math.max(Math.max(nearestNeighborConfusion, borderConfusion), argConfusion);
-//            System.err.println("[Bootstrap score]\t" + p + "\t" + (int)Math.round(confusionScore * 100) +
-//                    "\tnnConfusion:" + nearestNeighborConfusion +
-//                    "\tborderConfusion:" + borderConfusion +
-//                    "\targConfusion:" + argConfusion);
-            // score.put(p, (int) Math.round(confusionScore * 100));
+            if (!USE_NEGATIVE) {
+                confusionScore = 1/posScore;
+            }
+
             String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
             String pRepr = depPathMap.findRepr(fullp);
             if (pRepr == null) {
@@ -311,6 +353,7 @@ public class Bootstrap {
         int count = 0;
         for (IcePath icePath : scoreList) {
             double simScore = minDistanceToSet(icePath.getPath(), foundPatternStrings);
+            System.err.println("SimScore for " + icePath.toString() + " " + simScore);
             boolean isValid = count > SCREEN_LINES ||
                     !existingReprs.contains(icePath.getRepr()) &&
                             (!DIVERSIFY ||
@@ -324,6 +367,7 @@ public class Bootstrap {
                     count++;
                 }
                 else {
+                    System.err.println("filtered out for diversity: " + icePath.toString());
                     buffer.add(icePath);
                 }
             }
@@ -335,23 +379,10 @@ public class Bootstrap {
                 }
             }
         }
-
-        // print paths, best path last
-//        for (int scr = 10000; scr >= 5; scr--) {
-//            for (String p : score.keySet()) {
-//                if (score.get(p) == scr) {
-//                    String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
-//                    String pRepr = depPathMap.findRepr(fullp);
-//                    if (pRepr == null) continue;
-//                    foundPatterns.add(new IcePath(p, pRepr, depPathMap.findExample(fullp), scr));
-//                }
-//            }
-//        }
-
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
         }
-
+        System.err.println("Bootstrapper.DIVERSIFY:" + DIVERSIFY);
     }
 
     public double minDistanceToSet(String path, Set<String> pathSet) {
@@ -400,14 +431,18 @@ public class Bootstrap {
 
         BootstrapAnchoredPathType type;
 
+        String typedPath;
+
         public String argPair() {
             return String.format("%s:%s", arg1, arg2);
         }
 
         public BootstrapAnchoredPath(AnchoredPath path,
+                                     String typedPath,
                                      BootstrapAnchoredPathType type) {
             super(path.arg1, path.path, path.arg2, path.source, -1, -1);
             this.type = type;
+            this.typedPath = typedPath;
         }
     }
 

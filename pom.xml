@@ -6,7 +6,7 @@
 
     <groupId>edu.nyu.cs.proteus</groupId>
     <artifactId>ICE</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 
     <build>
         <plugins>
@@ -15,14 +15,20 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-			<source>5</source>
-			<target>1.5</target>
+                    <!-- Uncomment the following excludes directive if you are compiling on a java
+                    version earlier than Java 7. Accordingly, use icecli6 instead of icecli when
+                    running the command line interface. -->
+                    <!-- excludes>
+                        <exclude>**/src/main/java/edu/nyu/jet/ice/views/cli/IceCLI.java</exclude>
+                    </excludes -->
+                    <source>5</source>
+                    <target>1.5</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2</version>
+                <version>2.5.5</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -48,11 +54,6 @@
     <version>1.6.0</version>
   </dependency>
     <dependency>
-        <groupId>org.la4j</groupId>
-        <artifactId>la4j</artifactId>
-        <version>0.4.9</version>
-    </dependency>
-    <dependency>
       <groupId>org.jyaml</groupId>
       <artifactId>jyaml</artifactId>
       <version>1.3</version>
@@ -61,21 +62,6 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>18.0</version>
-    </dependency>
-    <dependency>
-        <groupId>com.miglayout</groupId>
-        <artifactId>miglayout-swing</artifactId>
-        <version>4.2</version>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-math3</artifactId>
-        <version>3.2</version>
-    </dependency>
-    <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>1.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -87,13 +73,51 @@
       <artifactId>trove4j</artifactId>
       <version>3.0.3</version>
     </dependency>
-<!-- dependency>
-        <groupId>edu.nyu.cs.proteus</groupId>
-        <artifactId>Jet</artifactId>
-        <version>1.8.1</version>
-        <scope>system</scope>
-        <systemPath>${project.basedir}/lib/jet-all.jar</systemPath>
-    </dependency -->
-</dependencies>
+
+        <dependency>
+            <groupId>org.la4j</groupId>
+            <artifactId>la4j</artifactId>
+            <version>0.4.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout-swing</artifactId>
+            <version>4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <!-- dependency>
+            <groupId>edu.nyu.cs.proteus</groupId>
+            <artifactId>Jet</artifactId>
+            <version>1.8.2-depfix</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jet-all-1.8.1.jar</systemPath>
+        </dependency -->
+
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.1</version>
+        </dependency>
+    </dependencies>
+>>>>>>> upstream/master
 
 </project>

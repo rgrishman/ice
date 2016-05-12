@@ -1,7 +1,7 @@
 package edu.nyu.jet.ice.terminology;
 
 /**
- * Describe the code here
+ * Summarizes information related to a term/entity, also supports sorting
  *
  * @author yhe
  * @version 1.0

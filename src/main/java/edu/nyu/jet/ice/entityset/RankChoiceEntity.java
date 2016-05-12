@@ -1,7 +1,7 @@
 package edu.nyu.jet.ice.entityset;
 
 /**
- * Created by yhe on 2/20/14.
+ * Java bean to record user decision on whether an entity belongs to an entity set.
  */
 public class RankChoiceEntity extends Entity {
     public enum EntityDecision {

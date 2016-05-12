@@ -1,19 +1,17 @@
-This is the README file for Ice, a rapid information extraction customizer.
+# ICE: Integrated Customization Environment for Information Extraction
 
-Ice is licensed under the Apache 2.0 license.
+Licensed under the Apache 2.0 license.
 
-# Running Ice
+# Running Ice Using Binary Release
 
-The easiest way to use Ice is to use the binary distribution.
-
-To use the binary distribution, download the binary distribution and unzip the package. In *runice.sh*, point both $ICE\_HOME
+Alternatively, download the binary distribution and unzip it. In *runice.sh*, point both $ICE\_HOME
 and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
 
 Then, from the working directory, run
 
     ./runice.sh
     
-# Running Ice Tagger
+# Running the Ice Tagger
 
 Ice bundles a relation tagger based on Jet, which tags mentions of relations in text files, using
 the models that you build with Ice. Note that before the Ice tagger can find the relations,
@@ -23,13 +21,11 @@ To run the tagger, from the working directory, run
 
     ./runtagger.sh propertyFile txtFileList apfFileList
     
-where *propertyFile* is the Jet properties file. We suggest that you use *tagprops* that is delivered
- with this package. If you are familiar with Jet and Ice, you can use your own properties file too.
- *txtFileList* are the list of text input files, and *apfFileList* is the list of output files in Ace apf
- format. Both file lists assume the "one-file-name-per-line" format and should have the same length. The
- output file corresponds to the input file at the same line number.
+where propertyFile is the Jet properties file, usually it is parseprops; txtFileList are
+the list of text input files, and apfFileList is the list of output files in Ace apf
+format.
 
-# Building and Running Ice from Source
+#Building and Running Ice from Source
 
 We assume that you have git and maven installed on your system.
 
@@ -50,7 +46,7 @@ binary distribution. However, if you are building from source, you might also wa
 obtain Jet from: <http://cs.nyu.edu/grishman/jet/jet.html>
 
 The current version of Ice assumes that it is run from a "working directory", where three 
-Jet property files are located: *parseprops*, *onomaprops*, and *tagprops*. These three files 
+Jet property files are located: *props*, *parseprops*, and *onomaprops*. These three files 
 tell Ice where models for Jet are located. These files are released together with the 
 Java source code in the `src/props` directory.
 
@@ -63,9 +59,9 @@ put in the working directory as well.
 After these steps, the working directory we have prepared will look like this:
 
     working_dir/
-        parseprops - Jet property file 1
-        onomaprops - Jet property file 2
-        tagprops - Jet property file 3
+        props - Jet property file 1
+        parseprops - Jet property file 2
+        onomaprops - Jet property file 3
         ice.yml - Ice configuration file 1
         iceprops - Ice configuration file 2
         data/ - model files, including parseModel.gz
@@ -87,5 +83,5 @@ Then, from the working directory, run
 
 # User Manual
 
-Please refer to [iceman](docs/iceman.md) for usage.
+Please refer to [Iceman](docs/iceman.html) for usage.
 

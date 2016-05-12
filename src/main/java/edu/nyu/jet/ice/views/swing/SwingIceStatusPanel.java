@@ -15,7 +15,9 @@ import java.awt.event.ActionListener;
 import java.io.*;
 
 /**
- * Created by yhe on 10/17/14.
+ * Panel that tracks the status of the current corpus in Ice
+ *
+ * @author yhe
  */
 public class SwingIceStatusPanel extends JPanel {
     final JLabel corpusLabel = new JLabel("Corpus ");

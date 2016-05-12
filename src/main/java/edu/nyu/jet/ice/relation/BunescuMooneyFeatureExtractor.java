@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Describe the code here
+ * A Feature extractor using Bunescu-Mooney 2005 features for supervised/simulated active learning relation extraction.
+ *
+ * This class is not used by ICE GUI/CLI.
  *
  * @author yhe
  * @version 1.0

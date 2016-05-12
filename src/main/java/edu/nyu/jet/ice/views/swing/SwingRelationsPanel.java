@@ -7,6 +7,7 @@ import edu.nyu.jet.ice.uicomps.RelationBuilderFrame;
 import edu.nyu.jet.ice.uicomps.RelationBuilderThread;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
+import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.Refreshable;
@@ -26,7 +27,9 @@ import java.util.List;
 
 
 /**
- * Created by yhe on 4/14/14.
+ * Panel to bootstrap relation extractor
+ *
+ * @author yhe
  */
 public class SwingRelationsPanel extends JPanel implements Refreshable {
     JList relationList;
@@ -38,7 +41,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
     JTextField arg2TextField;
     IceRelation currentRelation;
     SwingIceStatusPanel iceStatusPanel;
-    public List<String> negPaths = new ArrayList<String>();
+    // public List<String> negPaths = new ArrayList<String>();
+    public Map<String, List<String>> negPaths = new TreeMap<String, List<String>>();
     private static final int DELAY_MS = 250;
     static final Set<String> ACE_TYPES = new HashSet<String>();
     {
@@ -58,6 +62,19 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         //entitySetPanel.setSize(800, 520);
         this.setLayout(new MigLayout());
         this.setOpaque(false);
+
+        negPaths.clear();
+        for (String relationName : Ice.relations.keySet()) {
+            IceRelation r = Ice.relations.get(relationName);
+            if (r == null) {
+                continue;
+            }
+            List<String> paths = new ArrayList<String>();
+            if (r.getNegPaths() != null) {
+                paths.addAll(r.getNegPaths());
+            }
+            negPaths.put(relationName, paths);
+        }
 
         JPanel leftPanel = new JPanel(new MigLayout());
         leftPanel.setOpaque(false);
@@ -197,7 +214,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 List<String> paths = depPathMap.findPath(relationInstance);
                 if (paths == null) {
                     JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                            "The provided path is invalid.",
+                            String.format("No example in the corpus for [%s]", relationInstance),
                             "Dependency Path Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;
@@ -336,7 +353,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     }
                 }
                 currentRelation.setPaths(relationPaths);
-                currentRelation.setNegPaths(negPaths);
+                currentRelation.setNegPaths(negPaths.get(currentRelation.getName()));
                 relationList.revalidate();
                 relationList.repaint();
             }
@@ -406,12 +423,16 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         String name = inName;
 
         String pathListFileName = "";  // not used anyway
-        Bootstrap bootstrap = new Bootstrap(new SwingProgressMonitor(
+        ProgressMonitorI  progressMonitorI = new SwingProgressMonitor(
                 Ice.mainFrame, "Initializing Relation Builder",
                 "Collecting seeds...",
                 0,
                 5
-        ));
+        );
+        String bootstrapperName =
+                Ice.iceProperties.getProperty("Ice.Bootstrapper.name") != null ?
+                        Ice.iceProperties.getProperty("Ice.Bootstrapper.name") : "Bootstrap";
+        Bootstrap bootstrap = Bootstrap.makeBootstrap(bootstrapperName, progressMonitorI, name);
         RelationBuilderFrame frame = new RelationBuilderFrame("Bootstrap relations",
                 null,
                 bootstrap,

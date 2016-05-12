@@ -8,7 +8,6 @@ import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
 import edu.nyu.jet.ice.uicomps.Ice;
-import edu.nyu.jet.ice.views.CorpusPanel;
 import net.miginfocom.swing.MigLayout;
 import org.ho.yaml.YamlDecoder;
 import org.ho.yaml.YamlEncoder;
@@ -21,15 +20,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
 /**
  * Nice is a (N)ew Ice GUI in Swing.
+ *
+ * The main Nice window is a tabbed pane that contains panels that serve actual functionalities
+ *
+ * @author yhe
  */
-public class Nice implements IceController {
+public class Nice {
     public static JFrame mainFrame;
     public SwingCorpusPanel corpusPanel;
     public SwingEntitiesPanel entitiesPanel;
@@ -48,54 +50,8 @@ public class Nice implements IceController {
         enc.close();
     }
 
-    public void refreshAll() {
-        corpusPanel.refresh();
-    }
-
-    public void refreshCorpusPanel() {
-        java.util.List<String> names = new ArrayList<String>();
-        names.addAll(Ice.corpora.keySet());
-        String selectedCorpusName = Ice.selectedCorpusName;
-        corpusPanel.setCorporaList(names);
-        corpusPanel.setSelectedCorpus(selectedCorpusName);
-        java.util.List<String> backgroundNames = new ArrayList<String>();
-        for (String corpus : Ice.corpora.keySet()) {
-            if (corpus.equals(Ice.selectedCorpusName))
-                continue;
-            if (Ice.corpora.get(corpus).wordCountFileName == null)
-                continue;
-            if (Ice.corpora.get(corpus).relationTypeFileName == null)
-                continue;
-            backgroundNames.add(corpus);
-        }
-        String selectedBackground = "";
-        if (Ice.selectedCorpus != null && Ice.selectedCorpus.backgroundCorpus != null) {
-            selectedBackground = Ice.selectedCorpus.backgroundCorpus;
-        }
-        corpusPanel.setBackgroundList(backgroundNames);
-        corpusPanel.setSelectedBackground(selectedBackground);
-        String filter = "?";
-        String directory = "?";
-        if (Ice.selectedCorpus != null && Ice.selectedCorpus.filter != null) {
-            filter = Ice.selectedCorpus.filter;
-        }
-        corpusPanel.setFilter(filter);
-        if (Ice.selectedCorpus != null && Ice.selectedCorpus.directory != null) {
-            directory = Ice.selectedCorpus.directory;
-        }
-        corpusPanel.setDirectory(directory);
-
-        if (Ice.selectedCorpus != null) {
-            corpusPanel.printCorpusSize(Ice.selectedCorpus.getNumberOfDocs());
-        }
-        else {
-            corpusPanel.printCorpusSize(0);
-        }
-
-    }
-
-    public void setCorpusPanel(CorpusPanel corpusPanel) {
-        this.corpusPanel = (SwingCorpusPanel)corpusPanel;
+    public void setCorpusPanel(SwingCorpusPanel corpusPanel) {
+        this.corpusPanel = corpusPanel;
     }
 
     public void setEntitiesPanel(SwingEntitiesPanel entitiesPanel) {
@@ -112,44 +68,6 @@ public class Nice implements IceController {
 
     public void setEntitySetPanel(SwingEntitySetPanel entitySetPanel) {
         this.entitySetPanel = entitySetPanel;
-    }
-
-    public void addCorpus(String corpusName) {
-        Corpus newCorpus = new Corpus(corpusName);
-        Ice.corpora.put(corpusName, newCorpus);
-        corpusPanel.addCorpus(corpusName);
-        Ice.selectCorpus(corpusName);
-        refreshAll();
-    }
-
-    public void deleteCorpus(String corpusName) {
-        Ice.corpora.remove(corpusName);
-        if (!Ice.corpora.isEmpty())
-            Ice.selectCorpus(Ice.corpora.firstKey());
-        refreshAll();
-    }
-
-    public void selectCorpus(String selectedCorpus) {
-        Ice.selectCorpus(selectedCorpus);
-        refreshAll();
-    }
-
-    public void selectDirectory(String directoryName) {
-        Ice.selectedCorpus.setDirectory(directoryName);
-        Ice.selectedCorpus.writeDocumentList();
-    }
-
-    public void setFilter(String filterName) {
-        Ice.selectedCorpus.setFilter(filterName);
-        Ice.selectedCorpus.writeDocumentList();
-        // need to update because corpus size may have changed
-        refreshAll();
-    }
-
-    public void selectBackgroundCorpus(String backgroundCorpusName) {
-        if (backgroundCorpusName != null) {
-            Ice.selectedCorpus.backgroundCorpus = backgroundCorpusName;
-        }
     }
 
     public void saveProgress() {
@@ -174,20 +92,50 @@ public class Nice implements IceController {
     }
 
     public static void main(String[] args) {
-        String cover = "                  ___           ___     \n" +
-                "    ___          /  /\\         /  /\\    \n" +
-                "   /  /\\        /  /:/        /  /:/_   \n" +
-                "  /  /:/       /  /:/        /  /:/ /\\  \n" +
-                " /__/::\\      /  /:/  ___   /  /:/ /:/_ \n" +
-                " \\__\\/\\:\\__  /__/:/  /  /\\ /__/:/ /:/ /\\\n" +
-                "    \\  \\:\\/\\ \\  \\:\\ /  /:/ \\  \\:\\/:/ /:/\n" +
-                "     \\__\\::/  \\  \\:\\  /:/   \\  \\::/ /:/ \n" +
-                "     /__/:/    \\  \\:\\/:/     \\  \\:\\/:/  \n" +
-                "     \\__\\/      \\  \\::/       \\  \\::/   \n" +
-                "                 \\__\\/         \\__\\/ v0.2\n\n";
-        System.err.println(cover);
-        String unicodeMessage = "          \u5BD2\u96E8\u9023\u6C5F\u591C\u5165\u5433 \u5E73\u660E\u9001\u5BA2\u695A\u5C71\u5B64\n";
-        System.err.println(unicodeMessage);
+        printCover();
+        Properties iceProperties = loadIceProperties();
+        ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+        toolTipManager.setDismissDelay(60000);
+        initIce();
+        loadPathMatcher(iceProperties);
+        mainFrame = new JFrame();
+        mainFrame.setLayout(new MigLayout());
+        mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2demo");
+        mainFrame.setLocationRelativeTo(null); // center main window
+
+        reassemble();
+    }
+
+    public static void initIce() {
+        try {
+            File yamlFile = new File("ice.yml");
+            InputStream yamlInputStream = new FileInputStream(yamlFile);
+            YamlDecoder dec = new YamlDecoder(yamlInputStream);
+            Ice.corpora = new TreeMap((Map) dec.readObject());
+            Ice.entitySets = new TreeMap((Map) dec.readObject());
+            Ice.relations = new TreeMap((Map) dec.readObject());
+            dec.close();
+        } catch (IOException e) {
+            System.err.println("Did not load ice.yml.");
+        }
+        if (!Ice.corpora.isEmpty()) {
+            Ice.selectCorpus(Ice.corpora.firstKey());
+        }
+    }
+
+    public static void loadPathMatcher(Properties iceProperties) {
+        Bootstrap.pathMatcher = new PathMatcher();
+        if (iceProperties.getProperty("Ice.DepEmbeddings.fileName") != null) {
+            try {
+                Bootstrap.pathMatcher.loadWordEmbedding(
+                        iceProperties.getProperty("Ice.DepEmbeddings.fileName").trim());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static Properties loadIceProperties() {
         File icePropFile = new File("iceprops");
         Properties iceProperties = new Properties();
         Ice.iceProperties.getProperty("null");
@@ -204,36 +152,24 @@ public class Nice implements IceController {
                 Ice.iceProperties.setProperty((String)k, val);
             }
         }
-        try {
-            ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
-            toolTipManager.setDismissDelay(7500);
-            File yamlFile = new File("ice.yml");
-            InputStream yamlInputStream = new FileInputStream(yamlFile);
-            YamlDecoder dec = new YamlDecoder(yamlInputStream);
-            Ice.corpora = new TreeMap((Map) dec.readObject());
-            Ice.entitySets = new TreeMap((Map) dec.readObject());
-            Ice.relations = new TreeMap((Map) dec.readObject());
-            dec.close();
-        } catch (IOException e) {
-            System.out.println("Did not load ice.yml.");
-        }
-        if (!Ice.corpora.isEmpty())
-            Ice.selectCorpus(Ice.corpora.firstKey());
-        Bootstrap.pathMatcher = new PathMatcher();
-        if (iceProperties.getProperty("Ice.DepEmbeddings.fileName") != null) {
-            try {
-                Bootstrap.pathMatcher.loadWordEmbedding(
-                        iceProperties.getProperty("Ice.DepEmbeddings.fileName").trim());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        mainFrame = new JFrame();
-        mainFrame.setLayout(new MigLayout());
-        mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2s");
-        mainFrame.setLocationRelativeTo(null); // center main window
+        return iceProperties;
+    }
 
-        reassemble();
+    public static void printCover() {
+        String cover = "                  ___           ___     \n" +
+                "    ___          /  /\\         /  /\\    \n" +
+                "   /  /\\        /  /:/        /  /:/_   \n" +
+                "  /  /:/       /  /:/        /  /:/ /\\  \n" +
+                " /__/::\\      /  /:/  ___   /  /:/ /:/_ \n" +
+                " \\__\\/\\:\\__  /__/:/  /  /\\ /__/:/ /:/ /\\\n" +
+                "    \\  \\:\\/\\ \\  \\:\\ /  /:/ \\  \\:\\/:/ /:/\n" +
+                "     \\__\\::/  \\  \\:\\  /:/   \\  \\::/ /:/ \n" +
+                "     /__/:/    \\  \\:\\/:/     \\  \\:\\/:/  \n" +
+                "     \\__\\/      \\  \\::/       \\  \\::/   \n" +
+                "                 \\__\\/         \\__\\/ v0.2\n\n";
+        System.err.println(cover);
+        String unicodeMessage = "          \u5BD2\u96E8\u9023\u6C5F\u591C\u5165\u5433 \u5E73\u660E\u9001\u5BA2\u695A\u5C71\u5B64\n";
+        System.err.println(unicodeMessage);
     }
 
     public static void reassemble() {
@@ -241,10 +177,10 @@ public class Nice implements IceController {
         contentPane.removeAll();
         contentPane.setLayout(new MigLayout());
 
-        IceController niceController = new Nice();
-        Nice.instance = (Nice)niceController;
-        SwingCorpusPanel swingCorpusPanel = new SwingCorpusPanel(niceController);
-        niceController.setCorpusPanel(swingCorpusPanel);
+        Nice nice = new Nice();
+        Nice.instance = nice;
+        SwingCorpusPanel swingCorpusPanel = new SwingCorpusPanel();
+        nice.setCorpusPanel(swingCorpusPanel);
         SwingEntitiesPanel swingEntitiesPanel = null;
         SwingPathsPanel swingPathsPanel = null;
         SwingEntitySetPanel swingEntitySetPanel = null;
@@ -254,10 +190,10 @@ public class Nice implements IceController {
             swingPathsPanel = new SwingPathsPanel();
             swingEntitySetPanel = new SwingEntitySetPanel();
             swingRelationsPanel = new SwingRelationsPanel();
-            niceController.setEntitiesPanel(swingEntitiesPanel);
-            niceController.setPathsPanel(swingPathsPanel);
-            niceController.setEntitySetPanel(swingEntitySetPanel);
-            niceController.setRelationsPanel(swingRelationsPanel);
+            nice.setEntitiesPanel(swingEntitiesPanel);
+            nice.setPathsPanel(swingPathsPanel);
+            nice.setEntitySetPanel(swingEntitySetPanel);
+            nice.setRelationsPanel(swingRelationsPanel);
         }
         assembleTabs(contentPane, swingCorpusPanel, swingEntitiesPanel, swingPathsPanel,
                 swingEntitySetPanel, swingRelationsPanel);
@@ -270,7 +206,7 @@ public class Nice implements IceController {
         mainFrame.setVisible(true);
         mainFrame.validate();
         mainFrame.repaint();
-        niceController.refreshAll();
+        swingCorpusPanel.refresh();
         if (IceUtils.numOfWordCountedCorpora() == 1) {
             JOptionPane.showMessageDialog(null,
                     "You just processed your first corpus. \n" +

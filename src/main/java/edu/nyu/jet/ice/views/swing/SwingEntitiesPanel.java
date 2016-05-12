@@ -2,6 +2,7 @@ package edu.nyu.jet.ice.views.swing;
 
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.DepPathMap;
+import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
 import edu.nyu.jet.ice.uicomps.Ice;
@@ -28,11 +29,21 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by yhe on 10/13/14.
+ * Panel that manages the entity/terminology extraction.
+ *
+ * Currently, the entity index functionality comes from EntitySetBuilder.makeSwingBox()
+ *
+ * @author yhe
  */
+
 public class SwingEntitiesPanel extends JPanel implements Refreshable {
     public final SwingIceStatusPanel statusPanel = new SwingIceStatusPanel();
     public final JTextArea textArea = new JTextArea(11, 35);
+
+    /**
+     *  create entities panel and display top-ranked entities in response
+     *  to "Find Entities" button.
+     */
 
     public SwingEntitiesPanel() {
         super();
@@ -74,6 +85,11 @@ public class SwingEntitiesPanel extends JPanel implements Refreshable {
         refresh();
     }
 
+    /**
+     *  returns a list of (at most <CODE>limit</CODE>) terms from
+     *  file <CODE>termFile</CODE>.
+     */
+
     public static java.util.List<String> getTerms(String termFile, int limit) {
         java.util.List<String> topTerms = new ArrayList<String>();
         try {
@@ -98,16 +114,21 @@ public class SwingEntitiesPanel extends JPanel implements Refreshable {
         statusPanel.refresh();
     }
 
-    public void findTerms() {
+    /**
+     *  invokes <CODE>TermRanker</CODE> to rank terms by relative frequency,
+     *  writing ranked list to file.
+     */
 
+    public void findTerms() {
         String termFileName = FileNameSchema.getTermsFileName(Ice.selectedCorpusName);
-//                run("Terms", "utils/findTerms " + wordCountFileName + " " +
-//                        Ice.corpora.get(backgroundCorpus).wordCountFileName + " " +
-//                        termFileName);
-        // String ratioFileName = Ice.selectedCorpusName + "-" + Ice.selectedCorpus.backgroundCorpus + "-" + "Ratio";
         try {
+            File f = new File(FileNameSchema.getWordCountFileName(Ice.selectedCorpusName));
+            if (!f.exists() || !f.isFile()) {
+                IcePreprocessor.countWords(false);
+            }
             TermRanker.rankTerms(FileNameSchema.getWordCountFileName(Ice.selectedCorpusName),
-                    Ice.corpora.get(Ice.selectedCorpus.backgroundCorpus).wordCountFileName, termFileName);
+                    Ice.corpora.get(Ice.selectedCorpus.backgroundCorpus).wordCountFileName, 
+		    termFileName);
         }
         catch (IOException e) {
             e.printStackTrace(System.err);

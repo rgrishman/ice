@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.views.swing;
 
+import edu.nyu.jet.ice.entityset.EmbeddingEntitySetExpander;
 import edu.nyu.jet.ice.entityset.EntitySetExpander;
 import edu.nyu.jet.ice.entityset.EntitySetRankThread;
 import edu.nyu.jet.ice.models.IceEntitySet;
@@ -25,7 +26,9 @@ import java.util.Timer;
 
 
 /**
- * Created by yhe on 4/14/14.
+ * Panel that manages entity set.
+ *
+ * @author yhe
  */
 public class SwingEntitySetPanel extends JPanel implements Refreshable {
     JList entitySetList;
@@ -153,7 +156,6 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         suggestEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                refresh();
                 Timer timer = switchToBusyCursor(SwingEntitySetPanel.this);
                 String seedString = null;
                 List<String> seeds = null;
@@ -182,11 +184,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                             JOptionPane.YES_NO_OPTION);
                     if (n == 0) {
                         String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
-                        if (entitySetName == null) {
-                            return;
-                        }
                         IceEntitySet ies = new IceEntitySet(entitySetName);
-                        nameTextField.setText(ies.getType());
                         entityListModel.addElement(ies);
                         entitySetList.setSelectedValue(ies, true);
                         entriesListModel.addElement(seeds.get(0));
@@ -238,7 +236,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 if (n == 0) {
                     entityListModel.remove(idx);
                     entriesListModel.clear();
-                    //entriesListModel = null;
+                    entriesListModel = null;
                     nameTextField.setText("");
                     currentEntitySet = null;
                 }
@@ -260,7 +258,6 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         addEntitySetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                refresh();
                 String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
                 if (entitySetName == null) {
                     return;
@@ -276,7 +273,6 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     }
                 }
                 IceEntitySet ies = new IceEntitySet(entitySetName);
-                nameTextField.setText(ies.getType());
                 entityListModel.addElement(ies);
                 entitySetList.setSelectedValue(ies, true);
             }
@@ -301,6 +297,10 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 }
                 EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
                         seedStrings);
+//                EntitySetExpander expander = new EmbeddingEntitySetExpander(
+//                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+//                                + File.separator + "phrases.embedding.200",
+//                        seedStrings);
                 EntitySetRankerFrame entitySetWindow = new EntitySetRankerFrame("Expand entity set",
                         nameTextField.getText(),
                         expander);
@@ -322,14 +322,12 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         // add to UI
         //this.add(entitySetPanel);
-        entriesListModel = new DefaultListModel();
-        entriesList.setModel(entriesListModel);
     }
 
     public void refresh() {
         iceStatusPanel.refresh();
         int idx = entitySetList.getSelectedIndex();
-        if (idx < 0 || Ice.entitySets.size() == 0) {
+        if (idx < 0) {
             return;
         }
         // System.err.println(idx);

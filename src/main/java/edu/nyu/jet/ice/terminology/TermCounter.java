@@ -26,7 +26,7 @@ import java.util.*;
  * @version 1.0
  */
 public class TermCounter extends Thread {
-    private Map<String, Integer> docCount = new HashMap<String, Integer>();
+    private Map<String, Integer> docCounter = new HashMap<String, Integer>();
     private Map<String, Integer> freqCount = new HashMap<String, Integer>();
     private Map<String, List<Integer>> rawCount = new HashMap<String, List<Integer>>();
     private ProgressMonitorI progressMonitor = null;
@@ -53,7 +53,7 @@ public class TermCounter extends Thread {
     }
 
     public void resetCounters() {
-        docCount.clear();
+        docCounter.clear();
         freqCount.clear();
     }
 
@@ -102,23 +102,28 @@ public class TermCounter extends Thread {
                 break;
             }
             docCount++;
-            String inputFile;
-            if ("*".equals(inputSuffix)) {
-                inputFile = docName;
-            } else {
-                inputFile = docName + "." + inputSuffix;
+            try {
+                String inputFile;
+                if ("*".equals(inputSuffix)) {
+                    inputFile = docName;
+                } else {
+                    inputFile = docName + "." + inputSuffix;
+                }
+                System.out.println("\nProcessing document " + docCount + ": " + inputFile);
+                ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+                doc.setAllTags(true);
+                doc.open();
+                // process document
+                Ace.monocase = Ace.allLowerCase(doc);
+                Control.processDocument(doc, null, false, docCount);
+                addDocument(doc, FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName), inputDir, inputFile);
+                if (progressMonitor != null) {
+                    progressMonitor.setProgress(docCount);
+                    progressMonitor.setNote(docCount + " files processed");
+                }
             }
-            System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
-            ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
-            doc.setAllTags(true);
-            doc.open();
-            // process document
-            Ace.monocase = Ace.allLowerCase(doc);
-            Control.processDocument(doc, null, false, docCount);
-            addDocument(doc, FileNameSchema.getPreprocessCacheDir(corpusName), inputDir, inputFile);
-            if (progressMonitor != null) {
-                progressMonitor.setProgress(docCount);
-                progressMonitor.setNote(docCount + " files processed");
+            catch (Exception e) {
+                e.printStackTrace();
             }
         }
 	System.out.println("Writing word counts to " + outputFile);
@@ -126,6 +131,18 @@ public class TermCounter extends Thread {
 	docListReader.close();
     }
 
+    /**
+     * Write absolute word frequencies in each document.
+     *
+     * Currently document level count information is not used. We record this information because the
+     * term extraction algorithms in FUSE would use such information. e.g., some algorithms will prefer
+     * terms that are evenly distributed in the foreground corpus. We wanted to migrate the FUSE algorithms
+     * here in future.
+     *
+     * @param outputFile
+     * @param docCount
+     * @throws IOException
+     */
     public void writeOutputFile(String outputFile, int docCount) throws IOException{
         PrintWriter pw = new PrintWriter(new FileWriter(outputFile));
         pw.println("# DOC_COUNT\n# TERM DOC_FREQS");
@@ -177,55 +194,10 @@ public class TermCounter extends Thread {
             }
         }
         for (String localTerm : localCount.keySet()) {
-            if (!docCount.containsKey(localTerm)) {
-                docCount.put(localTerm, 0);
+            if (!docCounter.containsKey(localTerm)) {
+                docCounter.put(localTerm, 0);
             }
-            docCount.put(localTerm, docCount.get(localTerm) + 1);
-            if (!freqCount.containsKey(localTerm)) {
-                freqCount.put(localTerm, 0);
-            }
-            freqCount.put(localTerm, freqCount.get(localTerm) + localCount.get(localTerm));
-            if (!rawCount.containsKey(localTerm)) {
-                rawCount.put(localTerm, new ArrayList<Integer>());
-            }
-            rawCount.get(localTerm).add(localCount.get(localTerm));
-        }
-    }
-
-    public void addDocument(Document doc) {
-        List<Annotation> nps = doc.annotationsOfType("constit");
-        if (nps == null) {
-            return;
-        }
-        Map<String, Integer> localCount = new HashMap<String, Integer>();
-        for (Annotation np : nps) {
-            if (np.get("cat") != null && np.get("cat").equals("np")) {
-                List<String> termsFound = extractPossibleTerms(doc, np.span());
-                for (String term : termsFound) {
-                    if (!localCount.containsKey(term + "/nn")) {
-                        localCount.put(term + "/nn", 0);
-                    }
-                    localCount.put(term + "/nn", localCount.get(term) + 1);
-                }
-            }
-        }
-        List<Annotation> names = doc.annotationsOfType("ENAMEX");
-        if (names != null) {
-            for (Annotation name : names) {
-                String term = doc.text(name).trim().replaceAll("\\s+", " ") + "/nnp";
-                if (term.length() <= 5 ||
-                        (term.length() > 0 && !Character.isLetter(term.charAt(0)))) continue;
-                if (!localCount.containsKey(term)) {
-                    localCount.put(term, 0);
-                }
-                localCount.put(term, localCount.get(term) + 1);
-            }
-        }
-        for (String localTerm : localCount.keySet()) {
-            if (!docCount.containsKey(localTerm)) {
-                docCount.put(localTerm, 0);
-            }
-            docCount.put(localTerm, docCount.get(localTerm) + 1);
+            docCounter.put(localTerm, docCounter.get(localTerm) + 1);
             if (!freqCount.containsKey(localTerm)) {
                 freqCount.put(localTerm, 0);
             }

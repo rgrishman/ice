@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by yhe on 2/26/15.
+ * Tag relations in a document by using positive and negative dependency path rules created with ICE
+ *
+ * @author yhe
  */
 public class PathRelationExtractor {
 

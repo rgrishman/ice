@@ -34,7 +34,9 @@ import org.la4j.vector.sparse.CompressedVector;
  * @author yhe
  * @version 1.0
  */
+
 public class EntitySetIndexer {
+
     private static ProgressMonitorI defaultProgressMonitor = null;
     private static final String[] stopWordsArr = new String[]{
             "a", "an", "and", "are", "as", "at", "be", "but", "by",
@@ -70,6 +72,7 @@ public class EntitySetIndexer {
 	this.progressMonitor = progressMonitor;
     }
 
+    /* ABG 20160511 May be needed for working directory
     public static void main(String[] args) {
 	EntitySetIndexer indexer = new EntitySetIndexer();
 	indexer.setProgressMonitor(defaultProgressMonitor);
@@ -104,6 +107,31 @@ public class EntitySetIndexer {
 		    progressMonitor.setAlive(true);
 		    progressMonitor.setNote("Initializing Jet");
 		}
+		*/
+	/**
+	 *  Command-line callable method to index terms by their contextual features.
+	 */
+
+	public static void main(String[] args) {
+		EntitySetIndexer indexer = new EntitySetIndexer();
+		indexer.setProgressMonitor(defaultProgressMonitor);
+		indexer.run(args[0], args[1], Double.valueOf(args[2]), args[3], args[4], args[5], args[6], args[7]);
+    }
+
+       /**
+        *  Index terms by their contextual features.
+        *
+        *  @param termFile    file of terms, one per line
+        *  @param type        type of terms to be indexed
+        *  @param cutoff       minimum score of terms to be indexed
+        *  @param propsFile   Jet properties file
+        *  @param docList     list of document file names to be processed
+        *  @param inputDir    input dirctory for documents
+        *  @param inputSuffix file extension for document file names (* ==> no extension)
+        *  @param outputFile  output file with indexed terms
+        */
+
+	public void run(String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
 		try {
 		    Thread.sleep(500);
 		}
@@ -178,10 +206,27 @@ public class EntitySetIndexer {
 		    FileEventStream tempStream = new FileEventStream(tempFile);
 		    DataIndexer indexer = new OnePassDataIndexer(tempStream, 0);
 
-		    if (progressMonitor != null) {
-			progressMonitor.setProgress(progressMonitor.getMaximum());
-			progressMonitor.setNote("Calculating features... Takes time...");
-		    }
+			String docName;
+			int docCount = 0;
+			//DictionaryBasedNamedEntityPostprocessor nePostprocessor =
+			//        new DictionaryBasedNamedEntityPostprocessor(propsFile);
+			BufferedReader docListReader = new BufferedReader(new FileReader (docList));
+			List<Event> allEvents = new ArrayList<Event>();
+			boolean isCanceled = false;
+			while ((docName = docListReader.readLine()) != null) {
+				docCount++;
+				String inputFile = docName;
+				if (!("*".equals(inputSuffix.trim()))) {
+					inputFile = inputFile + "." + inputSuffix;
+				}
+				System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
+				ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
+				doc.setAllTags(true);
+				doc.open();
+				// process document
+				Ace.monocase = Ace.allLowerCase(doc);
+				Control.processDocument(doc, null, false, docCount);
+				System.err.println("Jet control finished");
 
 		    String[] contextLabels = indexer.getPredLabels();
 		    TObjectIntHashMap contextMap = new TObjectIntHashMap();
@@ -196,10 +241,75 @@ public class EntitySetIndexer {
 			if (!counter.containsKey(word)) {
 			    counter.put(word, new CompressedVector(contextLabels.length));
 			}
-			org.la4j.vector.Vector v = counter.get(word);
-			for (String context : e.getContext()) {
-			    int contextIdx = contextMap.get(context)-1;
-			    v.set(contextIdx, v.get(contextIdx) + 1);
+			// Indexing
+			if (!isCanceled) {
+				if (progressMonitor != null) {
+					progressMonitor.setNote("Start indexing features... Cannot cancel.");
+				}
+				PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("temp.events")));
+				for (Event event : allEvents) {
+					pw.println(FileEventStream.toLine(event).trim());
+				}
+				pw.close();
+				// write file for word2vecf training
+				pw = new PrintWriter(new BufferedWriter(new FileWriter(
+						FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+                                + File.separator
+                                + "deps.context"
+				)));
+				for (Event event : allEvents) {
+                    for (String context : event.getContext()) {
+                        pw.println(event.getOutcome().replaceAll("\\s+", "_")
+                            + " " + context.replaceAll("\\s+", "_")
+                        );
+                    }
+				}
+				pw.close();
+				DataIndexer indexer = new OnePassDataIndexer(new FileEventStream("temp.events"), 0);
+
+				if (progressMonitor != null) {
+					progressMonitor.setProgress(progressMonitor.getMaximum());
+					progressMonitor.setNote("Calculating features... Takes time...");
+				}
+
+				String[] contextLabels = indexer.getPredLabels();
+				TObjectIntHashMap contextMap = new TObjectIntHashMap();
+
+				for (int i = 0; i < contextLabels.length; i++) {
+					String contextLabel = contextLabels[i];
+					contextMap.put(contextLabel, i+1);          /* TObjectIntHashMap will return 0 for not found */
+				}
+				Map<String, org.la4j.vector.Vector> counter = new HashMap<String, org.la4j.vector.Vector>();
+				for (Event e : allEvents) {
+					String word = e.getOutcome();
+					if (!counter.containsKey(word)) {
+						counter.put(word, new CompressedVector(contextLabels.length));
+					}
+					org.la4j.vector.Vector v = counter.get(word);
+					for (String context : e.getContext()) {
+						int contextIdx = contextMap.get(context)-1;
+						v.set(contextIdx, v.get(contextIdx) + 1);
+					}
+				}
+                updateContextWithPMI(counter);
+				// Write to index
+				if (progressMonitor != null) {
+					progressMonitor.setProgress(progressMonitor.getMaximum());
+					progressMonitor.setNote("Writing index...");
+				}
+				PrintWriter w = new PrintWriter(new FileWriter(outputFile));
+				PrintWriter wInverse = new PrintWriter(new FileWriter(outputFile + ".info"));
+				w.println(contextLabels.length + 1);
+				for (String word : counter.keySet()) {
+					writeVector(word, counter.get(word), w);
+					writeVectorInfo(word, counter.get(word), contextLabels, wInverse);
+				}
+				w.close();
+				wInverse.close();
+				if (progressMonitor != null) {
+					progressMonitor.setProgress(progressMonitor.getMaximum());
+					progressMonitor.setNote("Start indexing features... done.");
+				}
 			}
 		    }
 		    updateContextWithPMI(counter);
@@ -290,23 +400,23 @@ public class EntitySetIndexer {
                 if (syn != null) {
                     if (!stopWords.contains(syn.sourceWord.trim())) {
 //                        contextList.add("wordFrom=" + stemmer.getStem(syn.sourceWord, "NULL"));
-                        contextList.add(String.format("from_%s_%s", syn.type, stemmer.getStem(syn.sourceWord.trim(), "NULL")));
+                        contextList.add(String.format("%s-1_%s", syn.type, stemmer.getStem(syn.sourceWord.trim(), "NULL")));
                     }
 //                    contextList.add("wordFromPOS=" + syn.sourcePos);
 //                    contextList.add("fromRelationName=" + syn.type);
                 }
-                List<Annotation>  posCands = doc.annotationsAt(termHead.start(), "tagger");
-                if (posCands != null) {
-                    String pos = (String)posCands.get(0).get("cat");
-                    contextList.add("pos=" + pos);
-                }
+//                List<Annotation>  posCands = doc.annotationsAt(termHead.start(), "tagger");
+//                if (posCands != null) {
+//                    String pos = (String)posCands.get(0).get("cat");
+//                    contextList.add("pos=" + pos);
+//                }
                 SyntacticRelationSet fromSet = s.getRelationsFrom(termHead.start());
                 if (fromSet != null) {
                     for (int j = 0; j < fromSet.size(); j++) {
                         SyntacticRelation r = fromSet.get(j);
                         if (!stopWords.contains(r.targetWord.trim())) {
 //                            contextList.add("wordTo=" + stemmer.getStem(r.targetWord, "NULL"));
-                            contextList.add(String.format("to_%s_%s", r.type, stemmer.getStem(r.targetWord.trim(), "NULL")));
+                            contextList.add(String.format("%s_%s", r.type, stemmer.getStem(r.targetWord.trim(), "NULL")));
                         }
 //                        contextList.add("wordToPOS=" + r.targetPos);
 //                        contextList.add("toRelationName=" + r.type);

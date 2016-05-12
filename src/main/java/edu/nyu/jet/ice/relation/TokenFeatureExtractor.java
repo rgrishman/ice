@@ -12,7 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by yhe on 9/1/14.
+ * A Feature extractor using token sequence as features for supervised/simulated active learning
+ * relation extraction.
+ *
+ * This class is not used by ICE GUI/CLI.
+ *
+ * @author yhe
  */
 public class TokenFeatureExtractor implements RelationFeatureExtractor {
     public Event extractFeatures(AceEntityMention m1,

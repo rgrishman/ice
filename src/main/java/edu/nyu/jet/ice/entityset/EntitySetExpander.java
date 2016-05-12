@@ -14,12 +14,20 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 /**
- * Created by yhe on 2/14/14.
+ * Performs entity set expansion based on distributional similarity.
  */
 public class EntitySetExpander {
+    // centroid = positive seeds + gamma * negative seeds
     public static final double GAMMA = 0.5;
+    // size of recommended postitive or negative seeds;
+    // not related to functionalities in current (N)ice GUI　
     public static final int    RECOMMENDATION_SIZE = 10;
+    // Number of entities to select seed from　
     public static final int    SUGGEST_SEED_SAMPLE_SIZE = 20;
+
+    public EntitySetExpander() {
+
+    }
 
     public void setProgressMonitor(ProgressMonitorI progressMonitor) {
         EntitySetExpander.progressMonitor = progressMonitor;
@@ -27,15 +35,22 @@ public class EntitySetExpander {
 
     protected static ProgressMonitorI progressMonitor;
 
-    private Map<String, Vector> entityFeatureDict;
-    private Vector centroid;
-    private Vector negativeCentroid;
-    private List<String> positives;
-    private List<String> negatives;
-    private Similarity sim = new Similarity();
+    protected Map<String, Vector> entityFeatureDict;
+    protected Vector centroid;
+    protected Vector negativeCentroid;
+    protected List<String> positives;
+    protected List<String> negatives;
+    protected Similarity sim = new Similarity();
     public List<Entity> rankedEntities = null;
     public Set<String> used = null;
 
+    /**
+     * Based on an entity index and a terms file, recommend seeds for entity set construction.
+     * @param indexFileName
+     * @param termFileName
+     * @param type
+     * @return
+     */
     public static List<String> recommendSeeds(String indexFileName, String termFileName, String type) {
         Map<String, Vector> entityFeatureDict = new HashMap<String, Vector>();
         String line;
@@ -222,6 +237,9 @@ public class EntitySetExpander {
         return entityFeatureDict.keySet().size();
     }
 
+    /**
+     * Not related to current functionality of current (N)ice GUI
+     */
     public void recommend() {
         PriorityQueue<Entity> positiveQueue = new PriorityQueue<Entity>(RECOMMENDATION_SIZE,
                 new SimilarityComparator());
@@ -262,6 +280,10 @@ public class EntitySetExpander {
         }
     }
 
+    /**
+     * Rank entities based on closeness to type centroid
+     * @return
+     */
     public boolean rank() {
         if (progressMonitor != null) {
             progressMonitor.setNote("Calculating similarity...");
@@ -302,6 +324,12 @@ public class EntitySetExpander {
         return true;
     }
 
+    /**
+     * Update centroids based on user assigned class labels. Then rerank entities based on
+     * the new centroids.
+     *
+     * @param entities
+     */
     public void rerank(List<Entity> entities) {
         if (progressMonitor != null) {
             progressMonitor.setNote("Calculating similarity...");

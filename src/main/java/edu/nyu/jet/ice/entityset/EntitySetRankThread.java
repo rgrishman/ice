@@ -3,7 +3,7 @@ package edu.nyu.jet.ice.entityset;
 import edu.nyu.jet.ice.uicomps.EntitySetRankerFrame;
 
 /**
- * Describe the code here
+ * Wrapper of the EntitySetExpander to run it in a separate Thread
  *
  * @author yhe
  * @version 1.0

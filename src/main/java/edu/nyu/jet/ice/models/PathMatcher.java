@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by yhe on 2/25/15.
+ * PathMatcher is a Edit-Distance-based matcher that produces an alignment and an alignment score between
+ * two MatcherPaths using the generalized Levenshtein algorithm. It can optionally use word embeddings to
+ * compute the substitution cost, if embeddings is set.
  */
 public class PathMatcher {
 

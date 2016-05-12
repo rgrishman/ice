@@ -12,6 +12,7 @@ import Jet.Tipster.Document;
 import Jet.Tipster.Span;
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
+import gnu.trove.TObjectIntHashMap;
 
 import java.io.*;
 import java.util.*;
@@ -147,6 +148,14 @@ public class IceUtils {
         return result.toArray(new String[result.size()]);
     }
 
+    public static void writeLines(String filename, String[] lines) throws IOException {
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+        for (String line : lines) {
+            pw.println(line.trim());
+        }
+        pw.close();
+    }
+
     public static String readFileAsString(String filePath) throws IOException {
         StringBuilder fileData = new StringBuilder(1000);
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -202,6 +211,25 @@ public class IceUtils {
     }
 
 
+    public static double innerProduct(double[] v1, double[] v2) {
+        double innerProduct = 0.00000001;
+        for (int i = 0; i < v1.length; i++) {
+            innerProduct += v1[i] * v2[i];
+        }
+        return innerProduct;
+    }
+
+    public static void l2norm(double[] v) {
+        double l2sum = 0;
+        for (int i = 0; i < v.length; i++) {
+            l2sum += v[i] * v[i];
+        }
+        l2sum = Math.sqrt(l2sum);
+        for (int i = 0; i < v.length; i++) {
+            v[i] /= l2sum;
+        }
+    }
+
     /**
      *
      * @return The number of corpora that have been preprocssed and run word count
@@ -216,6 +244,32 @@ public class IceUtils {
             }
         }
         return count;
+    }
+
+    /**
+     * load a text file in format COUNT\tSTRING
+     * @param countFile the count file
+     * @return
+     */
+    public static TObjectIntHashMap loadCountFile(String countFile) throws IOException {
+        TObjectIntHashMap result = new TObjectIntHashMap();
+        File f = new File(countFile);
+        if (!f.exists()) {
+            System.err.print(countFile + " does not exist.");
+            return result;
+        }
+        BufferedReader br = new BufferedReader(new FileReader(countFile));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            String[] parts = line.split("\\t");
+            if (parts.length == 2) {
+                int count = Integer.valueOf(parts[0]);
+                String content = parts[1].trim();
+                result.put(content, count);
+            }
+        }
+        br.close();
+        return result;
     }
 
 

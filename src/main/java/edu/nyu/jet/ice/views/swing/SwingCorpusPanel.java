@@ -1,13 +1,11 @@
 package edu.nyu.jet.ice.views.swing;
 
 import edu.nyu.jet.ice.controllers.Nice;
+import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
-import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
-import edu.nyu.jet.ice.controllers.IceController;
-import edu.nyu.jet.ice.views.CorpusPanel;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 
@@ -17,14 +15,15 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 
 /**
- * Created by yhe on 10/12/14.
+ * The Corpus panel that manages the basic information of the corpus
+ *
+ * @author yhe
  */
-public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refreshable {
+public class SwingCorpusPanel extends JComponent implements Refreshable {
     private JLabel corpusSelectionLabel = new JLabel("Corpus");
     private JComboBox corpusSelectionComboBox = new JComboBox();
     private JButton addButton = new JButton("Add...");
@@ -41,10 +40,10 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
     private JLabel statisticsLabel = new JLabel("Current corpus has 0 documents.");
     private JButton saveProgressButton = new JButton("Save progress");
     private JButton exportButton = new JButton("Export to Jet");
-    private IceController controller;
+    private Nice controller;
     private SwingIceStatusPanel iceStatusPanel;
 
-    public SwingCorpusPanel(IceController controller) {
+    public SwingCorpusPanel() {
         super();
         this.setLayout(new MigLayout());
         this.setOpaque(false);
@@ -64,13 +63,12 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         foregroundPanel.add(directoryLabel);
         directoryTextField.setMinimumSize(new Dimension(240, 20));
         directoryTextField.setMaximumSize(new Dimension(240, 20));
-        directoryTextField.setName("directoryTextField");
+
         directoryTextField.setEditable(false);
         foregroundPanel.add(directoryTextField, "span 3");
         foregroundPanel.add(directoryBrowseButton, "wrap");
         foregroundPanel.add(filterLabel);
         filterTextField.setMinimumSize(new Dimension(240, 20));
-        filterTextField.setName("filterTextField");
         foregroundPanel.add(filterTextField, "span 3");
         foregroundPanel.add(preprocessButton, "wrap");
         foregroundPanel.add(statisticsLabel, "span");
@@ -119,23 +117,19 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                     }
                 }
                 if (corpusName != null) {
-                    SwingCorpusPanel.this.controller.addCorpus(corpusName);
+                    addCorpus(corpusName);
                 }
             }
         });
 
         deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                if (Ice.selectedCorpus == null || Ice.selectedCorpusName == null
-                        || Ice.corpora.size() < 1) {
-                    return;
-                }
                 int input = JOptionPane.showConfirmDialog(null,
                         "Are you sure you want to delete corpus [" + Ice.selectedCorpusName + "]?",
                         "Confirm",
                         JOptionPane.YES_NO_OPTION);
                 if (input == JOptionPane.YES_OPTION) {
-                    SwingCorpusPanel.this.controller.deleteCorpus(Ice.selectedCorpusName);
+                    deleteCorpus(Ice.selectedCorpusName);
                 }
             }
         });
@@ -145,7 +139,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 JComboBox comboBox = (JComboBox)actionEvent.getSource();
                 String selectedCorpus = (String)comboBox.getSelectedItem();
                 if (selectedCorpus != null) {
-                    SwingCorpusPanel.this.controller.selectCorpus(selectedCorpus);
+                    selectCorpus(selectedCorpus);
                 }
             }
         });
@@ -159,14 +153,13 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                     File file = fc.getSelectedFile();
                     String path = file.getPath();
                     directoryTextField.setText(path);
-                    SwingCorpusPanel.this.controller.selectDirectory(path);
+                    selectDirectory(path);
                 }
             }
         });
 
         preprocessButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-
                 Object[] options = {"No",
                         "Yes"};
                 int n = JOptionPane.showOptionDialog(null,
@@ -181,32 +174,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 if (n == 0) {
                     return;
                 }
-                SwingCorpusPanel.this.controller.setFilter(filterTextField.getText());
-                try {
-                    if (Ice.selectedCorpus.docListFileName == null ||
-                            !(new File(Ice.selectedCorpus.docListFileName)).exists()) {
-                        JOptionPane.showMessageDialog(Nice.mainFrame,
-                                "Cannot find relevant documents. Please reset directory or filter.",
-                                "Corpus Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    String[] docArr = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
-                    if (docArr.length == 0) {
-                        JOptionPane.showMessageDialog(Nice.mainFrame,
-                                "Cannot find relevant documents. Please reset directory or filter.",
-                                "Corpus Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                }
-                catch (IOException e) {
-                    System.err.println("Unable to read docList file...");
-                    e.printStackTrace();
-                    return;
-                }
-		IcePreprocessor icePreprocessor = new IcePreprocessor(Ice.selectedCorpus.getName());
-		/*
+                setFilter(filterTextField.getText());
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                         Ice.selectedCorpus.directory,
                         Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
@@ -227,7 +195,6 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 icePreprocessor.start();
             }
         });
@@ -237,7 +204,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 JComboBox comboBox = (JComboBox)actionEvent.getSource();
                 String selectedBackgroundCorpus = (String)comboBox.getSelectedItem();
                 if (selectedBackgroundCorpus != null) {
-                    SwingCorpusPanel.this.controller.selectBackgroundCorpus(selectedBackgroundCorpus);
+                    selectBackgroundCorpus(selectedBackgroundCorpus);
                 }
             }
         });
@@ -270,18 +237,17 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         corpusSelectionComboBox.setSelectedItem(name);
     }
 
-    public void addCorpus(String corpusName) {
-        corpusSelectionComboBox.addItem(corpusName);
-        corpusSelectionComboBox.setSelectedItem(corpusName);
-    }
+//    public void addCorpus(String corpusName) {
+//
+//    }
 
     public void setDirectory(String directory) {
         directoryTextField.setText(directory);
     }
 
-    public void setFilter(String type) {
-        filterTextField.setText(type);
-    }
+//    public void setFilter(String type) {
+//       filterTextField.setText(type);
+//    }
 
     public void setBackgroundList(java.util.List<String> names) {
         backgroundCorpusComboBox.removeAllItems();
@@ -294,6 +260,10 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
 //        }
     }
 
+    public void setUIFilterFromIce(String filterName) {
+        filterTextField.setText(filterName);
+    }
+
     public void setSelectedBackground(String name) {
         backgroundCorpusComboBox.setSelectedItem(name);
     }
@@ -304,10 +274,20 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
 
     public void refresh() {
         java.util.List<String> names = new ArrayList<String>();
-        names.addAll(Ice.corpora.keySet());
-        String selectedCorpusName = Ice.selectedCorpusName;
+        // names.addAll(Ice.corpora.keySet());
+        for (String corpus : Ice.corpora.keySet()) {
+            if (!corpus.startsWith(".")) {
+                names.add(corpus);
+            }
+        }
+        // String selectedCorpusName = Ice.selectedCorpusName;
         setCorporaList(names);
-        setSelectedCorpus(selectedCorpusName);
+        if (names.size() > 0 && Ice.selectedCorpusName != null && Ice.selectedCorpusName.startsWith(".")) {
+            setSelectedCorpus(names.get(0));
+        }
+        else {
+            setSelectedCorpus(Ice.selectedCorpusName);
+        }
         java.util.List<String> backgroundNames = new ArrayList<String>();
         for (String corpus : Ice.corpora.keySet()) {
             if (corpus.equals(Ice.selectedCorpusName))
@@ -316,6 +296,9 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
                 continue;
             if (Ice.corpora.get(corpus).relationTypeFileName == null)
                 continue;
+            if (corpus.startsWith(".")) {
+                continue;
+            }
             backgroundNames.add(corpus);
         }
         String selectedBackground = "";
@@ -329,7 +312,7 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
         if (Ice.selectedCorpus != null && Ice.selectedCorpus.filter != null) {
             filter = Ice.selectedCorpus.filter;
         }
-        setFilter(filter);
+        setUIFilterFromIce(filter);
         if (Ice.selectedCorpus != null && Ice.selectedCorpus.directory != null) {
             directory = Ice.selectedCorpus.directory;
         }
@@ -342,5 +325,45 @@ public class SwingCorpusPanel extends JComponent implements CorpusPanel, Refresh
             printCorpusSize(0);
         }
         iceStatusPanel.refresh();
+    }
+
+    public void addCorpus(String corpusName) {
+        Corpus newCorpus = new Corpus(corpusName);
+        Ice.corpora.put(corpusName, newCorpus);
+        corpusSelectionComboBox.addItem(corpusName);
+        corpusSelectionComboBox.setSelectedItem(corpusName);
+        Ice.selectCorpus(corpusName);
+        refresh();
+    }
+
+    public void deleteCorpus(String corpusName) {
+        Ice.corpora.remove(corpusName);
+        if (!Ice.corpora.isEmpty())
+            Ice.selectCorpus(Ice.corpora.firstKey());
+        refresh();
+    }
+
+    public void selectCorpus(String selectedCorpus) {
+        Ice.selectCorpus(selectedCorpus);
+        refresh();
+    }
+
+    public void selectDirectory(String directoryName) {
+        Ice.selectedCorpus.setDirectory(directoryName);
+        Ice.selectedCorpus.writeDocumentList();
+    }
+
+    public void setFilter(String filterName) {
+        Ice.selectedCorpus.setFilter(filterName);
+        Ice.selectedCorpus.writeDocumentList();
+        // need to update because corpus size may have changed
+        // filterTextField.setText(filterName);
+        refresh();
+    }
+
+    public void selectBackgroundCorpus(String backgroundCorpusName) {
+        if (backgroundCorpusName != null) {
+            Ice.selectedCorpus.backgroundCorpus = backgroundCorpusName;
+        }
     }
 }

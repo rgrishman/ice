@@ -5,7 +5,11 @@ import edu.nyu.jet.ice.utils.IceUtils;
 import java.io.IOException;
 
 /**
- * Created by yhe on 2/26/15.
+ * A utility class to convert MAE annotated files to APF files.
+ *
+ * This is not used in the current ICE GUI / CLI.
+ *
+ * @author yhe
  */
 public class BatchMaeToApf {
 

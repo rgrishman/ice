@@ -11,7 +11,6 @@ import java.io.IOException;
 /**
  * count all dependency paths in corpus.
  */
-
 public class RelationFinder extends Thread {
 
     String[] args;
@@ -74,9 +73,14 @@ public class RelationFinder extends Thread {
             depPathMap.unpersist();
             DepPaths.progressMonitor = relationProgressMonitor;
             DepPaths.main(args);
+	    /*
+	      ABG 20160511 need working directory
 	    System.out.println("Saving new relations to " + types + ".");
             Corpus.sort(FileNameSchema.getWD() + "temp", types);
             Corpus.sort(FileNameSchema.getWD() + "temp.source.dict", types + ".source.dict");
+	    */
+            Corpus.sort("temp", types);
+            // Corpus.sort("temp.source.dict", types + ".source.dict");
             depPathMap.forceLoad();
 	    if(area != null) {
 		Corpus.displayTerms(types, 40, area, Corpus.relationFilter);

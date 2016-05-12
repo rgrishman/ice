@@ -1,0 +1,28 @@
+# JET properties file to run ACE with maxent chunker, maxent NE with word clusters + maxent relation tagger
+Jet.batch                = t
+Jet.dataPath             = data
+EnglishLex.fileName1     = Jet4.dict
+EnglishLex.fileName2     = titles.dict
+Gazetteer.fileName       = loc.dict
+NameGender.fileName      = gender.dict
+Time.fileName            = time_rules.yaml
+Ace.EDTtype.fileName     = ../acedata/EDT type dict 05.txt
+Ace.generic.fileName     = ../acedata/generic dict 05.txt
+Ace.NameSubtypeModel.fileName     = ../acedata/ACEnameSubtypeModel 05.txt
+Ace.Value.fileName       = ../acedata/values.dict
+Tags.fileName            = pos_hmm.txt
+Pattern.fileName1        = MEchunkPatterns.txt
+Pattern.fileName2	 = NPpatterns.txt
+Chunker.fileName         = chunkModel.txt
+NameTags.ME.fileName = ../acedata/AceOntoMeneModel
+WordClusters.fileName = brownClusters10-2014.txt
+##### ICE USER CONFIG FILES #####
+Onoma.fileName           = ../acedata/ice_onoma.dict
+Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
+Ace.RelationModel.fileName = ../acedata/iceRelationModel
+#################################
+#
+processDocument      = sentenceSplit, sentence:processSentence
+processSentence      = tokenize, lexLookup, pruneTags, tagNames, chunk, \
+                       pat(names), pat(othernames), ng:processNG
+processNG            = pat(ng-chunks)
