@@ -20,6 +20,10 @@ public class TermFilter extends ListFilter {
 	boolean showVerbs;
 	boolean showOther;
 
+	public TermFilter() {
+
+	}
+
 	/**
 	 *  return true if 'term' is a selected part of speech
 	 */

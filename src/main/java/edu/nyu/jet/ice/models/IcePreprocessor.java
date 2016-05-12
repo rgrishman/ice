@@ -61,10 +61,11 @@ public class IcePreprocessor extends Thread {
         aceTypeMap.put("VEH", "VEHICLE");
     }
 
+	String corpusName;
+	Corpus corpus;
     String inputDir;
     String propsFile;
     String docList;
-    String inputSuffix;
     String cacheDir;
 
     private static final int MAX_MENTIONS_IN_SENTENCE = 50;
@@ -75,6 +76,16 @@ public class IcePreprocessor extends Thread {
 
     ProgressMonitorI progressMonitor = null;
 
+	// ABG this may still be needed
+    public IcePreprocessor(String corpusName) {
+		this.corpusName = corpusName;
+		this.corpus = Ice.corpora.get(corpusName);
+        this.inputDir = corpus.getDirectory();
+        this.propsFile = FileNameSchema.getWD() + "parseprops";
+        this.docList = FileNameSchema.getDocListFileName(corpusName);
+        this.cacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
+
+    }
 
     /**
      * creates an IcePreprocessor.
@@ -106,11 +117,21 @@ public class IcePreprocessor extends Thread {
 
     public static void main(String[] args) throws IOException {
 
-        if (args.length != 5) {
-            System.err.println("IcePreprocessor requires 5 arguments:");
-            System.err.println("  propsFile docList inputDir inputSuffix cacheDir");
+        if (args.length != 3) {
+            System.err.println("IcePreprocessor requires 2 arguments:");
+            System.err.println("  corpusName propsFile");
             System.exit(-1);
         }
+<<<<<<< HEAD
+        String corpusName = args[0];
+		String propsFile = args[1];
+        IcePreprocessor icePreprocessor = new IcePreprocessor(corpusName);
+
+        icePreprocessor.processFiles();
+    }
+
+    public void processFiles() {
+=======
         String propsFile = args[0];
         String docList = args[1];
         String inputDir = args[2];
@@ -132,8 +153,10 @@ public class IcePreprocessor extends Thread {
      */
     private void processFiles(String selectedCorpusDir, String selectedCorpusName) {
 
+>>>>>>> upstream/master
         System.out.println("Starting Jet Preprocessor ...");
         if (progressMonitor != null) {
+			progressMonitor.setAlive(true);
             progressMonitor.setProgress(1);
             progressMonitor.setNote("Loading Jet models...");
         }
@@ -141,11 +164,15 @@ public class IcePreprocessor extends Thread {
         File cacheDirFile = new File(cacheDir);
         cacheDirFile.mkdirs();
 
+<<<<<<< HEAD
+         // initialize Jet
+		System.out.println("Initializing Jet with props file " + propsFile);
+=======
         // initialize Jet
+>>>>>>> upstream/master
         JetTest.initializeFromConfig(propsFile);
-
         try {
-            FileUtils.copyFile(new File(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
+            FileUtils.copyFile(new File(FileNameSchema.getWD() + JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
                     new File(cacheDir + File.separator + "apf.v5.1.1.dtd"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -166,12 +193,73 @@ public class IcePreprocessor extends Thread {
             progressMonitor.setNote("Loading Jet models... done.");
         }
         try {
+<<<<<<< HEAD
+            if (progressMonitor != null && progressMonitor.isCanceled()) {
+                return;
+            }
+            if (!corpus.directory.startsWith(
+                    FileNameSchema.getCorpusInfoDirectory(corpusName))) {
+                if (progressMonitor != null) {
+                    progressMonitor.setProgress(5);
+                    progressMonitor.setNote("Copying files...");
+                }
+                copyFiles();
+            }
+            BufferedReader docListReader;
+			FileReader docListFileReader = new FileReader(docList);
+            docListReader = new BufferedReader(docListFileReader);
+=======
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
+>>>>>>> upstream/master
             boolean isCanceled = false;
             docCount = 0;
             System.out.println();
             while ((docName = docListReader.readLine()) != null) {
                 docCount++;
+<<<<<<< HEAD
+                String inputFile;
+                if ("*".equals(corpus.getFilter().trim())) {
+                    inputFile = docName;
+                } else {
+                    inputFile = docName + "." + corpus.getFilter();
+                }
+//                String newInputFile = inputFile.replaceAll(File.separator, "_");
+//                String content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+//                PrintWriter newFileWriter =
+//                        new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
+//                newFileWriter.print(content);
+//                newFileWriter.close();
+//                newFileNames.add(newInputFile);
+                System.out.println("Processing document " + docCount + ": " + inputFile);
+                ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+                doc.setAllTags(true);
+                doc.open();
+                // process document
+                Ace.monocase = Ace.allLowerCase(doc);
+                // --------------- code from Ace.java
+                doc.stretchAll();
+                // process document
+                Ace.monocase = Ace.allLowerCase(doc);
+
+                Control.processDocument(doc, null, docCount == -1, docCount);
+                Ace.tagReciprocalRelations(doc);
+                String docId = Ace.getDocId(doc);
+                if (docId == null)
+                    docId = docName;
+                // create empty Ace document
+                String sourceType = "text";
+                AceDocument aceDoc =
+                        new AceDocument(inputFile, sourceType, docId, doc.text());
+                // build entities
+                Ace.buildAceEntities(doc, docId, aceDoc);
+                aceDoc.write(new PrintWriter(
+                        new BufferedWriter(
+                                new FileWriter(cacheFileName(cacheDir, inputDir, inputFile) + ".ace"))), doc);
+                // ---------------
+                // invoke parser on 'doc' and accumulate counts
+                SyntacticRelationSet relations = null;
+=======
+>>>>>>> upstream/master
                 try {
                     String inputFile;
                     if ("*".equals(inputSuffix.trim())) {
@@ -221,6 +309,14 @@ public class IcePreprocessor extends Thread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+<<<<<<< HEAD
+                if (relations == null) {
+					System.out.println("Relations in this document are null");
+                    continue;
+                }
+
+=======
+>>>>>>> upstream/master
                 if (progressMonitor != null) {
                     progressMonitor.setProgress(docCount + 5);
                     progressMonitor.setNote(docCount + " files processed");
@@ -231,8 +327,57 @@ public class IcePreprocessor extends Thread {
                     }
                 }
             }
-
+			docListReader.close();
+			docListFileReader.close();
             // Do word count now
+<<<<<<< HEAD
+			System.out.println("Starting word count");
+            String[] docFileNames = null;
+            try {
+                docFileNames = IceUtils.readLines(corpus.getDocListFileName());
+            }
+            catch (IOException e) {
+                e.printStackTrace(System.err);
+                return;
+            }
+			System.err.println("corpus.filter = " + corpus.filter);
+            if (progressMonitor != null) {
+                progressMonitor.setNote("Postprocessing...");
+            }
+            if (!isCanceled) {
+                if (progressMonitor != null && progressMonitor.isCanceled()) {
+                    return;
+                }
+				System.err.println("Calling TermCounter(" + FileNameSchema.getWD() + "onomaprops, " + corpusName + ")");
+                TermCounter counter = TermCounter.prepareRun(
+				   FileNameSchema.getWD() + "onomaprops",
+				   corpusName, progressMonitor);
+                counter.run();
+                corpus.wordCountFileName = FileNameSchema.getWordCountFileName(corpus.name);
+				System.out.println("Setting word count file name to " + corpus.wordCountFileName);
+            }
+			System.out.println("Finished counting words.");
+			System.err.println("corpus.filter = " + corpus.filter);
+			// find relations
+            if (!isCanceled) {
+                if (progressMonitor != null && progressMonitor.isCanceled()) {
+                    return;
+                }
+				System.err.println("Calling RelationFinder(" + corpusName + ")");
+                RelationFinder finder = new RelationFinder(corpusName);
+                finder.run();
+                corpus.relationTypeFileName =
+                        FileNameSchema.getRelationTypesFileName(corpus.name);
+                corpus.relationInstanceFileName =
+                        FileNameSchema.getRelationsFileName(corpusName);
+				DepPathMap depPathMap = DepPathMap.getInstance(FileNameSchema.getRelationReprFileName(corpusName));
+				depPathMap.forceLoad();
+            }
+			System.out.println("Finished finding relations.");
+            if (progressMonitor != null && ! progressMonitor.isCanceled()) {
+				System.out.println("Setting progress to " + Integer.toString(progressMonitor.getMaximum()));
+                progressMonitor.setProgress(progressMonitor.getMaximum());
+=======
             if (Ice.selectedCorpus != null) {
                 if (progressMonitor != null) {
                     progressMonitor.setNote("Counting words and relations...");
@@ -255,12 +400,74 @@ public class IcePreprocessor extends Thread {
                 if (progressMonitor != null && !progressMonitor.isCanceled()) {
                     progressMonitor.setProgress(progressMonitor.getMaximum());
                 }
+>>>>>>> upstream/master
             }
         } catch (IOException e) {
             e.printStackTrace();
+			progressMonitor.setAlive(false);
         }
+		if (progressMonitor != null) {
+			progressMonitor.setAlive(false);
+		}
     }
 
+<<<<<<< HEAD
+    private void deleteDir(File file){
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                deleteDir(f);
+            }
+        }
+        file.delete();
+    }
+
+    private void copyFiles() throws IOException {
+        String docName;
+		BufferedReader docListReader = new BufferedReader(new FileReader(docList));
+        List<String> newFileNames = new ArrayList<String>();
+        Set<String> newFileNameSet = new HashSet<String>();
+        String newDirName = FileNameSchema.getSourceCacheDir(corpusName);
+		System.out.println("Copying corpus files to working directory" + newDirName);
+        File newDir = new File(newDirName);
+        if (newDir.exists() && newDir.isDirectory()) {
+           deleteDir(newDir);
+        }
+        newDir.mkdirs();
+        while ((docName = docListReader.readLine()) != null) {
+            String inputFile;
+            if ("*".equals(corpus.getFilter().trim())) {
+                inputFile = docName;
+            } else {
+                inputFile = docName + "." + corpus.getFilter();
+            }
+            String newSuffix = corpus.getFilter().equals("*") ? "" : "." + corpus.getFilter();
+            String newInputFile = UUID.randomUUID().toString() + newSuffix;
+            while (newFileNameSet.contains(newInputFile)) {
+                newInputFile = UUID.randomUUID().toString() + newSuffix;
+            }
+			// System.out.println(inputFile + " -> " + newInputFile);
+			String content = "";
+			try {
+				content = IceUtils.readFileAsString(inputDir + File.separator + inputFile);
+			} catch (IOException e) {
+				System.err.println("Unable to read file " + inputDir + File.separator + inputFile + ": " + e.getMessage());
+				continue;
+			}
+            content = content.replaceAll(">", " ");
+            content = content.replaceAll("<", " ");
+            PrintWriter newFileWriter =
+                    new PrintWriter(new FileWriter(newDirName + File.separator + newInputFile));
+            newFileWriter.print(content);
+            newFileWriter.close();
+            newFileNames.add(newInputFile);
+            newFileNameSet.add(newInputFile);
+        }
+		docListReader.close();
+        corpus.directory = newDirName;
+		String ppDocListFileName = FileNameSchema.getPreprocessedDocListFileName(corpusName);
+        PrintWriter fileListWriter = new PrintWriter(new FileWriter(ppDocListFileName));
+=======
     public static boolean countWords(boolean isCanceled) {
         String[] docFileNames = null;
         try {
@@ -289,18 +496,25 @@ public class IcePreprocessor extends Thread {
     private void createNewFileList(List<String> newFileNames, String newDirName, String docListFileName) throws IOException {
         //Ice.selectedCorpus.directory = newDirName;
         PrintWriter fileListWriter = new PrintWriter(new FileWriter(docListFileName));
+>>>>>>> upstream/master
         for (String fileName : newFileNames) {
-            if (!"*".equals(inputSuffix.trim())) {
-                if (fileName.length() - inputSuffix.length() - 1 < 0) {
+            if (!"*".equals(corpus.getFilter().trim())) {
+                if (fileName.length() - corpus.getFilter().length() - 1 < 0) {
                     continue;
                 }
                 fileName =
-                        fileName.substring(0, fileName.length() - inputSuffix.length() - 1);
+                        fileName.substring(0, fileName.length() - corpus.getFilter().length() - 1);
             }
             fileListWriter.println(fileName);
         }
 
         fileListWriter.close();
+<<<<<<< HEAD
+        corpus.docListFileName = ppDocListFileName;
+        this.docList = corpus.docListFileName;
+        this.inputDir = corpus.directory;
+=======
+>>>>>>> upstream/master
     }
 
     public static PatternSet loadPatternSet(String fileName) throws IOException {
@@ -338,7 +552,12 @@ public class IcePreprocessor extends Thread {
     }
 
     public static Map<String, Integer> loadNPs(String cacheDir, String inputDir, String inputFile) throws IOException {
+<<<<<<< HEAD
+		// System.out.println("loadNPs(" + cacheDir + ", " + inputDir + ", " + inputFile + ")");
+        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".nps";
+=======
         String inputFileName = getNpsFileName(cacheDir, inputDir, inputFile);
+>>>>>>> upstream/master
         Map<String, Integer> localCount = new HashMap<String, Integer>();
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
         String line = null;
@@ -696,10 +915,19 @@ public class IcePreprocessor extends Thread {
         // pw.close();
     }
 
+<<<<<<< HEAD
+    public static SyntacticRelationSet loadSyntacticRelationSet(
+       String cacheDir,
+	   String inputDir,
+	   String inputFile) throws IOException {
+        String inputFileName = cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
+		//		System.out.println("loadSyntacticRelationSet(" + cacheDir + ", " + inputDir + ", " + inputFile + ")");
+=======
     public static SyntacticRelationSet loadSyntacticRelationSet(String cacheDir,
                                                                 String inputDir,
                                                                 String inputFile) throws IOException {
         String inputFileName = getDepFileName(cacheDir, inputDir, inputFile);
+>>>>>>> upstream/master
         SyntacticRelationSet relations = new SyntacticRelationSet();
         if (!(new File(inputFileName).exists())) {
             return relations;
@@ -715,11 +943,28 @@ public class IcePreprocessor extends Thread {
     }
 
     public static String cacheFileName(String cacheDir,
+<<<<<<< HEAD
+                                        String inputDir,
+                                        String inputFile) {
+        String separator = File.separator;
+        if (separator.equals("\\")) {
+            separator = "\\\\";
+        }
+		/*
+        return cacheDir + File.separator
+                + inputDir.replaceAll(separator, "_") + "_"
+                + inputFile.replaceAll(separator, "_");
+		*/
+        return cacheDir + File.separator
+                + inputFile.replaceAll(separator, "_");
+
+=======
                                        String inputDir,
                                        String inputFile) {
         return cacheDir + File.separator
                 + inputDir.replaceAll("/", "_") + "_"
                 + inputFile.replaceAll("/", "_");
+>>>>>>> upstream/master
     }
 
 

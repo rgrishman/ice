@@ -99,6 +99,7 @@ public class Words {
 		progressMonitor.setNote(docCount + " files processed");
 	    }
 	}
+	docListReader.close();
 	// write counts
         if (!isCanceled) {
 	    PrintWriter writer = new PrintWriter (new FileWriter (outputFile));

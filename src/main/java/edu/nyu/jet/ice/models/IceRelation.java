@@ -19,16 +19,26 @@ public class IceRelation {
 
     List<String> negPaths = new ArrayList<String>();
 
+    List<IcePath> icePaths;
+
 	// ---- property methods -----
 
-	public String getName() {return name;}
-	public void setName (String s) {name = s;}
-	public List<String> getPaths() {return paths;}
-	public void setPaths(List<String> s) {paths = s;}
-	public String getArg1type() {return arg1type;}
-	public void setArg1type (String s) {arg1type = s;}
-	public String getArg2type() {return arg2type;}
-	public void setArg2type (String s) {arg2type = s;}
+    public String getName() {return name;}
+    public void setName (String s) {name = s;}
+    public List<String> getPaths() {return paths;}
+    public void setPaths(List<String> s) {paths = s;}
+    public String getArg1type() {return arg1type;}
+    public void setArg1type (String s) {arg1type = s;}
+    public String getArg2type() {return arg2type;}
+    public void setArg2type (String s) {arg2type = s;}
+
+    public List<IcePath> getIcePaths() {
+	return icePaths;
+    }
+
+    public void setIcePaths (List<IcePath> paths) {
+	icePaths = paths;
+    }
 
     public List<String> getNegPaths() {
         return negPaths;
@@ -39,14 +49,14 @@ public class IceRelation {
     }
     // ---- constructors -----
 
-	public IceRelation (String name) {
-		this.name = name;
-		this.paths = new ArrayList<String>();
-	}
+    public IceRelation (String name) {
+	this.name = name;
+	this.paths = new ArrayList<String>();
+    }
 
-	public IceRelation () {
-		this ("?");
-	}
+    public IceRelation () {
+	this ("?");
+    }
 
     @Override
     public String toString() {

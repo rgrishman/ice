@@ -27,13 +27,14 @@ public class Ratio {
 	}
 
 	public static void readCounts (String file, Map<String, Integer> counts) throws IOException {
-		BufferedReader reader = new BufferedReader (new FileReader (file));
-		String line;
-		while ((line = reader.readLine()) != null) {
-			String[] field = line.trim().split("\t");
-			if (field.length == 2)
-				counts.put(field[1], Integer.valueOf(field[0]));
-		}
+	    BufferedReader reader = new BufferedReader (new FileReader (file));
+	    String line;
+	    while ((line = reader.readLine()) != null) {
+		String[] field = line.trim().split("\t");
+		if (field.length == 2)
+		    counts.put(field[1], Integer.valueOf(field[0]));
+	    }
+	    reader.close();
 	}
 
 	public static void computeRatios (PrintWriter writer) throws IOException {

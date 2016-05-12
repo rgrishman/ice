@@ -120,7 +120,7 @@ public class DepPaths {
         System.out.println("Starting Jet DepCounter ...");
         JetTest.initializeFromConfig(propsFile);
         PatternSet patternSet = IcePreprocessor.loadPatternSet(
-                JetTest.getConfig("Jet.dataPath") + File.separator +
+		   FileNameSchema.getWD() +  JetTest.getConfig("Jet.dataPath") + File.separator +
                         JetTest.getConfig("Pattern.quantifierFileName"));
         // load ACE type dictionary
         EDTtype.readTypeDict();
@@ -130,7 +130,9 @@ public class DepPaths {
         // ACE mode (provides additional antecedents ...)
         Resolve.ACE = true;
         Properties props = new Properties();
-        props.load(new FileReader(propsFile));
+		FileReader propsReader = new FileReader(propsFile);
+		props.load(propsReader);
+		propsReader.close();
 
         String docName;
         int docCount = 0;

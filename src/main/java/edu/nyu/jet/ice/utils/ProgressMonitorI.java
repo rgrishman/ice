@@ -10,12 +10,15 @@ package edu.nyu.jet.ice.utils;
 public interface ProgressMonitorI {
 
     boolean isCanceled();
+    boolean isAlive();
+
+    void setAlive(boolean a);
 
     void setProgress(int docCount);
 
-	void setMaximum(int maximum);
+    void setMaximum(int maximum);
 
-	int getMaximum();
+    int getMaximum();
 
     void setNote(String s);
 }

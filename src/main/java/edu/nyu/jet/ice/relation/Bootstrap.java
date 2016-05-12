@@ -14,6 +14,7 @@ import gnu.trove.TObjectDoubleHashMap;
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
+import java.awt.GraphicsEnvironment;
 
 /**
  * a simple bootstrapping learner for relations.
@@ -97,18 +98,31 @@ public class Bootstrap {
         return instance;
     }
 
+	/*
+	  ABG 20160511 I want to see how this new version deals with the
+	  reprFileName
+
+    public List<IcePath> initialize(String seedPath, String reprFileName, String patternFileName) {
+		String[] splitPaths = seedPath.split(":::");
+		return initMulti(splitPaths, reprFileName, patternFileName);
+	} 
+
+	public List<IcePath> initMulti(String[] splitPaths, String reprFileName, String patternFileName) {
+		System.out.println("Bootstrap.initMulti( , " + reprFileName + ", " + patternFileName + ")");
+		pathMatcher = new PathMatcher();
+*/
     public List<IcePath> initialize(String seedPath, String patternFileName) {
         try {
-            DepPathMap depPathMap = DepPathMap.getInstance();
-            String[] splitPaths = seedPath.split(":::");
-//            String firstSeedPath = null;
+			DepPathMap depPathMap = DepPathMap.getInstance(reprFileName);
             List<String> allPaths = new ArrayList<String>();
             for (String p : splitPaths) {
+				System.out.println("Finding paths for " + p);
 //                if (firstSeedPath == null) {
 //                    firstSeedPath = depPathMap.findPath(seedPath);
 //                }
                 List<String> currentPaths = depPathMap.findPath(p);
                 if (currentPaths != null) {
+					System.out.println("  found " + Integer.toString(currentPaths.size()) + " paths");
                     for (String currentPath : currentPaths) {
                         String[] parts = currentPath.split("--");
                         //firstSeedPath = parts[1].trim();
@@ -116,14 +130,20 @@ public class Bootstrap {
                         arg1Type = parts[0].trim();
                         arg2Type = parts[2].trim();
                     }
-                }
+                } else {
+					System.err.println("Seed '" + p + "' has no current paths!");
+				}
             }
             if (allPaths.size() == 0) {
-                JOptionPane.showMessageDialog(Ice.mainFrame,
+				if (!GraphicsEnvironment.isHeadless()) {
+					JOptionPane.showMessageDialog(Ice.mainFrame,
                         "Seed is invalid. Choose another seed or run [find common patterns].",
                         "Unable to proceed",
                         JOptionPane.WARNING_MESSAGE);
-                return foundPatterns;
+				} else {
+					System.err.println("Seed is invalid (no paths). Choose another seed or run [find common patterns].");
+				}
+				return foundPatterns;
             }
             //seedPaths.add(args[0]);
             //seedPaths.add(firstSeedPath);
@@ -178,12 +198,23 @@ public class Bootstrap {
 
         for (String sp : seedPaths) {
             List<AnchoredPath> posPaths = pathSet.getByPath(sp);
+<<<<<<< HEAD
+			// TODO figure out why some paths are coming up empty
+			if (null == posPaths || posPaths.size() < 1) {
+				System.err.println("No paths found for seedPath " + sp);
+				continue;
+			}
+            for (AnchoredPath p : posPaths) {
+                seedPathInstances.add(new BootstrapAnchoredPath(p,
+                        BootstrapAnchoredPathType.POSITIVE));
+=======
             if (posPaths != null) {
                 for (AnchoredPath p : posPaths) {
                     seedPathInstances.add(new BootstrapAnchoredPath(p,
                             sp,
                             BootstrapAnchoredPathType.POSITIVE));
                 }
+>>>>>>> upstream/master
             }
             // should we bootstrap negative paths?
             if (USE_NEGATIVE) {

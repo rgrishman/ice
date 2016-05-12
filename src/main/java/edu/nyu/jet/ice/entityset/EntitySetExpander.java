@@ -414,6 +414,10 @@ public class EntitySetExpander {
         return negatives;
     }
 
+    public List<Entity> getRankedEntities() {
+	return rankedEntities;
+    }
+
     public static void main(String[] args) {
         System.out.println("Index file:");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));

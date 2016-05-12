@@ -9,6 +9,7 @@ import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IceRelation;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.relation.Bootstrap;
 
 import javax.swing.*;
@@ -29,8 +30,6 @@ public class RelationBuilder {
     String name;
     String seed;
     public String pathListFileName;
-
-    Corpus corpus;
 
     // property methods
     public String getName() {
@@ -117,7 +116,7 @@ public class RelationBuilder {
                     return;
                 }
                 String tempSeed = seedField.getText();
-                buildRelation(tempName, tempSeed);
+                buildRelation(Ice.selectedCorpusName, tempName, tempSeed);
             }
         });
 
@@ -187,11 +186,11 @@ public class RelationBuilder {
     }
 
 
-    public void buildRelation(String inName, String inSeed) {
+    public void buildRelation(String corpusName, String inName, String inSeed) {
 
         name = inName;
 
-        pathListFileName = Ice.selectedCorpusName + name + "RelationPathList";
+        pathListFileName = FileNameSchema.getRelationPathListFileName(corpusName);
         Bootstrap bootstrap = new Bootstrap(new SwingProgressMonitor(
                 Ice.mainFrame, "Initializing Relation Builder",
                 "Collecting seeds...",
@@ -215,7 +214,7 @@ public class RelationBuilder {
 //                System.out.println("plfn = " + pathListFileName);
         RelationBuilderThread builder = new RelationBuilderThread(
                 seed,
-                Ice.selectedCorpus.relationInstanceFileName,
+                FileNameSchema.getRelationsFileName(corpusName),
                 pathListFileName,
                 RelationBuilder.this,
                 bootstrap,

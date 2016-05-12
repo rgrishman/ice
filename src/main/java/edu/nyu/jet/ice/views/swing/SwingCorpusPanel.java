@@ -182,6 +182,7 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                         filterTextField.getText(),
                         FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
                 );
+		*/
                 SwingProgressMonitor progressMonitor = new SwingProgressMonitor(SwingCorpusPanel.this,
                         "Preprocessing files",
                         "Processing files with Jet...",

@@ -47,7 +47,32 @@
             </plugin>
         </plugins>
     </build>
-    <dependencies>
+<dependencies>
+  <dependency>
+    <groupId>org.apache.opennlp</groupId>
+    <artifactId>opennlp-tools</artifactId>
+    <version>1.6.0</version>
+  </dependency>
+    <dependency>
+      <groupId>org.jyaml</groupId>
+      <artifactId>jyaml</artifactId>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>18.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.13</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.trove4j</groupId>
+      <artifactId>trove4j</artifactId>
+      <version>3.0.3</version>
+    </dependency>
 
         <dependency>
             <groupId>org.la4j</groupId>
@@ -74,13 +99,13 @@
             <artifactId>commons-io</artifactId>
             <version>1.3.2</version>
         </dependency>
-        <dependency>
+        <!-- dependency>
             <groupId>edu.nyu.cs.proteus</groupId>
             <artifactId>Jet</artifactId>
             <version>1.8.2-depfix</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/jet-all-1.8.1.jar</systemPath>
-        </dependency>
+        </dependency -->
 
         <dependency>
             <groupId>commons-cli</groupId>
@@ -93,5 +118,6 @@
             <version>1.1</version>
         </dependency>
     </dependencies>
+>>>>>>> upstream/master
 
 </project>

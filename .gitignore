@@ -10,6 +10,7 @@ target/
 *.save
 tmp/
 .DS_Store/
+*~
 build/
 report/
 docs/api

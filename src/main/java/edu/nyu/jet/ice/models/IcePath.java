@@ -1,6 +1,8 @@
 package edu.nyu.jet.ice.models;
 
-import gnu.trove.TObjectDoubleHashMap;
+// import gnu.trove.TObjectDoubleHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import java.text.DecimalFormat;
 
 /**
  * A path in relation bootstrapping
@@ -12,18 +14,28 @@ public class IcePath implements Comparable<IcePath> {
     public enum IcePathChoice {
         NO, YES, UNDECIDED
     }
+
+    private final DecimalFormat form = new DecimalFormat("0.000");
+
+    // ABG 2016 05 05: Note that this path is a FULL path, including both terms
     private String path;
     private String repr;
     private String example;
     private double score;
+    private String roundedScore;
     public  TObjectDoubleHashMap subScores;
     private IcePathChoice choice;
+
+    public IcePath() {
+
+    }
 
     public IcePath(String path, String repr, String example, double score, IcePathChoice choice) {
         this.path = path;
         this.repr = repr;
         this.example = example;
         this.score = score;
+	this.roundedScore = form.format(score);
         this.choice = choice;
     }
 
@@ -32,6 +44,7 @@ public class IcePath implements Comparable<IcePath> {
         this.repr = repr;
         this.example = example;
         this.score = score;
+	this.roundedScore = form.format(score);
         this.choice = IcePathChoice.UNDECIDED;
     }
 
@@ -40,6 +53,7 @@ public class IcePath implements Comparable<IcePath> {
         this.repr = repr;
         this.example = example;
         this.score = score;
+	this.roundedScore = form.format(score);
         this.choice = IcePathChoice.UNDECIDED;
         this.subScores = subScores;
     }
@@ -72,8 +86,13 @@ public class IcePath implements Comparable<IcePath> {
         return score;
     }
 
+    public String getRoundedScore() {
+	return roundedScore;
+    }
+
     public void setScore(int score) {
         this.score = score;
+	this.roundedScore = form.format(score);
     }
 
     public IcePathChoice getChoice() {

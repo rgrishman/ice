@@ -19,7 +19,8 @@ public class DepPathMap {
     private HashMap<String, List<String>> reprPathMap = new HashMap<String, List<String>>();
     private HashMap<String, String> pathExampleMap = new HashMap<String, String>();
     private DepPathMap() { }
-    private String previousFileName = null;
+    private static String previousFileName = null;
+    private static String fileName = "";
 
     private Set<String> leftRelations = new HashSet<String>();
     {
@@ -43,13 +44,40 @@ public class DepPathMap {
     DepPathMap is a singleton which is shared across the program.
      */
     public static DepPathMap getInstance() {
+	fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         if (instance == null) {
             instance = new DepPathMap();
         }
         return instance;
     }
 
+    public static DepPathMap getInstance(String fn) {
+	if (!fn.equals(fileName)) {
+	    previousFileName = fileName;
+	    fileName = fn;
+            instance = new DepPathMap();
+	    instance.forceLoad();
+	} else if (instance == null) {
+            instance = new DepPathMap();
+	    instance.load();
+        }
+        return instance;
+    }
+
     public String findRepr(String path) {
+	// ABG 20160511 I want to keep this error handling
+	if (null == pathReprMap) {
+	    System.err.println("pathReprMap is null!");
+	    return "";
+	} else {
+	    System.out.println("pathReprMap contains " + Integer.toString(pathReprMap.size()) + " paths");
+	}
+	if (!pathReprMap.containsKey(lemmatize(path))) {
+	    System.err.println("findRepr: no entry found for " + path);
+	    //   return "";
+	}
+	// ABG 20160511 Hm
+        // return pathReprMap.get(lemmatize(path));
         return pathReprMap.get(path);
     }
 
@@ -68,7 +96,6 @@ public class DepPathMap {
     }
 
     public void unpersist() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         try {
             File f = new File(fileName);
             f.delete();
@@ -80,7 +107,7 @@ public class DepPathMap {
     }
 
     public void persist() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+	System.out.println("Saving reprs to file " + fileName);
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(fileName));
             for (String path : pathReprMap.keySet()) {
@@ -93,12 +120,12 @@ public class DepPathMap {
             pw.close();
         }
         catch (IOException e) {
+	    System.err.println("Unable to write file " + fileName);
             e.printStackTrace();
         }
     }
 
     public boolean forceLoad() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         // if (previousFileName != null && previousFileName.equals(fileName)) return true; // use old data
@@ -114,15 +141,14 @@ public class DepPathMap {
                 String path = parts[0];
                 String repr = parts[1];
                 String example = parts[2];
-//                if (repr.equals("PERSON sell DRUGS")) {
-//                    System.err.println(path + " <> " + repr);
-//                }
+		System.out.println("pathReprMap.put(" + path + ", " + repr + ")");
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
                     reprPathMap.put(normalizedRepr, new ArrayList());
                 }
                 reprPathMap.get(normalizedRepr).add(path);
+		System.out.println("reprPathMap.get(" + normalizedRepr + ").add(" + path + ")");
                 pathExampleMap.put(path, example);
             }
             r.close();
@@ -136,7 +162,6 @@ public class DepPathMap {
     }
 
     public boolean load() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName) && pathExampleMap.size() > 0) return true; // use old data
@@ -153,7 +178,7 @@ public class DepPathMap {
                 String repr = parts[1];
                 String example = parts[2];
 //                if (repr.equals("PERSON sell DRUGS")) {
-//                    System.err.println(path + " <> " + repr);
+		System.out.println(path + " <> " + repr);
 //                }
                 pathReprMap.put(path, repr);
                 String normalizedRepr = normalizeRepr(repr);

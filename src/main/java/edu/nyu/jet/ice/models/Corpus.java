@@ -15,12 +15,11 @@ import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.Ratio;
+import edu.nyu.jet.ice.utils.IceInfoStatus;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
 
-//import java.nio.file.Files;
-//import java.nio.file.Paths;
 import java.awt.*;
 import java.util.*;
 import java.io.*;
@@ -50,6 +49,11 @@ public class Corpus {
     static public RelationFilter relationFilter = new RelationFilter();
     public EntitySetBuilder entitySetBuilder = new EntitySetBuilder();
 
+	private ArrayList<String> fileNames;
+	private IceInfoStatus countStatus;
+	private IceInfoStatus relationStatus;
+	private HashMap<String, Index> indices = new HashMap<String, Index>();
+
     // property methods
     public String getName() {
         return name;
@@ -72,11 +76,16 @@ public class Corpus {
     }
 
     public void setFilter(String s) {
-        String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
-        //Files.createDirectory(Paths.get(corpusInfoDirectory));
-        File dir = new File(corpusInfoDirectory);
-        dir.mkdirs();
         filter = s;
+	}
+	
+	public void makeDirectory() {
+		if (name != null) {
+			String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
+			System.out.println("Creating directory " + corpusInfoDirectory);
+			File dir = new File(corpusInfoDirectory);
+			dir.mkdirs();
+		}
     }
 
     public int getNumberOfDocs() {
@@ -123,16 +132,63 @@ public class Corpus {
         return relationTypeFileName;
     }
 
+	public void setRelationTypeFileName(String fileName) {
+		relationTypeFileName = fileName;
+	}
+
+    public IceInfoStatus getCountStatus() { return countStatus; }
+
+    public void setCountStatus(IceInfoStatus countStatus) {
+        this.countStatus = countStatus;
+    }
+
+    public IceInfoStatus getRelationStatus() { return relationStatus; }
+
+    public void setRelationStatus(IceInfoStatus relationStatus) {
+        this.relationStatus = relationStatus;
+    }
+
+    public ArrayList<String> getFileNames() { return fileNames; }
+
+    public void setFileNames(ArrayList<String> fileNames) {
+        this.fileNames = fileNames;
+    }
+
+    public HashMap<String, Index> getIndices() { return this.indices; }
+
+    public Index getIndex(String name) {
+        return this.indices.get(name);
+    }
+
+    public void setIndices (HashMap<String, Index> indices) {
+        this.indices = indices;
+    }
+
+    public void addIndices (HashMap<String, Index> indices) {
+        this.indices.putAll(indices);
+    }
+
+    public void addIndex (String name, Index index) {
+        this.indices.put(name, index);
+    }
+
+    public void removeIndex(String name) {
+        this.indices.remove(name);
+    }
+
     ProgressMonitorI wordProgressMonitor;
 
+
     public Corpus(String name) {
+		System.out.println("New Corpus(" + name + ")");
         this.name = name;
-        directory = "?";
+		//        directory = "?";
+		directory = name;
         filter = "?";
         relationBuilder = new RelationBuilder();
-
+        termFileName = FileNameSchema.getTermsFileName(name);
+		String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
         try {
-            String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);
             //Files.createDirectory(Paths.get(corpusInfoDirectory));
             File dir = new File(corpusInfoDirectory);
             dir.mkdirs();
@@ -143,7 +199,7 @@ public class Corpus {
     }
 
     public Corpus() {
-        this("?");
+		System.out.println("New corpus with blank constructor");
     }
 
     //List<JRadioButton> backgroundCorpusButtons = new ArrayList<JRadioButton>();
@@ -166,11 +222,8 @@ public class Corpus {
             e.printStackTrace(System.err);
             return;
         }
-        TermCounter counter = TermCounter.prepareRun("onomaprops",
-                Arrays.asList(docFileNames),
-                directory,
-                filter,
-                wordCountFileName,
+        TermCounter counter = TermCounter.prepareRun(FileNameSchema.getWD() + "onomaprops",
+				 name,
                 monitor);
         counter.start();
     }
@@ -181,7 +234,7 @@ public class Corpus {
 //                run("Terms", "utils/findTerms " + wordCountFileName + " " +
 //                        Ice.corpora.get(backgroundCorpus).wordCountFileName + " " +
 //                        termFileName);
-        String ratioFileName = Ice.selectedCorpusName + "-" + backgroundCorpus + "-" + "Ratio";
+        String ratioFileName = FileNameSchema.getTermsRatioFileName(name, bgCorpus.getName());
         try {
             //Ratio.main(new String[] {wordCountFileName, Ice.corpora.get(backgroundCorpus).wordCountFileName, ratioFileName});
             //IceUtils.numsort(ratioFileName, termFileName);
@@ -317,6 +370,17 @@ public class Corpus {
         return box;
     }
 
+	public List<String> checkRelations(String filterName) {
+        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
+		if (filterName.equals("sentential")) {
+			relationFilter.onlySententialPatterns = true;
+		} else {
+			relationFilter.onlySententialPatterns = false;
+		}
+		// findRelations(null, docListFileName, null);
+		System.err.println("getTerms(" + relationTypeFileName + ")");
+        return getTerms(relationTypeFileName, 40, relationFilter);
+	}
 
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor, RelationFilter relationFilter) {
         relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
@@ -343,9 +407,15 @@ public class Corpus {
     }
 
     public void findRelations(ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
-        relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
-        docListFileName = FileNameSchema.getDocListFileName(name);
+		if (relationInstanceFileName.length() < 1) {
+			relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
+		}
+		if (relationTypeFileName.length() < 1) {
+			relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
+		}
+		if (docListFileName.length() < 1) {
+			docListFileName = FileNameSchema.getDocListFileName(name);
+		}
 
 
         RelationFinder finder = new RelationFinder(
@@ -354,6 +424,14 @@ public class Corpus {
                 progressMonitor);
         finder.start();
     }
+
+	public List<String> rank () {
+		rankRelations();
+		String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
+		String sortedRatioFileName = ratioFileName + ".sorted";
+		return getTerms(sortedRatioFileName, 40, relationFilter);
+		
+	}
 
     public void rankRelations() {
         String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
@@ -495,7 +573,7 @@ public class Corpus {
         IceUtils.numsort(infile, outfile);
     }
 
-    String[] buildDocumentList() {
+    public String[] buildDocumentList() {
         if (directory.equals("?") || filter.equals("?")) return null;
         //File dir = new File(directory);
         //String[] docs = dir.list(new Jet.IceModels.CorpusFileFilter(filter));
@@ -600,10 +678,12 @@ public class Corpus {
 //                        }
 //                    }
 //                    else {
-                        String repr = depPathMap.findRepr(parts[1]);
-                        if (repr != null) {
-                            topTerms.add(parts[0] + "\t" + repr);
-                        }
+					if (parts.length > 1) {
+						String repr = depPathMap.findRepr(parts[1]);
+						if (repr != null) {
+							topTerms.add(parts[0] + "\t" + repr);
+						}
+					}
 //                    }
                 }
                 else {
@@ -667,7 +747,7 @@ class WordCounter extends Thread {
     WordCounter(String docListFileName, String directory, String filter,
                 String wordCountFileName) {
         args = new String[5];
-        args[0] = "onomaprops";
+        args[0] = FileNameSchema.getWD() + "onomaprops";
         args[1] = docListFileName;
         args[2] = directory;
         args[3] = filter;

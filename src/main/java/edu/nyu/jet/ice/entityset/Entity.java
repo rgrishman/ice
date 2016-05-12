@@ -9,16 +9,25 @@ package edu.nyu.jet.ice.entityset;
  */
 public class Entity {
     private String text;
+    private String term;
     private String type;
     private double score;
 
+    public Entity () {
+
+    }
+
     public Entity(String text) {
         this.text = text;
+	String[] textParts = text.split("/");
+	this.term = textParts[0];
     }
 
     public Entity(String text, String type, double score) {
         this.score = score;
         this.text = text;
+	String[] textParts = text.split("/");
+	this.term = textParts[0];
         this.type = type;
     }
 
@@ -28,6 +37,16 @@ public class Entity {
 
     public void setText(String text) {
         this.text = text;
+	String[] textParts = text.split("/");
+	this.term = textParts[0];
+    }
+
+    public String getTerm() {
+	return term;
+    }
+
+    public void setTerm(String term) {
+	this.term = term;
     }
 
     public String getType() {
