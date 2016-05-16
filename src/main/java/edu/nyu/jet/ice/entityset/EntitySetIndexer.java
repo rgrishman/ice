@@ -4,6 +4,7 @@ import AceJet.Ace;
 import AceJet.Gazetteer;
 import Jet.Control;
 import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
@@ -92,160 +93,179 @@ public class EntitySetIndexer {
         *  @param outputFile  output file with indexed terms
         */
 
-	public void run(String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
-		try {
-			String line;
-			BufferedReader r = new BufferedReader(new FileReader(termFile));
-			while ((line = r.readLine()) != null) {
-				Entity entity = Entity.fromString(line);
-				if (entity == null) continue;
-				if (entity.getScore() > cutoff &&
-						entity.getType().equals(type) &&
-						entity.getText().trim().length() > 1) {
-					words.add(entity.getText().replaceAll("\\s+", " ").trim());
-				}
-			}
-			// Processing documents
-			if (progressMonitor != null) {
-				progressMonitor.setProgress(0);
-				progressMonitor.setNote("Initializing Jet");
-			}
-			try {
-				Thread.sleep(500);
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			JetTest.initializeFromConfig(propsFile);
-			Lexicon.clear();
-			for (String word : words) {
-				Lexicon.addEntry(Gazetteer.splitAtWS(word),
-						new FeatureSet(),
-						"term");
-			}
+    public void run(String corpusName, String type, double cutoff, String propsFile) {
+	Corpus corpus = Ice.corpora.get(corpusName);
+	String termFile = FileNameSchema.getTermsFileName(corpusName);
+	String docList = FileNameSchema.getPreprocessedDocListFileName(corpusName);
+	String inputDir = corpus.getDirectory();
+	String inputSuffix = corpus.getFilter();
+	String outputFile = FileNameSchema.getEntitySetIndexFileName(corpusName, type, cutoff);
+	run(corpusName, termFile, type, cutoff, propsFile, docList, inputDir, inputSuffix, outputFile);		
+    }
 
-			String docName;
-			int docCount = 0;
-			//DictionaryBasedNamedEntityPostprocessor nePostprocessor =
-			//        new DictionaryBasedNamedEntityPostprocessor(propsFile);
-			BufferedReader docListReader = new BufferedReader(new FileReader (docList));
-			List<Event> allEvents = new ArrayList<Event>();
-			boolean isCanceled = false;
-			while ((docName = docListReader.readLine()) != null) {
-				docCount++;
-				String inputFile = docName;
-				if (!("*".equals(inputSuffix.trim()))) {
-					inputFile = inputFile + "." + inputSuffix;
-				}
-				System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
-				ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
-				doc.setAllTags(true);
-				doc.open();
-				// process document
-				Ace.monocase = Ace.allLowerCase(doc);
-				Control.processDocument(doc, null, false, docCount);
-				System.err.println("Jet control finished");
+    public void run(String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
+	String corpusName = FileNameSchema.getCorpusNameFromTermsFile(termFile);
+	System.out.println("termFile name " + termFile + " -> corpusName " + corpusName);
+	run(corpusName, termFile, type, cutoff, propsFile, docList, inputDir, inputSuffix, outputFile);
+    }
 
-				SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
-						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
-						inputDir,
-						inputFile);
-				IcePreprocessor.loadPOS(doc,
-						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
-						inputDir,
-						inputFile);
+    public void run(String corpusName, String termFile, String type, double cutoff, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
+      try {
+	String line;
+	BufferedReader r = new BufferedReader(new FileReader(termFile));
+	while ((line = r.readLine()) != null) {
+	  Entity entity = Entity.fromString(line);
+	  if (entity == null) continue;
+	  if (entity.getScore() > cutoff &&
+	      entity.getType().equals(type) &&
+	      entity.getText().trim().length() > 1) {
+	      words.add(entity.getText().replaceAll("\\s+", " ").trim());
+	  }
+	}
+	// Processing documents
+	if (progressMonitor != null) {
+	    progressMonitor.setProgress(0);
+	    progressMonitor.setNote("Initializing Jet");
+	}
+	try {
+	    Thread.sleep(500);
+	}
+	catch (InterruptedException e) {
+	    e.printStackTrace();
+	}
+	JetTest.initializeFromConfig(propsFile);
+	Lexicon.clear();
+	for (String word : words) {
+	    Lexicon.addEntry(Gazetteer.splitAtWS(word),
+			     new FeatureSet(),
+			     "term");
+	}
+	
+	String docName;
+	int docCount = 0;
+	//DictionaryBasedNamedEntityPostprocessor nePostprocessor =
+	//        new DictionaryBasedNamedEntityPostprocessor(propsFile);
+	BufferedReader docListReader = new BufferedReader(new FileReader (docList));
+	List<Event> allEvents = new ArrayList<Event>();
+	boolean isCanceled = false;
+	String ppCacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
+	System.out.println("preprocessCacheDir is " + ppCacheDir);
+	while ((docName = docListReader.readLine()) != null) {
+	    docCount++;
+	    String inputFile = docName;
+	    if (!("*".equals(inputSuffix.trim()))) {
+		inputFile = inputFile + "." + inputSuffix;
+	    }
+	    System.out.println ("\nProcessing document " + docCount + ": " + inputFile);
+	    ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
+	    doc.setAllTags(true);
+	    doc.open();
+	    // process document
+	    Ace.monocase = Ace.allLowerCase(doc);
+	    Control.processDocument(doc, null, false, docCount);
+	    System.err.println("Jet control finished");
 
-				List<Annotation> sentences = doc.annotationsOfType("sentence");
-				if (sentences == null) continue;
-				for (Annotation sentence : sentences) {
-					allEvents.addAll(processSentence(sentence, doc, syntacticRelationSet, words));
-				}
-				if (progressMonitor != null) {
-					if (progressMonitor.isCanceled()) {
-						isCanceled = true;
-						break;
-					}
-					progressMonitor.setProgress(docCount);
-					progressMonitor.setNote(docCount + " files processed");
-				}
-			}
-			// Indexing
-			if (!isCanceled) {
-				if (progressMonitor != null) {
-					progressMonitor.setNote("Start indexing features... Cannot cancel.");
-				}
-				PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("temp.events")));
-				for (Event event : allEvents) {
-					pw.println(FileEventStream.toLine(event).trim());
-				}
-				pw.close();
-				// write file for word2vecf training
-				pw = new PrintWriter(new BufferedWriter(new FileWriter(
-						FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+	    SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
+	      ppCacheDir,
+	      inputDir,
+	      inputFile);
+	    IcePreprocessor.loadPOS(doc,
+				    ppCacheDir,
+				    inputDir,
+				    inputFile);
+	    
+	    List<Annotation> sentences = doc.annotationsOfType("sentence");
+	    if (sentences == null) continue;
+	    for (Annotation sentence : sentences) {
+		allEvents.addAll(processSentence(sentence, doc, syntacticRelationSet, words));
+	    }
+	    if (progressMonitor != null) {
+		if (progressMonitor.isCanceled()) {
+		    isCanceled = true;
+		    break;
+		}
+		progressMonitor.setProgress(docCount);
+		progressMonitor.setNote(docCount + " files processed");
+	    }
+	}
+	// Indexing
+	if (!isCanceled) {
+	    if (progressMonitor != null) {
+		progressMonitor.setNote("Start indexing features... Cannot cancel.");
+	    }
+	    PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("temp.events")));
+	    for (Event event : allEvents) {
+		pw.println(FileEventStream.toLine(event).trim());
+	    }
+	    pw.close();
+	    // write file for word2vecf training
+	    pw = new PrintWriter(new BufferedWriter(new FileWriter(
+								   FileNameSchema.getCorpusInfoDirectory(corpusName)
                                 + File.separator
                                 + "deps.context"
-				)));
-				for (Event event : allEvents) {
-                    for (String context : event.getContext()) {
-                        pw.println(event.getOutcome().replaceAll("\\s+", "_")
-                            + " " + context.replaceAll("\\s+", "_")
-                        );
-                    }
-				}
-				pw.close();
-				DataIndexer indexer = new OnePassDataIndexer(new FileEventStream("temp.events"), 0);
-
-				if (progressMonitor != null) {
-					progressMonitor.setProgress(progressMonitor.getMaximum());
-					progressMonitor.setNote("Calculating features... Takes time...");
-				}
-
-				String[] contextLabels = indexer.getPredLabels();
-				TObjectIntHashMap contextMap = new TObjectIntHashMap();
-
-				for (int i = 0; i < contextLabels.length; i++) {
-					String contextLabel = contextLabels[i];
-					contextMap.put(contextLabel, i+1);          /* TObjectIntHashMap will return 0 for not found */
-				}
-				Map<String, org.la4j.vector.Vector> counter = new HashMap<String, org.la4j.vector.Vector>();
-				for (Event e : allEvents) {
-					String word = e.getOutcome();
-					if (!counter.containsKey(word)) {
-						counter.put(word, new CompressedVector(contextLabels.length));
-					}
-					org.la4j.vector.Vector v = counter.get(word);
-					for (String context : e.getContext()) {
-						int contextIdx = contextMap.get(context)-1;
-						v.set(contextIdx, v.get(contextIdx) + 1);
-					}
-				}
-                updateContextWithPMI(counter);
-				// Write to index
-				if (progressMonitor != null) {
-					progressMonitor.setProgress(progressMonitor.getMaximum());
-					progressMonitor.setNote("Writing index...");
-				}
-				PrintWriter w = new PrintWriter(new FileWriter(outputFile));
-				PrintWriter wInverse = new PrintWriter(new FileWriter(outputFile + ".info"));
-				w.println(contextLabels.length + 1);
-				for (String word : counter.keySet()) {
-					writeVector(word, counter.get(word), w);
-					writeVectorInfo(word, counter.get(word), contextLabels, wInverse);
-				}
-				w.close();
-				wInverse.close();
-				if (progressMonitor != null) {
-					progressMonitor.setProgress(progressMonitor.getMaximum());
-					progressMonitor.setNote("Start indexing features... done.");
-				}
-			}
+								   )));
+	    for (Event event : allEvents) {
+		for (String context : event.getContext()) {
+		    pw.println(event.getOutcome().replaceAll("\\s+", "_")
+			       + " " + context.replaceAll("\\s+", "_")
+			       );
 		}
-		catch (Exception e) {
-			System.err.println("Jet.ExpandEntitySet.EntitySetIndexer countFile type cutoff " +
-					"propsFile docList inputDir inputSuffix outputFile");
-			e.printStackTrace();
+	    }
+	    pw.close();
+	    DataIndexer indexer = new OnePassDataIndexer(new FileEventStream("temp.events"), 0);
+
+	    if (progressMonitor != null) {
+		progressMonitor.setProgress(progressMonitor.getMaximum());
+		progressMonitor.setNote("Calculating features... Takes time...");
+	    }
+
+	    String[] contextLabels = indexer.getPredLabels();
+	    TObjectIntHashMap contextMap = new TObjectIntHashMap();
+
+	    for (int i = 0; i < contextLabels.length; i++) {
+		String contextLabel = contextLabels[i];
+		contextMap.put(contextLabel, i+1);
+		/* TObjectIntHashMap will return 0 for not found */
+	    }
+	    Map<String, org.la4j.vector.Vector> counter = new HashMap<String, org.la4j.vector.Vector>();
+	    for (Event e : allEvents) {
+		String word = e.getOutcome();
+		if (!counter.containsKey(word)) {
+		    counter.put(word, new CompressedVector(contextLabels.length));
 		}
+		org.la4j.vector.Vector v = counter.get(word);
+		for (String context : e.getContext()) {
+		    int contextIdx = contextMap.get(context)-1;
+		    v.set(contextIdx, v.get(contextIdx) + 1);
+		}
+	    }
+	    updateContextWithPMI(counter);
+	    // Write to index
+	    if (progressMonitor != null) {
+		progressMonitor.setProgress(progressMonitor.getMaximum());
+		progressMonitor.setNote("Writing index...");
+	    }
+	    PrintWriter w = new PrintWriter(new FileWriter(outputFile));
+	    PrintWriter wInverse = new PrintWriter(new FileWriter(outputFile + ".info"));
+	    w.println(contextLabels.length + 1);
+	    for (String word : counter.keySet()) {
+		writeVector(word, counter.get(word), w);
+		writeVectorInfo(word, counter.get(word), contextLabels, wInverse);
+	    }
+	    w.close();
+	    wInverse.close();
+	    if (progressMonitor != null) {
+		progressMonitor.setProgress(progressMonitor.getMaximum());
+		progressMonitor.setNote("Start indexing features... done.");
+	    }
 	}
+      }
+      catch (Exception e) {
+	  System.err.println("Jet.ExpandEntitySet.EntitySetIndexer countFile type cutoff " +
+			     "propsFile docList inputDir inputSuffix outputFile");
+	  e.printStackTrace();
+      }
+    }
 
     private static void updateContextWithPMI(Map<String, org.la4j.vector.Vector> counter) {
         if (counter.size() == 0) return;

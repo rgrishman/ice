@@ -52,6 +52,7 @@ public class EntitySetExpander {
      * @return
      */
     public static List<String> recommendSeeds(String indexFileName, String termFileName, String type) {
+        System.out.println("EntitySetExpander.recommendSeeds(" + indexFileName + ", " + termFileName + ", " + type + ")");
         Map<String, Vector> entityFeatureDict = new HashMap<String, Vector>();
         String line;
         try {
@@ -110,7 +111,7 @@ public class EntitySetExpander {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+	System.out.println("Found " + Integer.toString(dataPoints.size()) + " dataPoints");
         List<DataPointCluster> dataPointClusters = new ArrayList<DataPointCluster>();
         for (DataPoint p : dataPoints) {
             dataPointClusters.add(new DataPointCluster(p));

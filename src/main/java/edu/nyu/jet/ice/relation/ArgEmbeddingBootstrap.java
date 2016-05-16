@@ -50,8 +50,9 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
 
     @Override
     public List<IcePath> initialize(String seedPath, String patternFileName) {
+	String corpusName = FileNameSchema.getCorpusNameFromPatternFileName(patternFileName);
         try {
-            DepPathMap depPathMap = DepPathMap.getInstance();
+            DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
             String[] splitPaths = seedPath.split(":::");
 //            String firstSeedPath = null;
             List<String> allPaths = new ArrayList<String>();
@@ -85,7 +86,7 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
 //                    + File.separator +"deps.context.complete.vec.dim200");
             pathSet = new ArgEmbeddingAnchoredPathSet(patternFileName, normalizedPhraseEmbeddings, 0.8);
 //            pathSet = new AnchoredPathSet(patternFileName);
-            bootstrap(arg1Type, arg2Type);
+            bootstrap(corpusName, arg1Type, arg2Type);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -95,10 +96,10 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
     }
 
     @Override
-    public List<IcePath> iterate(List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
+	public List<IcePath> iterate(String corpusName, List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
         addPathsToSeedSet(approvedPaths, seedPaths);
         addPathsToSeedSet(rejectedPaths, rejects);
-        bootstrap(arg1Type, arg2Type);
+        bootstrap(corpusName, arg1Type, arg2Type);
         return foundPatterns;
     }
 
@@ -127,7 +128,7 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
         }
     }
 
-    private void bootstrap(String arg1Type, String arg2Type) {
+    private void bootstrap(String corpusName, String arg1Type, String arg2Type) {
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
             DEBUG = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.debug"));
         }
@@ -135,7 +136,7 @@ public class ArgEmbeddingBootstrap extends Bootstrap {
             DIVERSIFY = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.diversify"));
         }
         foundPatterns.clear();
-        DepPathMap depPathMap = DepPathMap.getInstance();
+        DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
 
         double minAllowedSimilarity =
                 PathRelationExtractor.minThreshold * PathRelationExtractor.negDiscount * SCREEN_DIVERSITY_DISCOUNT;

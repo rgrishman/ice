@@ -31,6 +31,7 @@ public class Ice {
 	public static SortedMap<String, IceRelation> relations = new TreeMap<String, IceRelation>();
 	public static Corpus selectedCorpus = null;
 	public static String selectedCorpusName = null;
+	public static String workingDirectory = null;
 
 	static JTextField directoryField;
 	static JTextField filterField;
@@ -140,7 +141,7 @@ public class Ice {
                 continue;
             if (Ice.corpora.get(corpus).wordCountFileName == null)
                 continue;
-            if (Ice.corpora.get(corpus).relationTypeFileName == null)
+            if (Ice.corpora.get(corpus).relationTypesFileName == null)
                 continue;
             JRadioButton button = new JRadioButton(corpus);
             bggroup.add(button);

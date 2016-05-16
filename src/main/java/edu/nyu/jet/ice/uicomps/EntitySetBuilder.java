@@ -44,7 +44,23 @@ public class EntitySetBuilder {
 
     public void buildIndex(double cutoff, String inType) {
 
-        Corpus selectedCorpus = Ice.selectedCorpus;
+        String corpusName = Ice.selectedCorpusName;
+		buildIndex(corpusName, cutoff, inType);
+	}
+
+	public void buildIndex (String corpusName, double cutoff, String inType) {
+		Corpus selectedCorpus = Ice.corpora.get(corpusName);
+        /**
+         * String countFile   = args[0];
+         String type        = args[1];
+         double cutoff      = Double.valueOf(args[2]);
+         String propsFile   = args[3];
+         String docList     = args[4];
+         String inputDir    = args[5];
+         String inputSuffix = args[6];
+         String outputFile  = args[7];
+         */
+		System.out.println("EntitySetIndexerThread(" + FileNameSchema.getTermsFileName(corpusName) + ", " + inType + ", " + String.valueOf(cutoff) + ", onomaprops, " + selectedCorpus.getDocListFileName() + ", " + selectedCorpus.getDirectory() + "...)");
         EntitySetIndexerThread indexer = new EntitySetIndexerThread(
                 FileNameSchema.getTermsFileName(selectedCorpus.getName()),
                 inType,
@@ -59,9 +75,13 @@ public class EntitySetBuilder {
         indexer.start();
     }
 
-    public List<String> suggestSeeds() {
-        return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpus.name, type),
-                Ice.selectedCorpus.termFileName, type);
+	public List<String> suggestSeeds() {
+		return suggestSeeds(Ice.selectedCorpusName);
+	}
+
+    public List<String> suggestSeeds(String corpusName) {
+        return  EntitySetExpander.recommendSeeds(FileNameSchema.getEntitySetIndexFileName(corpusName, type),
+			 FileNameSchema.getTermsFileName(corpusName), type);
     }
 
     private List<String> splitSeedString(String seedString) {
@@ -76,11 +96,16 @@ public class EntitySetBuilder {
 
     public List<Entity> rankEntities(String seedString) {
 
-        Corpus selectedCorpus = Ice.selectedCorpus;
+        String corpusName = Ice.selectedCorpusName;
+		return rankEntities(corpusName, seedString);
 
+	}
+
+	public List<Entity> rankEntities(String corpusName, String seedString) {
         List<String> seedStrings = splitSeedString(seedString);
+		String entitySetIndexFileName = FileNameSchema.getEntitySetIndexFileName(corpusName, type);
 
-        EntitySetExpander expander = new EntitySetExpander(selectedCorpus.name + "EntitySetIndex_" + type,
+        EntitySetExpander expander = new EntitySetExpander(entitySetIndexFileName,
                 seedStrings);
 
         expander.rank();
@@ -237,7 +262,6 @@ public class EntitySetBuilder {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
                 buildIndex(cutoff, type);
             }
         });

@@ -8,6 +8,7 @@ import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.IceUtils;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import gnu.trove.TObjectDoubleHashMap;
 
@@ -98,8 +99,9 @@ public class Bootstrap {
     }
 
     public List<IcePath> initialize(String seedPath, String patternFileName) {
+		String corpusName = FileNameSchema.getCorpusNameFromPatternFileName(patternFileName);
         try {
-            DepPathMap depPathMap = DepPathMap.getInstance();
+            DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
             String[] splitPaths = seedPath.split(":::");
 //            String firstSeedPath = null;
             List<String> allPaths = new ArrayList<String>();
@@ -131,7 +133,7 @@ public class Bootstrap {
             // Using SimAchoredPathSet
 //            pathSet = new SimAnchoredPathSet(patternFileName, pathMatcher, 0.6);
             pathSet = new AnchoredPathSet(patternFileName);
-            bootstrap(arg1Type, arg2Type);
+            bootstrap(corpusName, arg1Type, arg2Type);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -140,10 +142,10 @@ public class Bootstrap {
         return foundPatterns;
     }
 
-    public List<IcePath> iterate(List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
+    public List<IcePath> iterate(String corpusName, List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
         addPathsToSeedSet(approvedPaths, seedPaths);
         addPathsToSeedSet(rejectedPaths, rejects);
-        bootstrap(arg1Type, arg2Type);
+        bootstrap(corpusName, arg1Type, arg2Type);
         return foundPatterns;
     }
 
@@ -159,7 +161,7 @@ public class Bootstrap {
         this.progressMonitor = progressMonitor;
     }
 
-    private void bootstrap(String arg1Type, String arg2Type) {
+    private void bootstrap(String corpusName, String arg1Type, String arg2Type) {
         // DEBUG = Show various distance scores (used to select instances) in tooltip
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
             DEBUG = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.debug"));
@@ -169,7 +171,7 @@ public class Bootstrap {
             DIVERSIFY = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.diversify"));
         }
         foundPatterns.clear();
-        DepPathMap depPathMap = DepPathMap.getInstance();
+        DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
 
         double minAllowedSimilarity =
                 PathRelationExtractor.minThreshold * PathRelationExtractor.negDiscount * SCREEN_DIVERSITY_DISCOUNT;

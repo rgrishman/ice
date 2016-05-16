@@ -42,7 +42,7 @@ public class Corpus {
     public String backgroundCorpus;
     public String termFileName;
     // for relation finder
-    public String relationTypeFileName;
+    public String relationTypesFileName;
     public String relationInstanceFileName;
     public RelationBuilder relationBuilder;
 
@@ -119,9 +119,17 @@ public class Corpus {
         termFileName = s;
     }
 
-    public String getRelationTypeFileName() {
-        return relationTypeFileName;
+    public String getRelationTypesFileName() {
+        return relationTypesFileName;
     }
+
+	public void setRelationTypesFileName(String s) {
+		this.relationTypesFileName = s;
+	}
+
+	public void setRelationInstanceFileName(String s) {
+		this.relationInstanceFileName = s;
+	}
 
     ProgressMonitorI wordProgressMonitor;
 
@@ -181,7 +189,7 @@ public class Corpus {
 //                run("Terms", "utils/findTerms " + wordCountFileName + " " +
 //                        Ice.corpora.get(backgroundCorpus).wordCountFileName + " " +
 //                        termFileName);
-        String ratioFileName = Ice.selectedCorpusName + "-" + backgroundCorpus + "-" + "Ratio";
+        String ratioFileName = this.name + "-" + backgroundCorpus + "-" + "Ratio";
         try {
             //Ratio.main(new String[] {wordCountFileName, Ice.corpora.get(backgroundCorpus).wordCountFileName, ratioFileName});
             //IceUtils.numsort(ratioFileName, termFileName);
@@ -319,9 +327,9 @@ public class Corpus {
 
 
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor, RelationFilter relationFilter) {
-        relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
-        File file = new File(relationTypeFileName);
+        relationInstanceFileName = FileNameSchema.getRelationsFileName(this.name);//name + "Relations";
+        relationTypesFileName = FileNameSchema.getRelationTypesFileName(this.name);//name + "Relationtypes";
+        File file = new File(relationTypesFileName);
         if (file.exists() &&
                 !file.isDirectory()) {
             int n = JOptionPane.showConfirmDialog(
@@ -330,7 +338,7 @@ public class Corpus {
                     "Patterns exist",
                     JOptionPane.YES_NO_OPTION);
             if (n == 0) {
-                Corpus.displayTerms(relationTypeFileName,
+                Corpus.displayTerms(relationTypesFileName,
                         40,
                         relationTextArea,
                         relationFilter);
@@ -344,28 +352,28 @@ public class Corpus {
 
     public void findRelations(ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
         relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
+        relationTypesFileName = FileNameSchema.getRelationTypesFileName(name);
         docListFileName = FileNameSchema.getDocListFileName(name);
 
 
         RelationFinder finder = new RelationFinder(
                 docListFileName, directory, filter, relationInstanceFileName,
-                relationTypeFileName, publishToTextArea, numberOfDocs,
+                relationTypesFileName, publishToTextArea, numberOfDocs,
                 progressMonitor);
         finder.start();
     }
 
     public void rankRelations() {
         String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
-        rankRelations(backgroundCorpus, ratioFileName);
+        rankRelations(this.name, backgroundCorpus, ratioFileName);
     }
 
-    public static void rankRelations(String bgCorpus, String fileName) {
+    public static void rankRelations(String fgCorpus, String bgCorpus, String fileName) {
         try {
             String sortedRatioFileName = fileName + ".sorted";
             Ratio.main(new String[]{
-                    Ice.selectedCorpus.relationTypeFileName,
-                    Ice.corpora.get(bgCorpus).relationTypeFileName,
+                    FileNameSchema.getRelationTypesFileName(fgCorpus),
+                    FileNameSchema.getRelationTypesFileName(bgCorpus),
                     fileName
             });
             IceUtils.numsort(fileName, sortedRatioFileName);
@@ -408,10 +416,10 @@ public class Corpus {
         JScrollPane scrollPane = new JScrollPane(relationTextArea);
         relationFilter.setArea(relationTextArea);
 
-        if (relationTypeFileName != null)
-            //Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, null);
+        if (relationTypesFileName != null)
+            //Corpus.displayTerms(relationTypesFileName, 40, relationTextArea, null);
 
-            Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, relationFilter);
+            Corpus.displayTerms(relationTypesFileName, 40, relationTextArea, relationFilter);
         box.add(scrollPane);
 
         // listener -----
@@ -462,10 +470,10 @@ public class Corpus {
         JScrollPane scrollPane = new JScrollPane(relationTextArea);
         relationFilter.setArea(relationTextArea);
 
-        if (relationTypeFileName != null)
-            //Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, null);
+        if (relationTypesFileName != null)
+            //Corpus.displayTerms(relationTypesFileName, 40, relationTextArea, null);
 
-            Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, relationFilter);
+            Corpus.displayTerms(relationTypesFileName, 40, relationTextArea, relationFilter);
         box.add(scrollPane);
 
         // listener -----
@@ -555,14 +563,15 @@ public class Corpus {
     }
 
     public List<String> getRelations(int limit) {
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
-        return getTerms(relationTypeFileName, limit, Corpus.relationFilter);
+        relationTypesFileName = FileNameSchema.getRelationTypesFileName(name);
+        return getTerms(relationTypesFileName, limit, Corpus.relationFilter);
     }
 
     public static List<String> getTerms(String termFile, int limit, ListFilter tf) {
+		String corpusName = FileNameSchema.getCorpusNameFromTermsFile(termFile);
         List<String> topTerms = new ArrayList<String>();
         int k = 0;
-        DepPathMap depPathMap = DepPathMap.getInstance();
+        DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
         boolean displayRelation = false;
         if (tf != null && tf instanceof RelationFilter) {
             // depPathMap.clear();

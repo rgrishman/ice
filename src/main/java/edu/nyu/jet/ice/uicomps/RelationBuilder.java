@@ -149,7 +149,8 @@ public class RelationBuilder {
     }
 
     public IceRelation createIceRelation(List<String> pathReprs) throws IllegalArgumentException{
-        DepPathMap depPathMap = DepPathMap.getInstance();
+		String corpusName = Ice.selectedCorpus.getName();
+        DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
         List<String> pathList = new ArrayList<String>();
         String arg1type = null;
         String arg2type = null;

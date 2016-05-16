@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.uicomps;
 
 import edu.nyu.jet.ice.relation.Bootstrap;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.views.swing.SwingRelationsPanel;
 
 /**
@@ -16,9 +17,10 @@ public class RelationBuilderThread extends Thread {
     RelationBuilderFrame frame;
     SwingRelationsPanel swingRelationsPanel;
 
-    public RelationBuilderThread(String seed, String relationInstanceFileName,
-                          String pathListFileName, RelationBuilder builder, Bootstrap bootstrap,
-                          RelationBuilderFrame frame, SwingRelationsPanel swingRelationsPanel) {
+    public RelationBuilderThread(
+      String seed, String relationInstanceFileName,
+      String pathListFileName, RelationBuilder builder, Bootstrap bootstrap,
+      RelationBuilderFrame frame, SwingRelationsPanel swingRelationsPanel) {
         args = new String[3];
         args[0] = seed;
         String[] parts = seed.trim().toLowerCase().split(" ");

@@ -159,11 +159,21 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 Timer timer = switchToBusyCursor(SwingEntitySetPanel.this);
                 String seedString = null;
                 List<String> seeds = null;
-                if (Ice.selectedCorpus.termFileName == null ||
-                        FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpusName, "nn") == null ||
-                        !(new File(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpusName, "nn"))).exists()) {
+		String esiFileName = FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpusName, "nn");
+		System.out.println("SwingEntitySetPanel: Testing for entitySetIndex file " + esiFileName);
+		String fileError = "";
+		// TODO find out where term file can be set
+		String termFileName = Ice.selectedCorpus.termFileName;
+		System.out.println("Testing for termFileName " + termFileName);
+                if (Ice.selectedCorpus.termFileName == null) {
+		    fileError = "Term file does not exist.";
+		} else if (esiFileName == null ||
+			   !(new File(esiFileName).exists())) {
+		    fileError = "Entity index file does not exist.";
+		}
+		if (fileError.length() > 0) {
                     JOptionPane.showMessageDialog(Ice.mainFrame,
-                            "Entity index file does not exist. Please run indexing first.",
+                            fileError + " Please run indexing first.",
                             "Index entities first",
                             JOptionPane.ERROR_MESSAGE);
                     switchToNormalCursor(SwingEntitySetPanel.this, timer);

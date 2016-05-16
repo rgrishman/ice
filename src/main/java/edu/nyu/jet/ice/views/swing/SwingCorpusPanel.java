@@ -175,13 +175,24 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                     return;
                 }
                 setFilter(filterTextField.getText());
+		System.out.println("About to create IcePreprocessor");
+		System.out.println("Ice.selectedCorpusName = " + Ice.selectedCorpusName);
+		System.out.println("Ice.selectedCorpus.docListFileName = " + Ice.selectedCorpus.docListFileName);
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
-                        Ice.selectedCorpus.directory,
-                        Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
-                        Ice.selectedCorpus.docListFileName,
-                        filterTextField.getText(),
-                        FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
+                  Ice.selectedCorpusName,
+		  Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
+		  filterTextField.getText()
+								      );
+
+		/*
+                IcePreprocessor icePreprocessor = new IcePreprocessor(
+		  Ice.selectedCorpus.directory,
+		  Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
+		  Ice.selectedCorpus.docListFileName,
+		  filterTextField.getText(),
+		  FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName)
                 );
+		*/
                 SwingProgressMonitor progressMonitor = new SwingProgressMonitor(SwingCorpusPanel.this,
                         "Preprocessing files",
                         "Processing files with Jet...",
@@ -293,7 +304,7 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                 continue;
             if (Ice.corpora.get(corpus).wordCountFileName == null)
                 continue;
-            if (Ice.corpora.get(corpus).relationTypeFileName == null)
+            if (Ice.corpora.get(corpus).relationTypesFileName == null)
                 continue;
             if (corpus.startsWith(".")) {
                 continue;
@@ -328,10 +339,13 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
 
     public void addCorpus(String corpusName) {
         Corpus newCorpus = new Corpus(corpusName);
+	newCorpus.setTermFileName(FileNameSchema.getTermsFileName(corpusName));
         Ice.corpora.put(corpusName, newCorpus);
         corpusSelectionComboBox.addItem(corpusName);
         corpusSelectionComboBox.setSelectedItem(corpusName);
         Ice.selectCorpus(corpusName);
+	System.out.println("Added corpus " + corpusName);
+	System.out.println("Ice.selectedCorpus is " + Ice.selectedCorpusName);
         refresh();
     }
 
