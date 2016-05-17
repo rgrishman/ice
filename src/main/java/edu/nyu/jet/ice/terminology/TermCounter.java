@@ -64,6 +64,11 @@ public class TermCounter extends Thread {
             progressMonitor.setNote("Loading Jet models...");
             progressMonitor.setProgress(1);
         }
+	System.out.println ("TermCounter.count(" + propsFile + ", , " + inputDir + ", " + inputSuffix + ", " + outputFile + ")");
+	String corpusName = FileNameSchema.getCorpusNameFromWordCountFileName(outputFile);
+	System.out.println("CorpusName = " + corpusName);
+	String cacheDir = FileNameSchema.getPreprocessCacheDir(corpusName);
+	System.out.println("cacheDir = " + cacheDir);
         try {
             Thread.sleep(500);
             if (progressMonitor != null) {
@@ -105,7 +110,7 @@ public class TermCounter extends Thread {
                 // process document
                 Ace.monocase = Ace.allLowerCase(doc);
                 Control.processDocument(doc, null, false, docCount);
-                addDocument(doc, FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName), inputDir, inputFile);
+                addDocument(doc, cacheDir, inputDir, inputFile);
                 if (progressMonitor != null) {
                     progressMonitor.setProgress(docCount);
                     progressMonitor.setNote(docCount + " files processed");

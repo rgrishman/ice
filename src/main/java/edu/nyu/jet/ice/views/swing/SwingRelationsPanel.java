@@ -170,8 +170,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         // listeners
 
         relationList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent listSelectionEvent) {
-                refresh();
+          public void valueChanged(ListSelectionEvent listSelectionEvent) {
+            refresh();
 //                int idx = relationList.getSelectedIndex();
 //                if (idx < 0) return;
 //                IceRelation iceRelation = (IceRelation) relationListModel.getElementAt(idx);
@@ -185,89 +185,91 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
 //                }
 //                entriesListModel = newListModel;
 //                entriesList.setModel(entriesListModel);
-            }
-        });
+	  }
+	    });
 
         addRelationButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                String relationName = JOptionPane.showInputDialog("Name of the relation");
-                if (relationName == null) {
-                    return;
-                }
-                relationName = relationName.toUpperCase();
-                for (Object existingRelation : relationListModel.toArray()) {
-                    if (existingRelation.toString().equals(relationName)) {
-                        JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                                "The name is already in use by another relation.",
-                                "Relation Name Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                }
-                String relationInstance = JOptionPane.showInputDialog(
-                        "Please provide an example of the relation");
-                if (relationInstance == null) {
-                    return;
-                }
-                DepPathMap depPathMap = DepPathMap.getInstance();
-                depPathMap.load();
-                List<String> paths = depPathMap.findPath(relationInstance);
-                if (paths == null) {
-                    JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                            String.format("No example in the corpus for [%s]", relationInstance),
+          public void actionPerformed(ActionEvent actionEvent) {
+            String relationName = JOptionPane.showInputDialog("Name of the relation");
+	    if (relationName == null) {
+		return;
+	    }
+	    relationName = relationName.toUpperCase();
+	    for (Object existingRelation : relationListModel.toArray()) {
+		if (existingRelation.toString().equals(relationName)) {
+		    JOptionPane.showMessageDialog(SwingRelationsPanel.this,
+						  "The name is already in use by another relation.",
+						  "Relation Name Error",
+						  JOptionPane.ERROR_MESSAGE);
+		    return;
+		}
+	    }
+	    String relationInstance = JOptionPane.showInputDialog(
+	      "Please provide an example of the relation");
+	    if (relationInstance == null) {
+		return;
+	    }
+	    String corpusName = Ice.selectedCorpus.getName();
+	    DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
+	    depPathMap.load();
+	    List<String> paths = depPathMap.findPath(relationInstance);
+	    if (paths == null) {
+	      JOptionPane.showMessageDialog(SwingRelationsPanel.this,
+                String.format("No example in the corpus for [%s]", relationInstance),
                             "Dependency Path Error",
                             JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                installSeedRelation(relationName, paths);
-                // System.err.println(path);
-            }
+	      return;
+	    }
+	    installSeedRelation(relationName, paths);
+	    // System.err.println(path);
+	  }
         });
 
         suggestRelationButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                java.util.Timer timer = switchToBusyCursor(SwingRelationsPanel.this);
-                String relationInstance = null;
-                try {
-                    relationInstance = suggestRelation();
-                }
-                finally {
-                    switchToNormalCursor(SwingRelationsPanel.this, timer);
-                }
-                if (relationInstance != null) {
-                    int n = JOptionPane.showConfirmDialog(
-                            SwingRelationsPanel.this,
-                            String.format("Do you want to start with path [%s]?", relationInstance),
-                            "Path Suggestion",
-                            JOptionPane.YES_NO_OPTION);
-                    if (n == 0) {
-                        String relationName = JOptionPane.showInputDialog("Name of the relation");
-                        if (relationName == null) {
-                            return;
-                        }
-                        relationName = relationName.toUpperCase();
-                        for (Object existingRelation : relationListModel.toArray()) {
-                            if (existingRelation.toString().equals(relationName)) {
-                                JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                                        "The name is already used by another relation.",
-                                        "Relation Name Error",
-                                        JOptionPane.ERROR_MESSAGE);
-                                return;
-                            }
-                        }
-                        DepPathMap depPathMap = DepPathMap.getInstance();
-                        List<String> paths = depPathMap.findPath(relationInstance);
-                        if (paths == null) {
-                            JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                                    "The provided path is invalid.",
-                                    "Dependency Path Error",
-                                    JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-                        installSeedRelation(relationName, paths);
-                    }
-                }
-            }
+          public void actionPerformed(ActionEvent actionEvent) {
+            java.util.Timer timer = switchToBusyCursor(SwingRelationsPanel.this);
+	    String relationInstance = null;
+	    String corpusName = Ice.selectedCorpus.getName();
+	    try {
+		relationInstance = suggestRelation();
+	    }
+	    finally {
+		switchToNormalCursor(SwingRelationsPanel.this, timer);
+	    }
+	    if (relationInstance != null) {
+		int n = JOptionPane.showConfirmDialog(
+	          SwingRelationsPanel.this,
+		  String.format("Do you want to start with path [%s]?", relationInstance),
+		  "Path Suggestion",
+		  JOptionPane.YES_NO_OPTION);
+		if (n == 0) {
+		  String relationName = JOptionPane.showInputDialog("Name of the relation");
+		  if (relationName == null) {
+		    return;
+		  }
+		  relationName = relationName.toUpperCase();
+		  for (Object existingRelation : relationListModel.toArray()) {
+		    if (existingRelation.toString().equals(relationName)) {
+		      JOptionPane.showMessageDialog(SwingRelationsPanel.this,
+			"The name is already used by another relation.",
+						    "Relation Name Error",
+						    JOptionPane.ERROR_MESSAGE);
+		      return;
+		    }
+		  }
+		  DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
+		  List<String> paths = depPathMap.findPath(relationInstance);
+		  if (paths == null) {
+		      JOptionPane.showMessageDialog(SwingRelationsPanel.this,
+			"The provided path is invalid.",
+						    "Dependency Path Error",
+						    JOptionPane.ERROR_MESSAGE);
+		      return;
+		  }
+		  installSeedRelation(relationName, paths);
+		}
+	    }
+	  }
         });
 
         expandEntriesButton.addActionListener(new ActionListener() {
@@ -287,9 +289,10 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         addEntryButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 if (entriesListModel == null) return;
+		String corpusName = Ice.selectedCorpus.getName();
                 String relationInstance = JOptionPane.showInputDialog(
                         "Please provide an example of the relation");
-                DepPathMap depPathMap = DepPathMap.getInstance();
+                DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
                 if (relationInstance == null) {
                     return;
                 }
@@ -336,12 +339,13 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                         entriesListModel.size() == 0) {
                     return;
                 }
+		String corpusName = Ice.selectedCorpus.getName();
                 currentRelation.setName(nameTextField.getText().trim());
                 currentRelation.setArg1type(arg1TextField.getText());
                 currentRelation.setArg2type(arg2TextField.getText());
                 java.util.List<String> relationPaths = new ArrayList<String>();
                 for (Object e : entriesListModel.toArray()) {
-                    DepPathMap depPathMap = DepPathMap.getInstance();
+                    DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
                     List<String> paths = depPathMap.findPath(e.toString());
                     if (paths != null) {
                         for (String path : paths) {
@@ -463,6 +467,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         iceStatusPanel.refresh();
         int idx = relationList.getSelectedIndex();
         if (idx < 0) return;
+	String corpusName = Ice.selectedCorpus.getName();
         // System.err.println(idx);
         IceRelation relation = (IceRelation)relationListModel.getElementAt(idx);
         // System.err.println(relation.getType());
@@ -476,7 +481,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         arg1TextField.setText(relation.getArg1type());
         arg2TextField.setText(relation.getArg2type());
         DefaultListModel newListModel = new DefaultListModel();
-        DepPathMap depPathMap = DepPathMap.getInstance();
+        DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
         depPathMap.load();
         for (String path : relation.getPaths()) {
             String fullPath = relation.getArg1type() +
@@ -507,11 +512,13 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
     }
 
     public String suggestRelation() {
+	String corpusName = Ice.selectedCorpus.getName();
         String result = "";
         try {
+
             String[] lines =
-                    IceUtils.readLines(FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName));
-            DepPathMap depPathMap = DepPathMap.getInstance();
+                    IceUtils.readLines(FileNameSchema.getRelationTypesFileName(corpusName));
+            DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
             depPathMap.load();
             for (String line : lines) {
                 String[] parts = line.split("\t");

@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.models;
 
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 
@@ -50,7 +51,8 @@ public class RelationFinder extends Thread {
             if (null != relationProgressMonitor) {
                 relationProgressMonitor.setProgress(2);
             }
-            DepPathMap depPathMap = DepPathMap.getInstance();
+	    String corpusName = FileNameSchema.getCorpusNameFromDocList(args[1]);
+            DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
             depPathMap.unpersist();
             DepPaths.progressMonitor = relationProgressMonitor;
             DepPaths.main(args);

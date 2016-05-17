@@ -89,8 +89,8 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor,
                                          boolean sententialOnly) {
         String relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
-        String relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
-        File file = new File(relationTypeFileName);
+        String relationTypesFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
+        File file = new File(relationTypesFileName);
         boolean shouldReuse = false;
         if (file.exists() &&
                 !file.isDirectory()) {
@@ -101,7 +101,7 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
                     JOptionPane.YES_NO_OPTION);
             if (n == 0) { // reuse existing paths
                 shouldReuse = true;
-//                Corpus.displayTerms(relationTypeFileName,
+//                Corpus.displayTerms(relationTypesFileName,
 //                        40,
 //                        relationTextArea,
 //                        relationFilter);
@@ -145,17 +145,18 @@ class PathExtractionThread extends Thread {
                     Ice.selectedCorpus.numberOfDocs,
                     progressMonitor);
             finder.run();
-            Ice.selectedCorpus.relationTypeFileName =
+            Ice.selectedCorpus.relationTypesFileName =
                     FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
             Ice.selectedCorpus.relationInstanceFileName =
                     FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
         }
         progressMonitor.setNote("Postprocessing...");
         // rank paths
-        Corpus.rankRelations(Ice.selectedCorpus.backgroundCorpus,
+        Corpus.rankRelations(Ice.selectedCorpusName,
+			     Ice.selectedCorpus.backgroundCorpus,
                 FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
                         Ice.selectedCorpus.backgroundCorpus));
-        DepPathMap depPathMap = DepPathMap.getInstance();
+        DepPathMap depPathMap = DepPathMap.getInstance(Ice.selectedCorpusName);
         depPathMap.load();
         // filter and show paths
         try {

@@ -381,13 +381,13 @@ public class IceCLI {
                         Ice.selectedCorpus.numberOfDocs,
                         null);
                 finder.run();
-                Ice.selectedCorpus.relationTypeFileName =
+                Ice.selectedCorpus.relationTypesFileName =
                         FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
                 Ice.selectedCorpus.relationInstanceFileName =
                         FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
                 if (Ice.selectedCorpus.backgroundCorpus != null) {
                     System.err.println("Generating path ratio file by comparing phrases in background corpus.");
-                    Corpus.rankRelations(Ice.selectedCorpus.backgroundCorpus,
+                    Corpus.rankRelations(Ice.selectedCorpusName, Ice.selectedCorpus.backgroundCorpus,
                             FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
                                     Ice.selectedCorpus.backgroundCorpus));
                 }

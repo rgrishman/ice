@@ -119,6 +119,7 @@ public class RelationBuilderFrame extends JFrame {
 
         iterateButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+		String corpusName = Ice.selectedCorpus.getName();
                 java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
                 java.util.List<IcePath> rejectedPaths = new ArrayList<IcePath>();
                 for (Object o : rankedListModel.toArray()) {
@@ -140,98 +141,101 @@ public class RelationBuilderFrame extends JFrame {
                         5
                 ));
 
-                BootstrapIterateThread thread = new BootstrapIterateThread(bootstrap,
-                        approvedPaths,
-                        rejectedPaths,
-                        RelationBuilderFrame.this
-                        );
+                BootstrapIterateThread thread = new BootstrapIterateThread(
+		   corpusName,
+		   bootstrap,
+		   approvedPaths,
+		   rejectedPaths,
+		   RelationBuilderFrame.this
+									   );
                 thread.start();
             }
         });
 
         saveButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
-                java.util.List<IcePath> rejectedPaths = new ArrayList<IcePath>();
-                for (Object o : rankedListModel.toArray()) {
-                    IcePath e = (IcePath) o;
-                    if (e.getChoice() == IcePath.IcePathChoice.YES) {
-                        approvedPaths.add(e);
-                    }
-                    if (e.getChoice() == IcePath.IcePathChoice.NO) {
-                        rejectedPaths.add(e);
-                    }
-                }
+          public void actionPerformed(ActionEvent actionEvent) {
+	    String corpusName = Ice.selectedCorpus.getName();
+	    java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
+	    java.util.List<IcePath> rejectedPaths = new ArrayList<IcePath>();
+	    for (Object o : rankedListModel.toArray()) {
+		IcePath e = (IcePath) o;
+		if (e.getChoice() == IcePath.IcePathChoice.YES) {
+		    approvedPaths.add(e);
+		}
+		if (e.getChoice() == IcePath.IcePathChoice.NO) {
+		    rejectedPaths.add(e);
+		}
+	    }
 
-                bootstrap.addPathsToSeedSet(approvedPaths, bootstrap.getSeedPaths());
-                bootstrap.addPathsToSeedSet(rejectedPaths, bootstrap.getRejects());
-                DepPathMap depPathMap = DepPathMap.getInstance();
-                StringBuilder text = new StringBuilder();
-                Set<String> usedRepr = new HashSet<String>();
-                for (String path : bootstrap.getSeedPaths()) {
-                    StringBuilder t = new StringBuilder();
-                    t.append(bootstrap.getArg1Type())
-                            .append(" -- ")
-                            .append(path)
-                            .append(" -- ")
-                            .append(bootstrap.getArg2Type());
-                    String repr = depPathMap.findRepr(t.toString());
-                    if (repr != null && !usedRepr.contains(repr)) {
-                        text.append(repr).append("\n");
-                        usedRepr.add(repr);
-                    }
-                }
-                if (relationBuilder != null) {
-                    relationBuilder.textArea.setText(text.toString());
-                }
-                if (swingRelationsPanel != null) {
-                    String[] reprs = text.toString().trim().split("\n");
-                    java.util.List<String> paths = Arrays.asList(reprs);
-                    swingRelationsPanel.updateEntriesListModel(paths);
-                }
-                // swingRelationsPanel.negPaths.clear();
-                java.util.List<String> paths = new ArrayList<String>();
-                for (String negPath : bootstrap.getRejects()) {
-                    // swingRelationsPanel.negPaths
-                    paths.add(bootstrap.getArg1Type() + " -- " +
-                        negPath + " -- " + bootstrap.getArg2Type());
-                }
-                swingRelationsPanel.negPaths.put(bootstrap.getRelationName(),
-                        paths);
-                RelationBuilderFrame.this.dispose();
-            }
-        });
+	    bootstrap.addPathsToSeedSet(approvedPaths, bootstrap.getSeedPaths());
+	    bootstrap.addPathsToSeedSet(rejectedPaths, bootstrap.getRejects());
+	    DepPathMap depPathMap = DepPathMap.getInstance(corpusName);
+	    StringBuilder text = new StringBuilder();
+	    Set<String> usedRepr = new HashSet<String>();
+	    for (String path : bootstrap.getSeedPaths()) {
+		StringBuilder t = new StringBuilder();
+		t.append(bootstrap.getArg1Type())
+		    .append(" -- ")
+		    .append(path)
+		    .append(" -- ")
+		    .append(bootstrap.getArg2Type());
+		String repr = depPathMap.findRepr(t.toString());
+		if (repr != null && !usedRepr.contains(repr)) {
+		    text.append(repr).append("\n");
+		    usedRepr.add(repr);
+		}
+	    }
+	    if (relationBuilder != null) {
+		relationBuilder.textArea.setText(text.toString());
+	    }
+	    if (swingRelationsPanel != null) {
+		String[] reprs = text.toString().trim().split("\n");
+		java.util.List<String> paths = Arrays.asList(reprs);
+		swingRelationsPanel.updateEntriesListModel(paths);
+	    }
+	    // swingRelationsPanel.negPaths.clear();
+	    java.util.List<String> paths = new ArrayList<String>();
+	    for (String negPath : bootstrap.getRejects()) {
+		// swingRelationsPanel.negPaths
+		paths.add(bootstrap.getArg1Type() + " -- " +
+			  negPath + " -- " + bootstrap.getArg2Type());
+	    }
+	    swingRelationsPanel.negPaths.put(bootstrap.getRelationName(),
+					     paths);
+	    RelationBuilderFrame.this.dispose();
+	  }
+	    });
 
         // handle the click of [Exit]
         exitButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+		public void actionPerformed(ActionEvent actionEvent) {
+		    
 
-
-                RelationBuilderFrame.this.dispose();
-            }
-        });
+		    RelationBuilderFrame.this.dispose();
+		}
+	    });
 
         // handle the click of [x]
         this.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                RelationBuilderFrame.this.dispose();
-
-            }
-        });
+		public void windowClosing(WindowEvent e) {
+		    RelationBuilderFrame.this.dispose();
+		    
+		}
+	    });
 
         // adapters
 
         rankedList.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                JList l = (JList)e.getSource();
-                ListModel m = l.getModel();
-                int index = l.locationToIndex(e.getPoint());
-                if( index>-1 ) {
-                    l.setToolTipText(((IcePath)m.getElementAt(index)).getExample());
-                }
-            }
-        });
+		@Override
+		    public void mouseMoved(MouseEvent e) {
+		    JList l = (JList)e.getSource();
+		    ListModel m = l.getModel();
+		    int index = l.locationToIndex(e.getPoint());
+		    if( index>-1 ) {
+			l.setToolTipText(((IcePath)m.getElementAt(index)).getExample());
+		    }
+		}
+	    });
 
 
 
@@ -243,20 +247,20 @@ public class RelationBuilderFrame extends JFrame {
         rankedList.getInputMap().put(KeyStroke.getKeyStroke("U"), "UNDECIDED");
         rankedList.getInputMap().put(KeyStroke.getKeyStroke("u"), "UNDECIDED");
         rankedList.getActionMap().put("YES", new AbstractAction() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                yesButton.doClick();
-            }
-        });
+		public void actionPerformed(ActionEvent actionEvent) {
+		    yesButton.doClick();
+		}
+	    });
         rankedList.getActionMap().put("NO", new AbstractAction() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                noButton.doClick();
-            }
-        });
+		public void actionPerformed(ActionEvent actionEvent) {
+		    noButton.doClick();
+		}
+	    });
         rankedList.getActionMap().put("UNDECIDED", new AbstractAction() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                undecidedButton.doClick();
-            }
-        });
+		public void actionPerformed(ActionEvent actionEvent) {
+		    undecidedButton.doClick();
+		}
+	    });
     }
 
 //    private void saveEntitySetToAuxFile(String typeName) {
@@ -313,11 +317,13 @@ class BootstrapIterateThread extends Thread {
     java.util.List<IcePath> approvedPaths;
     java.util.List<IcePath> rejectedPaths;
     RelationBuilderFrame frame;
+    String corpusName;
 
-    BootstrapIterateThread(Bootstrap bootstrap,
+    BootstrapIterateThread(String corpusName, Bootstrap bootstrap,
                            java.util.List<IcePath> approvedPaths,
                            java.util.List<IcePath> rejectedPaths,
                            RelationBuilderFrame frame) {
+	this.corpusName = corpusName;
         this.bootstrap = bootstrap;
         this.approvedPaths = approvedPaths;
         this.rejectedPaths = rejectedPaths;
@@ -325,7 +331,7 @@ class BootstrapIterateThread extends Thread {
     }
 
     public void run() {
-        bootstrap.iterate(approvedPaths, rejectedPaths);
+        bootstrap.iterate(corpusName, approvedPaths, rejectedPaths);
         frame.updateList();
         frame.listPane.validate();
         frame.listPane.repaint();

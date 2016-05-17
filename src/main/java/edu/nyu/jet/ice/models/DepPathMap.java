@@ -13,13 +13,26 @@ import java.util.*;
  * handles serialization/deserialization of the map.
  */
 public class DepPathMap {
+
+    private String corpusName;
+
     private static DepPathMap instance = null;
 
     private HashMap<String, String> pathReprMap = new HashMap<String, String>();
     private HashMap<String, List<String>> reprPathMap = new HashMap<String, List<String>>();
     private HashMap<String, String> pathExampleMap = new HashMap<String, String>();
-    private DepPathMap() { }
+    private DepPathMap(String corpusName) {
+	this.corpusName = corpusName;
+    }
     private String previousFileName = null;
+
+    public void setCorpusName (String corpusName) {
+	this.corpusName = corpusName;
+    }
+
+    public String getCorpusName () {
+	return this.corpusName;
+    }
 
     private Set<String> leftRelations = new HashSet<String>();
     {
@@ -42,9 +55,9 @@ public class DepPathMap {
     /**
     DepPathMap is a singleton which is shared across the program.
      */
-    public static DepPathMap getInstance() {
-        if (instance == null) {
-            instance = new DepPathMap();
+    public static DepPathMap getInstance(String corpusName) {
+        if (instance == null || !instance.corpusName.equals(corpusName)) {
+            instance = new DepPathMap(corpusName);
         }
         return instance;
     }
@@ -68,7 +81,7 @@ public class DepPathMap {
     }
 
     public void unpersist() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+        String fileName = FileNameSchema.getRelationReprFileName(this.corpusName);
         try {
             File f = new File(fileName);
             f.delete();
@@ -80,7 +93,7 @@ public class DepPathMap {
     }
 
     public void persist() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+        String fileName = FileNameSchema.getRelationReprFileName(this.corpusName);
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(fileName));
             for (String path : pathReprMap.keySet()) {
@@ -98,7 +111,7 @@ public class DepPathMap {
     }
 
     public boolean forceLoad() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+        String fileName = FileNameSchema.getRelationReprFileName(this.corpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         // if (previousFileName != null && previousFileName.equals(fileName)) return true; // use old data
@@ -136,7 +149,7 @@ public class DepPathMap {
     }
 
     public boolean load() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+        String fileName = FileNameSchema.getRelationReprFileName(this.corpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName) && pathExampleMap.size() > 0) return true; // use old data

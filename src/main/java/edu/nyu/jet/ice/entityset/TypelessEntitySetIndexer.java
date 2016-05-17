@@ -13,6 +13,7 @@ import Jet.Tipster.Annotation;
 import Jet.Tipster.Document;
 import Jet.Tipster.ExternalDocument;
 import edu.nyu.jet.ice.models.IcePreprocessor;
+import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
@@ -74,7 +75,7 @@ public class TypelessEntitySetIndexer {
      * THe arguments for args: corpus propsFile outputFile
      * @param args
      */
-	public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         if (args.length != 3) {
             System.err.println("args: corpus propsFile outputFile");
             System.exit(-1);
@@ -86,18 +87,27 @@ public class TypelessEntitySetIndexer {
         Ice.entitySets = new TreeMap((Map) dec.readObject());
         Ice.relations = new TreeMap((Map) dec.readObject());
         dec.close();
-        Ice.selectCorpus(args[0]);
-		TypelessEntitySetIndexer indexer = new TypelessEntitySetIndexer();
-		indexer.setProgressMonitor(null);
-		indexer.run(Ice.selectedCorpus.termFileName,
-                args[1],
-                Ice.selectedCorpus.getDocListFileName(),
-                Ice.selectedCorpus.directory,
-                Ice.selectedCorpus.filter,
-                args[2]);
+	String corpusName = args[0];
+	Corpus corpus = Ice.corpora.get(corpusName);
+        // Ice.selectCorpus(args[0]);
+	TypelessEntitySetIndexer indexer = new TypelessEntitySetIndexer();
+	indexer.setProgressMonitor(null);
+	indexer.run(args[0], args[1], args[2]);
     }
 
-	public void run(String termFile, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
+    public void run(String corpusName, String propsFile, String outputFile) {
+	String termFile = FileNameSchema.getTermsFileName(corpusName);
+	String docList = FileNameSchema.getPreprocessedDocListFileName(corpusName);
+	Corpus corpus = Ice.corpora.get(corpusName);
+	String inputDir = corpus.getDirectory();
+	String inputSuffix = corpus.getFilter();
+	run(corpusName, termFile, propsFile, docList, inputDir, inputSuffix, outputFile);
+    }
+    public void run(String termFile, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
+	String corpusName = FileNameSchema.getCorpusNameFromDocList(docList);
+	run(corpusName, termFile, propsFile, docList, inputDir, inputSuffix, outputFile);
+    }
+    public void run(String corpusName, String termFile, String propsFile, String docList, String inputDir, String inputSuffix, String outputFile) {
 		try {
 			String line;
 			BufferedReader r = new BufferedReader(new FileReader(termFile));
@@ -150,11 +160,11 @@ public class TypelessEntitySetIndexer {
 				System.err.println("Jet control finished");
 
 				SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
-						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
+						FileNameSchema.getPreprocessCacheDir(corpusName),
 						inputDir,
 						inputFile);
 				IcePreprocessor.loadPOS(doc,
-						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
+						FileNameSchema.getPreprocessCacheDir(corpusName),
 						inputDir,
 						inputFile);
 
@@ -184,7 +194,7 @@ public class TypelessEntitySetIndexer {
                 pw.close();
                 // write file for word2vecf training
                 pw = new PrintWriter(new BufferedWriter(new FileWriter(
-                        FileNameSchema.getCorpusInfoDirectory(Ice.selectedCorpusName)
+                        FileNameSchema.getCorpusInfoDirectory(corpusName)
                                 + File.separator
                                 + outputFile
                 )));
