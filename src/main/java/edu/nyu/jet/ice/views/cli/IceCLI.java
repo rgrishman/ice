@@ -687,7 +687,10 @@ public class IceCLI {
 	    String f[] = line.split(":::", 2);
 	    String relation = f[0];
 	    String repr = f[1];
-	    relationRepr.put(relation, repr);
+            String priorRepr = relationRepr.get(relation);
+            if (priorRepr == null || repr.length() < priorRepr.length())
+                // if a choice, take shorter sample sentence
+                relationRepr.put(relation, repr);
         }
         relationReprReader.close();
     }
