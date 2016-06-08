@@ -283,12 +283,15 @@ public class IceCLI {
                         while ((line = br.readLine()) != null) {
                             Path docPath  = relativePath.resolve(line);
                             docListFileWriter.println(docPath);
-                            String preprocessedCorpus = fromCorpusName;
+                            String mapFrom =
+                                cacheFileName(FileNameSchema.getPreprocessCacheDir(corpusName), corpusDir, docPath + "." + filterName);
+                            String mapTo =
+                                cacheFileName(FileNameSchema.getPreprocessCacheDir(fromCorpusName), fromDir, line + "." + filterName);
                             if (mapFileExists) {
                                 String[] mapLine = mapReader.readLine().split(":");
-                                preprocessedCorpus = mapLine[1];
+                                mapTo = mapLine[1];
                             }
-                            preprocessCacheMapFileWriter.println(docPath + ":" + preprocessedCorpus);
+                            preprocessCacheMapFileWriter.println(mapFrom + ":" + mapTo);
 			    docCount++;
                         }
                         br.close();
@@ -831,4 +834,8 @@ public class IceCLI {
                 options);
     }
 
+    static String cacheFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheDir + File.separator +
+            inputDir.replaceAll("/", "_") + "_" + inputFile.replaceAll("/", "_");
+    }
 }
