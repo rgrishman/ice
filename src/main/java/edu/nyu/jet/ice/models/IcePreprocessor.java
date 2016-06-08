@@ -29,6 +29,7 @@ import Jet.Tipster.Span;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 /**
@@ -732,18 +733,21 @@ public class IcePreprocessor extends Thread {
     public static String cacheFileName(String cacheDir,
                                        String inputDir,
                                        String inputFile) {
+        String fn = cacheDir + File.separator + 
+            inputDir.replaceAll("/", "_") + "_" + inputFile.replaceAll("/", "_");
         Map<String, String> map = Ice.selectedCorpus.preprocessCacheMap;
         if (map == null) {
             map = loadPreprocessCacheMap();
         }
         if (! map.isEmpty()) {
-            String originalCorpusName = map.get(inputFile);
-            Corpus originalCorpus = Ice.corpora.get(originalCorpusName);
-            inputDir = originalCorpus.getDirectory();
+            String originalFn = map.get(fn);
+            if (originalFn == null) {
+                System.err.println ("Error in preprocessCacheMap: no entry for " + fn);
+                System.exit(1);
+            }
+            fn = originalFn;
         }
-        return cacheDir + File.separator
-                + inputDir.replaceAll("/", "_") + "_"
-                + inputFile.replaceAll("/", "_");
+        return fn;
     }
 
     public static Map<String, String> loadPreprocessCacheMap () {
