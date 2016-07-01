@@ -617,6 +617,7 @@ public class IceCLI {
     static Map<String, Integer> relationCount = new HashMap<String, Integer>();
     static Map<String, Integer> relationTypeCount = new HashMap<String, Integer>();
     static Map<String, String> relationRepr = new HashMap<String, String>();
+    static List<String> events = new ArrayList<String>();
 
     /**
      *  Read the word count and relation files from one of the split directories.
@@ -696,6 +697,16 @@ public class IceCLI {
                 relationRepr.put(relation, repr);
         }
         relationReprReader.close();
+
+        String depEventFileName = FileNameSchema.getDependencyEventFileName(corpusName);
+        if ((new File(depEventFileName)).exists()) {
+            System.out.println("Reading " + depEventFileName);
+            BufferedReader eventReader = new BufferedReader (new FileReader (depEventFileName));
+            while ((line = eventReader.readLine()) != null) {
+                events.add(line);
+            }
+            eventReader.close();
+        }
     }
 
     /**
@@ -741,6 +752,18 @@ public class IceCLI {
 	    relationReprWriter.println(relation + ":::" + relationRepr.get(relation));
         }
 	relationReprWriter.close();
+        
+        String depEventFileName = FileNameSchema.getDependencyEventFileName(corpusName);
+        if (!events.isEmpty()) {
+            System.out.println("Writing " + depEventFileName);
+            PrintWriter eventWriter = new PrintWriter (new FileWriter (depEventFileName));
+            for (String event : events) {
+                eventWriter.println(event);
+            }
+            eventWriter.close();
+            EntitySetIndexer esi = new EntitySetIndexer();
+            esi.computePMI(depEventFileName, FileNameSchema.getEntitySetIndexFileName(corpusName, "nn"));
+        }
     }
 
     public static String splitCorpusName(String corpusName, int splitCount) {

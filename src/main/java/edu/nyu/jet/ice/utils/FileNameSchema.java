@@ -65,6 +65,10 @@ public class FileNameSchema {
         return CACHE_ROOT + File.separatorChar + corpusName;
     }
 
+    public static String getDependencyEventFileName(String corpusName) {
+        return CACHE_ROOT + File.separatorChar + corpusName + File.separator + "DepEvents";
+    }
+
     public static String getEntitySetIndexFileName(String corpusName, String inType) {
         return CACHE_ROOT + File.separatorChar + corpusName + File.separator + "EntitySetIndex_" + inType;
     }
