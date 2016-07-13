@@ -47,6 +47,7 @@
                 <include name="la4j-0.6.0.jar" />
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
+                <include name="junit-4.0.jar" />
                 <include name="jet-all-1.8.1.jar" />
             </fileset>
         </path>
@@ -90,7 +91,7 @@
     <target name="test" depends="compile-tests">
         <mkdir dir="${test.report.dir}" />
 
-        <junit printsummary="yes" fork="yes" maxmemory="400m">
+        <junit printsummary="yes" fork="no" maxmemory="400m">
             <classpath refid="test.classpath" />
             <classpath>
                 <pathelement path="${build.dir}" />
@@ -99,7 +100,7 @@
 
             <formatter type="plain" />
 
-            <batchtest fork="yes" todir="${test.report.dir}">
+            <batchtest fork="no" todir="${test.report.dir}">
                 <fileset dir="${test.src.dir}">
                     <include name="**/*Test.java" />
                     <exclude name="**/Abstract*.java" />
