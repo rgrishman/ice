@@ -64,22 +64,20 @@ public class RelationOracle {
                 String repr = fp.getRepr();
                 if (knownRelations.contains(repr + " YES")) {
                     fp.setChoice(IcePathChoice.YES);
-                    return;
                 } else if (knownRelations.contains(repr + " NO")) {
                     fp.setChoice(IcePathChoice.NO);
-                    return;
-                }
+                } else
                 while (true) {
                     System.out.print (repr + "?");
                     String response = reader.readLine();
                     if (response.equals("Y")) {
                         fp.setChoice(IcePathChoice.YES);
                         knownRelations.add(repr + " YES");
-                        return;
+                        break;
                     } else if (response.equals("N")) {
                         fp.setChoice(IcePathChoice.NO);
                         knownRelations.add(repr + " NO");
-                        return;
+                        break;
                     } else {
                         System.out.println("Type Y or N");
                     }
