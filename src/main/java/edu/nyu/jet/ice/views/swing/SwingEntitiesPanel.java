@@ -124,7 +124,12 @@ public class SwingEntitiesPanel extends JPanel implements Refreshable {
         try {
             File f = new File(FileNameSchema.getWordCountFileName(Ice.selectedCorpusName));
             if (!f.exists() || !f.isFile()) {
-                IcePreprocessor.countWords(false);
+                if (SwingPathsPanel.preprocessedTextsAvailable(Ice.selectedCorpusName)) {
+                    IcePreprocessor.countWords(false);
+                } else {
+                    JOptionPane.showMessageDialog(Ice.mainFrame, "Source text not available, cannot rebuild term set");
+                    return;
+                }
             }
             TermRanker.rankTerms(FileNameSchema.getWordCountFileName(Ice.selectedCorpusName),
                     Ice.corpora.get(Ice.selectedCorpus.backgroundCorpus).wordCountFileName, 

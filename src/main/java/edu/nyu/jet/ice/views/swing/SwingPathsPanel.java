@@ -26,10 +26,15 @@ import java.io.IOException;
  *
  * @author yhe
  */
+
 public class SwingPathsPanel extends JPanel implements Refreshable {
 
     private SwingIceStatusPanel iceStatusPanel;
     public final JTextArea textArea = new JTextArea(16, 35);
+
+/**
+ *  Create panel.
+ */
 
     public SwingPathsPanel() {
         super();
@@ -50,11 +55,6 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 
         patternBox.add(allPatternsButton);
         patternBox.add(sententialPatternsButton);
-
-        //Box patternBox = Ice.selectedCorpus.swingPatternBox();
-        //patternBox.setOpaque(false);
-        //patternBox.setMinimumSize(new Dimension(480, 366));
-        //this.add(patternBox);
 
         allPatternsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -82,39 +82,43 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
     }
 
     public void fullRefresh() {
-
         iceStatusPanel.refresh();
     }
 
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor,
                                          boolean sententialOnly) {
-        String relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
+        String relationInstanceFileName = 
+        FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
         String relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
         File file = new File(relationTypeFileName);
+        boolean relationsFileExists = file.exists() && !file.isDirectory();
         boolean shouldReuse = false;
-        if (file.exists() &&
-                !file.isDirectory()) {
-            int n = JOptionPane.showConfirmDialog(
-                    Ice.mainFrame,
-                    "Extracted patterns already exist. Show existing patterns without recomputation?",
-                    "Patterns exist",
-                    JOptionPane.YES_NO_OPTION);
-            if (n == 0) { // reuse existing paths
-                shouldReuse = true;
-//                Corpus.displayTerms(relationTypeFileName,
-//                        40,
-//                        relationTextArea,
-//                        relationFilter);
-//                return;
+        if (preprocessedTextsAvailable(Ice.selectedCorpusName)) {
+            if (relationsFileExists) {
+                int n = JOptionPane.showConfirmDialog(
+                        Ice.mainFrame,
+                        "Extracted patterns already exist. Show existing patterns without recomputation?",
+                        "Patterns exist",
+                        JOptionPane.YES_NO_OPTION);
+                if (n == 0) { // reuse existing paths
+                    shouldReuse = true;
+                }
             }
+        } else {
+            if (relationsFileExists) {
+                shouldReuse = true;
+             } else {
+                 JOptionPane.showMessageDialog(Ice.mainFrame, "Source text not available, cannot rebuild pattern set");
+             }
         }
         PathExtractionThread thread = new PathExtractionThread(shouldReuse,
                 sententialOnly, textArea, progressMonitor);
         thread.start();
-
-        // findRelations(progressMonitor, "", relationTextArea);
     }
 
+    public static boolean preprocessedTextsAvailable (String corpusName) {
+        return (new File(FileNameSchema.getPreprocessCacheDir(corpusName))).exists();
+    }
 }
 
 class PathExtractionThread extends Thread {

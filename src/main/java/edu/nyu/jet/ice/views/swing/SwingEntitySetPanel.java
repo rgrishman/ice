@@ -332,6 +332,10 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         }
         // System.err.println(idx);
         IceEntitySet entitySet = (IceEntitySet)entityListModel.getElementAt(idx);
+        if (entitySet == null) {
+            System.err.println("ICE internal error in SwingEntitySetPanel, entitySet is null");
+            return;
+        }
         // System.err.println(entitySet.getType());
         if (Ice.entitySets.containsKey(entitySet.getType())) {
             entitySet = Ice.entitySets.get(entitySet.getType());
