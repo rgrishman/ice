@@ -2,8 +2,8 @@ package edu.nyu.jet.ice.relation;
 
 import java.io.*;
 import java.util.*;
-import AceJet.*;
-import Jet.Tipster.*;
+import edu.nyu.jet.aceJet.*;
+import edu.nyu.jet.tipster.*;
 
 /**
  * converts a document with entities and relations annotated by MAE into standard

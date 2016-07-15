@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.models;
 
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

@@ -1,15 +1,15 @@
 package edu.nyu.jet.ice.relation;
 
-import AceJet.AnchoredPath;
-import AceJet.AnchoredPathSet;
-import AceJet.SimAnchoredPathSet;
+import edu.nyu.jet.aceJet.AnchoredPath;
+import edu.nyu.jet.aceJet.AnchoredPathSet;
+import edu.nyu.jet.aceJet.SimAnchoredPathSet;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
-import gnu.trove.TObjectDoubleHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 import javax.swing.*;
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package edu.nyu.jet.ice.models;
 
-import Jet.Lex.Stemmer;
-import Jet.Parser.SyntacticRelation;
+import edu.nyu.jet.lex.Stemmer;
+import edu.nyu.jet.parser.SyntacticRelation;
 
 import java.util.HashSet;
 import java.util.Set;

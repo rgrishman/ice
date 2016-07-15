@@ -1,13 +1,13 @@
 package edu.nyu.jet.ice.models;
 
-import AceJet.AnchoredPath;
-import Jet.Lex.Stemmer;
-import Jet.Parser.SyntacticRelation;
-import Jet.Parser.SyntacticRelationSet;
-import Jet.Tipster.Annotation;
-import Jet.Tipster.Document;
-import Jet.Tipster.Span;
-import gnu.trove.TIntHashSet;
+import edu.nyu.jet.aceJet.AnchoredPath;
+import edu.nyu.jet.lex.Stemmer;
+import edu.nyu.jet.parser.SyntacticRelation;
+import edu.nyu.jet.parser.SyntacticRelationSet;
+import edu.nyu.jet.tipster.Annotation;
+import edu.nyu.jet.tipster.Document;
+import edu.nyu.jet.tipster.Span;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.*;
 

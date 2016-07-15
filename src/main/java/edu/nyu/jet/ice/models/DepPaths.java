@@ -5,23 +5,23 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 //Author:       Ralph Grishman
 //Description:  A Java-based Information Extraction Tool
 
-import AceJet.*;
-import Jet.Control;
-import Jet.Parser.DepTransformer;
+import edu.nyu.jet.aceJet.*;
+import edu.nyu.jet.Control;
+import edu.nyu.jet.parser.DepTransformer;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
-import Jet.JetTest;
-import Jet.Parser.SyntacticRelation;
-import Jet.Parser.SyntacticRelationSet;
-import Jet.Pat.Pat;
-import Jet.Pat.PatternSet;
-import Jet.Refres.Resolve;
-import Jet.Tipster.Annotation;
-import Jet.Tipster.Document;
-import Jet.Tipster.ExternalDocument;
-import Jet.Tipster.Span;
+import edu.nyu.jet.JetTest;
+import edu.nyu.jet.parser.SyntacticRelation;
+import edu.nyu.jet.parser.SyntacticRelationSet;
+import edu.nyu.jet.pat.Pat;
+import edu.nyu.jet.pat.PatternSet;
+import edu.nyu.jet.refres.Resolve;
+import edu.nyu.jet.tipster.Annotation;
+import edu.nyu.jet.tipster.Document;
+import edu.nyu.jet.tipster.ExternalDocument;
+import edu.nyu.jet.tipster.Span;
 import opennlp.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

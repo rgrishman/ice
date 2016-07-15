@@ -1,7 +1,7 @@
 package edu.nyu.jet.ice.models;
 
-import AceJet.AnchoredPath;
-import Jet.Lex.Stemmer;
+import edu.nyu.jet.aceJet.AnchoredPath;
+import edu.nyu.jet.lex.Stemmer;
 
 import java.util.ArrayList;
 import java.util.List;

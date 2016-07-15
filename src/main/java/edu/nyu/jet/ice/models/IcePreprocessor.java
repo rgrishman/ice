@@ -5,27 +5,27 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 //Author:       Ralph Grishman
 //Description:  A Java-based Information Extraction Tool
 
-import AceJet.*;
-import Jet.Control;
+import edu.nyu.jet.aceJet.*;
+import edu.nyu.jet.Control;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
-import Jet.JetTest;
-import Jet.Lex.Stemmer;
-import Jet.Lisp.FeatureSet;
-import Jet.Parser.DepParser;
-import Jet.Parser.SyntacticRelation;
-import Jet.Parser.SyntacticRelationSet;
-import Jet.Pat.Pat;
-import Jet.Pat.PatternCollection;
-import Jet.Pat.PatternSet;
-import Jet.Refres.Resolve;
+import edu.nyu.jet.JetTest;
+import edu.nyu.jet.lex.Stemmer;
+import edu.nyu.jet.lisp.FeatureSet;
+import edu.nyu.jet.parser.DepParser;
+import edu.nyu.jet.parser.SyntacticRelation;
+import edu.nyu.jet.parser.SyntacticRelationSet;
+import edu.nyu.jet.pat.Pat;
+import edu.nyu.jet.pat.PatternCollection;
+import edu.nyu.jet.pat.PatternSet;
+import edu.nyu.jet.refres.Resolve;
 import edu.nyu.jet.ice.terminology.TermCounter;
-import Jet.Tipster.Annotation;
-import Jet.Tipster.Document;
-import Jet.Tipster.ExternalDocument;
-import Jet.Tipster.Span;
+import edu.nyu.jet.tipster.Annotation;
+import edu.nyu.jet.tipster.Document;
+import edu.nyu.jet.tipster.ExternalDocument;
+import edu.nyu.jet.tipster.Span;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;

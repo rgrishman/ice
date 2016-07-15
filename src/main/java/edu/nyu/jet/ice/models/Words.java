@@ -11,14 +11,14 @@ import java.util.*;
 import java.io.*;
 import javax.swing.ProgressMonitor;
 
-import AceJet.EDTtype;
-import Jet.Control;
-import Jet.Tipster.*;
-import Jet.Refres.Resolve;
-import Jet.Pat.Pat;
-import AceJet.Ace;
-import Jet.JetTest;
-import Jet.Lex.*;
+import edu.nyu.jet.aceJet.EDTtype;
+import edu.nyu.jet.Control;
+import edu.nyu.jet.tipster.*;
+import edu.nyu.jet.refres.Resolve;
+import edu.nyu.jet.pat.Pat;
+import edu.nyu.jet.aceJet.Ace;
+import edu.nyu.jet.JetTest;
+import edu.nyu.jet.lex.*;
 
 /**
  *  process a set of documents through Jet and then accumulate word counts,
@@ -64,7 +64,7 @@ public class Words {
 	System.out.println("Starting Jet Word Counter ...");
 	JetTest.initializeFromConfig(propsFile);
 	// load ACE type dictionary
-	AceJet.EDTtype.readTypeDict();
+	EDTtype.readTypeDict();
 	// turn off traces
 	Pat.trace = false;
 	Resolve.trace = false;

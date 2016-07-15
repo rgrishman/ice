@@ -1,18 +1,18 @@
 package edu.nyu.jet.ice.utils;
 
-import AceJet.AceDocument;
-import AceJet.AceEntityMention;
-import AceJet.AceRelation;
-import AceJet.AceRelationMention;
-import Jet.Lisp.FeatureSet;
-import Jet.Parser.DepParser;
-import Jet.Parser.SyntacticRelationSet;
-import Jet.Tipster.Annotation;
-import Jet.Tipster.Document;
-import Jet.Tipster.Span;
+import edu.nyu.jet.aceJet.AceDocument;
+import edu.nyu.jet.aceJet.AceEntityMention;
+import edu.nyu.jet.aceJet.AceRelation;
+import edu.nyu.jet.aceJet.AceRelationMention;
+import edu.nyu.jet.lisp.FeatureSet;
+import edu.nyu.jet.parser.DepParser;
+import edu.nyu.jet.parser.SyntacticRelationSet;
+import edu.nyu.jet.tipster.Annotation;
+import edu.nyu.jet.tipster.Document;
+import edu.nyu.jet.tipster.Span;
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.uicomps.Ice;
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.io.*;
 import java.util.*;

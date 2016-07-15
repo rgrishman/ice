@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.models;
 
-import gnu.trove.TObjectDoubleHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 /**
  * A path in relation bootstrapping

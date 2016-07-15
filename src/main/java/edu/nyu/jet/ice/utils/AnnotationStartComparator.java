@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.utils;
 
-import Jet.Tipster.Annotation;
+import edu.nyu.jet.tipster.Annotation;
 
 import java.util.Comparator;
 

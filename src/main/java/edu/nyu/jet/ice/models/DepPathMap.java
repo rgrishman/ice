@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.models;
 
-import AceJet.AnchoredPath;
+import edu.nyu.jet.aceJet.AnchoredPath;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 

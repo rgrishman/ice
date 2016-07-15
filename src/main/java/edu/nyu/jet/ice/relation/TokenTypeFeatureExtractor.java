@@ -1,12 +1,12 @@
 package edu.nyu.jet.ice.relation;
 
-import AceJet.AceDocument;
-import AceJet.AceEntityMention;
-import AceJet.AceRelationMention;
-import AceJet.EventSyntacticPattern;
-import Jet.Parser.SyntacticRelationSet;
-import Jet.Tipster.Annotation;
-import Jet.Tipster.Document;
+import edu.nyu.jet.aceJet.AceDocument;
+import edu.nyu.jet.aceJet.AceEntityMention;
+import edu.nyu.jet.aceJet.AceRelationMention;
+import edu.nyu.jet.aceJet.EventSyntacticPattern;
+import edu.nyu.jet.parser.SyntacticRelationSet;
+import edu.nyu.jet.tipster.Annotation;
+import edu.nyu.jet.tipster.Document;
 import opennlp.model.Event;
 
 import java.util.ArrayList;

@@ -1,16 +1,17 @@
 package edu.nyu.jet.ice.terminology;
 
-import AceJet.Ace;
-import Jet.Control;
+import edu.nyu.jet.aceJet.Ace;
+import edu.nyu.jet.aceJet.EDTtype;
+import edu.nyu.jet.Control;
 import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.AnnotationStartComparator;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
-import Jet.JetTest;
-import Jet.Pat.Pat;
-import Jet.Refres.Resolve;
-import Jet.Tipster.*;
+import edu.nyu.jet.JetTest;
+import edu.nyu.jet.pat.Pat;
+import edu.nyu.jet.refres.Resolve;
+import edu.nyu.jet.tipster.*;
 
 import java.io.*;
 import java.util.*;
@@ -82,7 +83,7 @@ public class TermCounter extends Thread {
         resetCounters();
         JetTest.initializeFromConfig(propsFile);
         // load ACE type dictionary
-        AceJet.EDTtype.readTypeDict();
+        EDTtype.readTypeDict();
         // turn off traces
         Pat.trace = false;
         Resolve.trace = false;

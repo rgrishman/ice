@@ -1,6 +1,6 @@
 package edu.nyu.jet.ice.views.cli;
 
-import Jet.JetTest;
+import edu.nyu.jet.JetTest;
 import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.entityset.EntitySetIndexer;
 import edu.nyu.jet.ice.models.Corpus;
