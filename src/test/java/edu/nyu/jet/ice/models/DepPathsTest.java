@@ -1,9 +1,9 @@
 package edu.nyu.jet.ice.models;
 
-import edu.nyu.jet.ice.models.DepPaths;;
-import Jet.Tipster.*;
-import Jet.Lisp.FeatureSet;
-import Jet.Parser.SyntacticRelationSet;
+import edu.nyu.jet.ice.models.DepPaths;
+import edu.nyu.jet.tipster.*;
+import edu.nyu.jet.lisp.FeatureSet;
+import edu.nyu.jet.parser.SyntacticRelationSet;
 
 import java.util.*;
 import java.io.*;
