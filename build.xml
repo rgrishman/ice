@@ -3,7 +3,7 @@
 
 <project name="ICE" default="dist-all-jar">
     <target name="init">
-        <property name="packages" value="edu.nyu.jet.ice.*, AceJet.*" />
+        <property name="packages" value="edu.nyu.jet.*" />
         <property name="version" value="0.2.1" />
 
         <property name="src.dir" value="src/main/java" />
@@ -33,7 +33,7 @@
                 <include name="la4j-0.6.0.jar" />
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
-                <include name="jet-all-1.8.1.jar" />
+                <include name="jet-all-1.9.0.jar" />
             </fileset>
         </path>
 
@@ -48,7 +48,7 @@
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
                 <include name="junit-4.0.jar" />
-                <include name="jet-all-1.8.1.jar" />
+                <include name="jet-all-1.9.0.jar" />
             </fileset>
         </path>
     </target>
@@ -149,7 +149,7 @@
                 <include name="la4j-0.6.0.jar" />
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
-                <include name="jet-all-1.8.1.jar" />
+                <include name="jet-all-1.9.0.jar"  />
             </fileset>
         </unjar>
         <delete dir="${jar.build.dir}/META-INF" />
