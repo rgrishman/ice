@@ -21,8 +21,8 @@
                     <!-- excludes>
                         <exclude>**/src/main/java/edu/nyu/jet/ice/views/cli/IceCLI.java</exclude>
                     </excludes -->
-                    <source>5</source>
-                    <target>1.5</target>
+                    <source>6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
             <plugin>

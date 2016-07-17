@@ -208,6 +208,7 @@ public class IcePreprocessor extends Thread {
                     // IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
                     saveENAMEX(doc, getNamesFileName(cacheDir, inputDir, inputFile));
                     savePOS(doc, getPosFileName(cacheDir, inputDir, inputFile));
+                    savePOSDebug(doc, getPosDebugFileName(cacheDir, inputDir, inputFile));
                     saveJetExtents(aceDoc, getJetExtentsFileName(cacheDir, inputDir, inputFile));
                     saveNPs(doc, getNpsFileName(cacheDir, inputDir, inputFile));
                     doc.removeAnnotationsOfType("ENAMEX");
@@ -662,6 +663,22 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
+     * part of preprocessing:  save part-of-speech debug information for <CODE>doc</CODE>
+     * to file <CODE>fileName</CODE>.  Format:  one token per line, token + POS + start + end.
+     */
+    public static void savePOSDebug(Document doc, String fileName) throws IOException {
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+        List<Annotation> names = doc.annotationsOfType("tagger");
+        if (names != null) {
+            for (Annotation name : names) {
+                pw.println(String.format("%s\t%s\t%d\t%d",
+                        doc.text(name).replaceAll("\\s+", " ").trim(), name.get("cat"), name.start(), name.end()));
+            }
+        }
+        pw.close();
+    }
+
+    /**
      * regenerate <CODE>tagger</CODE> annotations from cache file produced by savePOS.
      */
     public static void loadPOS(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
@@ -680,6 +697,10 @@ public class IcePreprocessor extends Thread {
 
     public static String getPosFileName(String cacheDir, String inputDir, String inputFile) {
         return cacheFileName(cacheDir, inputDir, inputFile) + ".pos";
+    }
+
+    public static String getPosDebugFileName(String cacheDir, String inputDir, String inputFile) {
+        return cacheFileName(cacheDir, inputDir, inputFile) + ".pos.debug";
     }
 
     public static void saveSyntacticRelationSet(SyntacticRelationSet relationSet, String fileName) throws IOException {

@@ -119,9 +119,10 @@ public class DepPaths {
 
         System.out.println("Starting Jet DepCounter ...");
         JetTest.initializeFromConfig(propsFile);
-        PatternSet patternSet = IcePreprocessor.loadPatternSet(
-                JetTest.getConfig("Jet.dataPath") + File.separator +
-                        JetTest.getConfig("Pattern.quantifierFileName"));
+
+//        PatternSet patternSet = IcePreprocessor.loadPatternSet(
+//                JetTest.getConfig("Jet.dataPath") + File.separator +
+//                        JetTest.getConfig("Pattern.quantifierFileName"));
         // load ACE type dictionary
         EDTtype.readTypeDict();
         // turn off traces

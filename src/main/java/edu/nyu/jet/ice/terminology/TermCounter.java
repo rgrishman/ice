@@ -205,12 +205,24 @@ public class TermCounter extends Thread {
         List<Annotation> tokens = doc.annotationsOfType("token", s);
         Collections.sort(tokens, new AnnotationStartComparator());
         int i = tokens.size() - 1;
+        if (i > -1) {
+            Annotation token = tokens.get(i);
+            String pos = getPOS(doc, token);
+            String tokenString = doc.text(token).replace("\\s+", " ").trim();
+            if ((pos.startsWith("NN") || pos.startsWith("JJ"))
+                    && tokenString.length() > 1
+                    && !stopWords.contains(tokenString)
+                    && isSingleTerm(doc, s)) {
+                terms.add(doc.text(s).replaceAll("\\s+", " ").trim());
+                return terms;
+            }
+        }
         StringBuilder termBuilder = new StringBuilder();
         while(i > -1) {
             Annotation token = tokens.get(i);
             String pos = getPOS(doc, token);
             String tokenString = doc.text(token).replace("\\s+", " ").trim();
-            if ((pos.equals("n") || pos.startsWith("adj"))
+            if ((pos.startsWith("NN") || pos.startsWith("JJ"))
                     && tokenString.length() > 1
                     && !stopWords.contains(tokenString)) {
                 termBuilder.insert(0, tokenString + " ");
@@ -226,9 +238,29 @@ public class TermCounter extends Thread {
         return terms;
     }
 
+    /**
+     * Check if a span is in Ca Me L shape
+     *
+     * @param doc
+     * @param span
+     * @return
+     */
+    private static boolean isSingleTerm(Document doc, Span span) {
+        String[] words = doc.text(span).replaceAll("\\s+", " ").trim().split(" ");
+        boolean allUpper = true;
+        for (String word : words) {
+            if (word.length() == 0 ||
+                    (!Character.isUpperCase(word.charAt(0)) && !Character.isDigit(word.charAt(0)))) {
+                allUpper = false;
+                break;
+            }
+        }
+        return allUpper;
+    }
+
     private static String getPOS(Document doc, Annotation token) {
         String pos = "NN";
-        List<Annotation> posAnns = doc.annotationsOfType("constit", token.span());
+        List<Annotation> posAnns = doc.annotationsOfType("tagger", token.span());
         if (posAnns != null) {
             pos = (String)posAnns.get(0).get("cat");
         }
