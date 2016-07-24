@@ -339,21 +339,27 @@ public class EntitySetIndexer {
         System.out.println("Finished updating PMIs.");
     }
 
-    private static void writeVector(String s, org.la4j.Vector v, PrintWriter w) {
+    private static void writeVector(String s, CompressedVector v, PrintWriter w) {
         w.print(s.replaceAll("_", " "));
-        for (int i = 0; i < v.length(); i++) {
-            if (v.get(i) > 0.1) {
-                w.print("\t" + i + ":" + String.format("%.8f", v.get(i)));
+        VectorIterator it = v.nonZeroIterator();
+        while (it.hasNext()) {
+            double val = it.next();
+            int i = it.index();
+            if (val > 0.1) {
+                w.print("\t" + i + ":" + String.format("%.8f", val));
             }
         }
         w.println();
     }
 
-    private static void writeVectorInfo(String s, org.la4j.Vector v, String[] contextLabels, PrintWriter w) {
+    private static void writeVectorInfo(String s, CompressedVector v, String[] contextLabels, PrintWriter w) {
         w.print(s.replaceAll("_", " "));
-        for (int i = 0; i < v.length(); i++) {
-            if (v.get(i) > 0.1) {
-                w.print("\t" + contextLabels[i] + ":" + String.format("%.8f", v.get(i)));
+        VectorIterator it = v.nonZeroIterator();
+        while (it.hasNext()) {
+            double val = it.next();
+            int i = it.index();
+            if (val > 0.1) {
+                w.print("\t" + contextLabels[i] + ":" + String.format("%.8f", val));
             }
         }
         w.println();
