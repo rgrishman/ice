@@ -25,7 +25,7 @@ import java.util.*;
  * @see edu.nyu.jet.ice.models.PathMatcher PathMatcher
  */
 
-public class LexicalSimilarityBootstrap extends Bootstrap {
+public class LexicalSimilarityBootstrap extends RichBootstrap {
 
     @Override
     public Set<String> getSeedPaths() {
