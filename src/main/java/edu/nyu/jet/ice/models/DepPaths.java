@@ -30,7 +30,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * collect a list of all dependency paths connecting two named entity mentions
+ * Collect a list of all dependency paths connecting two named entity mentions.
  */
 
 //  uses cache now
@@ -76,7 +76,6 @@ public class DepPaths {
         disallowedRelations.add("conj");
         disallowedRelations.add("conj-1");
     }
-
 
     /**
      * counts the number of instances of each dependency triple in a set
@@ -124,9 +123,6 @@ public class DepPaths {
                         JetTest.getConfig("Pattern.quantifierFileName"));
         // load ACE type dictionary
         EDTtype.readTypeDict();
-        // turn off traces
-        Pat.trace = false;
-        Resolve.trace = false;
         // ACE mode (provides additional antecedents ...)
         Resolve.ACE = true;
         Properties props = new Properties();

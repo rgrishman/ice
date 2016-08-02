@@ -419,7 +419,9 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
     }
 
     /**
-     *  Use bootstrapping to build a model for a relation.
+     *  Use bootstrapping to build a model for a relation.  This
+     *  method is invoked by pressing the 'EXPAND' button on the
+     *  relation panel.
      *
      *  @param  inName  the name of the relation
      *  @param  inSeed  the seed for bootstrapping this relation,
@@ -449,14 +451,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
 
         frame.setSize(400, 580);
         frame.setAlwaysOnTop(true);
-//                frame.setVisible(true);
-//                frame.listPane.revalidate();
-//                frame.listPane.repaint();
-//                frame.rankedList.revalidate();
-//                frame.rankedList.repaint();
-//                System.out.println("plfn = " + pathListFileName);
         String seed = inSeed;
-//                System.out.println("plfn = " + pathListFileName);
         RelationBuilderThread builder = new RelationBuilderThread(
                 seed,
                 Ice.selectedCorpus.relationInstanceFileName,

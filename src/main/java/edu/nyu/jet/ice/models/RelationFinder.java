@@ -37,11 +37,6 @@ public class RelationFinder extends Thread {
 
     public void run() {
         try {
-//            if (null == relationProgressMonitor) {
-//                relationProgressMonitor = new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
-//                        "Initializing Jet", 0, numberOfDocs);
-//                ((SwingProgressMonitor)relationProgressMonitor).setMillisToDecideToPopup(1);
-//            }
             // force monitor to display during long initialization
             try {
                 Thread.sleep(1000);
@@ -55,12 +50,10 @@ public class RelationFinder extends Thread {
             DepPaths.progressMonitor = relationProgressMonitor;
             DepPaths.main(args);
             Corpus.sort("temp", types);
-            // Corpus.sort("temp.source.dict", types + ".source.dict");
             depPathMap.forceLoad();
-			if(area != null) {
-				Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
-			}
-
+            if(area != null) {
+                Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
+            }
         } catch (IOException e) {
             System.out.println("IOException in DepPaths " + e);
             e.printStackTrace(System.err);
