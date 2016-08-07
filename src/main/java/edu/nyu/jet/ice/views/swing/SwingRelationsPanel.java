@@ -110,12 +110,14 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         relationList.setModel(relationListModel);
 
         JButton addRelationButton = new JButton("Add");
+        addRelationButton.setName("addRelationButton");
         leftPanel.add(addRelationButton);
         JButton suggestRelationButton = new JButton("Suggest");
         leftPanel.add(suggestRelationButton, "wrap");
         JButton deleteRelationButton = new JButton("Delete");
         leftPanel.add(deleteRelationButton);
         JButton saveRelationButton = new JButton("Save");
+        saveRelationButton.setName("saveRelationsButton");
         leftPanel.add(saveRelationButton);
 
         JLabel nameLabel = new JLabel("Type");
@@ -155,12 +157,14 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         entriesSetPane.setMinimumSize(new Dimension(235, 130));
         rightPanel.add(entriesSetPane, "span");
         JButton addEntryButton = new JButton("Add");
+        addEntryButton.setName("addRelationMemberButton");
         rightPanel.add(addEntryButton);
         JButton expandEntriesButton = new JButton("Expand");
         rightPanel.add(expandEntriesButton, "wrap");
         JButton deleteEntryButton = new JButton("Delete");
         rightPanel.add(deleteEntryButton);
         JButton saveEntriesButton = new JButton("Save");
+        saveEntriesButton.setName("saveRelationButton");
         rightPanel.add(saveEntriesButton);
         entriesSetPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         iceStatusPanel = new SwingIceStatusPanel();
@@ -345,10 +349,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     List<String> paths = depPathMap.findPath(e.toString());
                     if (paths != null) {
                         for (String path : paths) {
-                            String[] parts = path.split(" -- ");
-                            if (parts.length == 3) {
-                                relationPaths.add(parts[1]);
-                            }
+                            IceRelation.reportInvalidPath(path);
+                            relationPaths.add(path);
                         }
                     }
                 }
@@ -397,25 +399,31 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
 
     }
 
+    /**
+     *  Creates a new IceRelation.  This method is invoked in response to
+     *  the AddRelation button.
+     */
+
     private void installSeedRelation(String relationName, List<String> paths) {
         String arg1 = "";
         String arg2 = "";
-        List<String> seedPaths = new ArrayList<String>();
         for (String path : paths) {
+            IceRelation.reportInvalidPath (path);
             String[] parts = path.split("--");
             arg1 = parts[0].trim();
             arg2 = parts[2].trim();
-            seedPaths.add(parts[1].trim());
         }
 
         IceRelation iceRelation = new IceRelation(relationName);
         iceRelation.setArg1type(arg1);
         iceRelation.setArg2type(arg2);
 
-        iceRelation.setPaths(seedPaths);
+        iceRelation.setPaths(paths);
         relationListModel.addElement(iceRelation);
         relationList.setSelectedValue(iceRelation, true);
         currentRelation = iceRelation;
+        if (!iceRelation.isValid())
+            System.err.println("Invalid path in IceRelation.");
     }
 
     /**
@@ -463,13 +471,15 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         builder.start();
     }
 
+    /**
+     *  Refreshes the display of the currently selected relation.
+     */
+
     public void refresh() {
         iceStatusPanel.refresh();
         int idx = relationList.getSelectedIndex();
         if (idx < 0) return;
-        // System.err.println(idx);
         IceRelation relation = (IceRelation)relationListModel.getElementAt(idx);
-        // System.err.println(relation.getType());
         if (Ice.relations.containsKey(relation.getName())) {
             relation = Ice.relations.get(relation.getName());
             relationListModel.setElementAt(relation, idx);
@@ -483,19 +493,15 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         DepPathMap depPathMap = DepPathMap.getInstance();
         depPathMap.load();
         for (String path : relation.getPaths()) {
-            String fullPath = relation.getArg1type() +
-                    " -- " + path + " -- " +
-                    relation.getArg2type();
-            String repr = depPathMap.findRepr(fullPath);
+            IceRelation.reportInvalidPath(path);
+            String repr = depPathMap.findRepr(path);
             if (repr != null && ! newListModel.contains(repr)) {
-
                 newListModel.addElement(repr);
             }
             else {
-                System.err.println("Repr not found for path:" + fullPath);
+                System.err.println("Repr not found for path:" + path);
             }
         }
-        //System.err.println(newListModel.size());
 
         entriesListModel = newListModel;
         entriesList.setModel(entriesListModel);

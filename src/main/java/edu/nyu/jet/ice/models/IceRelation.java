@@ -48,6 +48,41 @@ public class IceRelation {
 		this ("?");
 	}
 
+        public static boolean validPath (String s) {
+            return (s.split("--").length == 3);
+        }
+
+        public static void reportInvalidPath (String s) {
+            if (!validPath(s)) {
+                System.err.println ("Invalid path: " + s + " at ");
+                (new Throwable()).printStackTrace();
+            }
+        }
+
+        public boolean invertedPath (String path) {
+            if (!validPath(path))
+                return false;
+            String[] pp = path.split("--");
+            String first = pp[0].trim();
+            String last = pp[pp.length - 1].trim();
+            return first.equals(arg2type) && last.equals(arg1type);
+        }
+
+        public boolean isValid () {
+            for (String path : paths) {
+                if (!validPath(path))
+                    return false;
+                String[] pp = path.split("--");
+                String first = pp[0].trim();
+                String last = pp[pp.length - 1].trim();
+                if ((first.equals(arg1type) && last.equals(arg2type)) ||
+                    (first.equals(arg2type) && last.equals(arg1type)))
+                    continue;
+                return false;
+            }
+            return true;
+        }
+
     @Override
     public String toString() {
         return name;

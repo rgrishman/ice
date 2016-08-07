@@ -130,20 +130,21 @@ public class JetEngineBuilder {
             List<String> paths = rs.getPaths();
             String type = rs.getName();
             for (String path : paths) {
-                String pattern = rs.arg1type + "--" + path +
-                        "--" + rs.arg2type;
-                pw.println(pattern + "\t" + type);
+                boolean inv = rs.invertedPath(path);
+                String pattern = path.replaceAll(" -- ", "--");
+                pw.println(pattern + "\t" + type + (inv ? "-1" : ""));
             }
         }
         pw.close();
         pw = new PrintWriter(new FileWriter(fileName + ".neg"));
         for (IceRelation rs : relations) {
             List<String> paths = rs.getNegPaths();
-            if (rs != null) {
+            if (paths != null) {
                 String type = rs.getName();
                 for (String path : paths) {
+                    boolean inv = rs.invertedPath(path);
                     String pattern = path.replaceAll(" -- ", "--");
-                    pw.println(pattern + "\t" + type);
+                    pw.println(pattern + "\t" + type + (inv ? "-1" : ""));
                 }
             }
         }
@@ -151,3 +152,4 @@ public class JetEngineBuilder {
     }
 
 }
+
