@@ -17,26 +17,52 @@ public class IceRelation {
 
 	List<String> paths = new ArrayList<String>();
 
-    List<String> negPaths = new ArrayList<String>();
+	List<String> cleanPaths = new ArrayList<String>();
+
+        private Map<String, Boolean> inverted;
+
+        private boolean valid;
+
+        List<String> negPaths = new ArrayList<String>();
 
 	// ---- property methods -----
 
 	public String getName() {return name;}
 	public void setName (String s) {name = s;}
-	public List<String> getPaths() {return paths;}
-	public void setPaths(List<String> s) {paths = s;}
+
+        /**
+         *  Returns the list of paths associated with this relation,
+         *  including any subscripts required to indicate argument order.
+         */
+
+	public List<String> getPaths() {
+            return paths;}
+
+        /**
+         *  Returns the list of paths associated with this relation,
+         *  excluding subscripts required to indicate argument order.
+         */
+
+        public List<String> getCleanPaths () {
+            return cleanPaths;
+        }
+
+	public void setPaths(List<String> s) {
+            analyzeSubscripts (s);
+        }
 	public String getArg1type() {return arg1type;}
 	public void setArg1type (String s) {arg1type = s;}
 	public String getArg2type() {return arg2type;}
 	public void setArg2type (String s) {arg2type = s;}
 
-    public List<String> getNegPaths() {
-        return negPaths;
-    }
+        public List<String> getNegPaths() {
+            return negPaths;
+        }
 
-    public void setNegPaths(List<String> negPaths) {
-        this.negPaths = negPaths;
-    }
+        public void setNegPaths(List<String> negPaths) {
+            this.negPaths = negPaths;
+        }
+
     // ---- constructors -----
 
 	public IceRelation (String name) {
@@ -59,33 +85,66 @@ public class IceRelation {
             }
         }
 
+        /**
+         *  Returns true if 'path' specifies an inverted relation:  if the
+         *  argument which comes first in text order is the second argument
+         *  to the relation.
+         */
+
         public boolean invertedPath (String path) {
-            if (!validPath(path))
-                return false;
-            String[] pp = path.split("--");
-            String first = pp[0].trim();
-            String last = pp[pp.length - 1].trim();
-            return first.equals(arg2type) && last.equals(arg1type);
+            return inverted.get(path);
         }
+
+        /**
+         *  Returns true if no error was detected in constructing the IceRelation.
+         */
 
         public boolean isValid () {
-            for (String path : paths) {
-                if (!validPath(path))
-                    return false;
-                String[] pp = path.split("--");
-                String first = pp[0].trim();
-                String last = pp[pp.length - 1].trim();
-                if ((first.equals(arg1type) && last.equals(arg2type)) ||
-                    (first.equals(arg2type) && last.equals(arg1type)))
-                    continue;
-                return false;
-            }
-            return true;
+            return valid;
         }
 
-    @Override
-    public String toString() {
-        return name;
-    }
+        /**
+         *  Determines argument order (invertedPath or not) for each path
+         *  based on argument types and subscripts.
+         */
 
+        private void analyzeSubscripts (List<String> rawPaths) {
+            paths = rawPaths;
+            valid = true;
+            cleanPaths = new ArrayList<String>();
+            inverted = new HashMap<String, Boolean>();
+            for (String path : rawPaths) {
+                if (!validPath(path)) {
+                    valid = false;
+                    break;
+                }
+                String[] pp = path.split("--");
+                String first = pp[0].trim();
+                String mid = pp[1].trim();
+                String last = pp[2].trim();
+                boolean inv = first.endsWith("(2)") || first.equals(arg2type);
+                if (first.endsWith("(1)") || first.endsWith("(2)"))
+                    first = first.substring(0, first.length() - 3);
+                if (last.endsWith("(1)") || last.endsWith("(2)"))
+                    last = last.substring(0, last.length() - 3);
+                if (!((first.equals(arg1type) && last.equals(arg2type)) ||
+                      (first.equals(arg2type) && last.equals(arg1type))))
+                    valid = false;
+                String fullPath = first + " -- " + mid + " -- " + last;
+                cleanPaths.add(fullPath);
+                inverted.put(fullPath, inv);
+            }
+        }
+
+        @Override
+            public String toString() {
+                return name;
+            }
+
+        public String report () {
+            String r = name + "(" + arg1type + ", " + arg2type + ")\n";
+            for (String path : paths)
+                r += path + "\n";
+                return r;
+        }
 }

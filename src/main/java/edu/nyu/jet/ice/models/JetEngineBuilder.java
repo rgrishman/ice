@@ -127,7 +127,7 @@ public class JetEngineBuilder {
     public static void buildRelationPatternFile(String fileName, List<IceRelation> relations) throws IOException {
         PrintWriter pw = new PrintWriter(new FileWriter(fileName));
         for (IceRelation rs : relations) {
-            List<String> paths = rs.getPaths();
+            List<String> paths = rs.getCleanPaths();
             String type = rs.getName();
             for (String path : paths) {
                 boolean inv = rs.invertedPath(path);

@@ -213,18 +213,10 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 if (relationInstance == null) {
                     return;
                 }
-                DepPathMap depPathMap = DepPathMap.getInstance();
-                depPathMap.load();
-                List<String> paths = depPathMap.findPath(relationInstance);
-                if (paths == null) {
-                    JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                            String.format("No example in the corpus for [%s]", relationInstance),
-                            "Dependency Path Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
+                List<String> paths = findPathOrClosest (relationInstance);
+                if (paths != null) {
+                    installSeedRelation(relationName, paths);
                 }
-                installSeedRelation(relationName, paths);
-                // System.err.println(path);
             }
         });
 
@@ -293,16 +285,11 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 if (entriesListModel == null) return;
                 String relationInstance = JOptionPane.showInputDialog(
                         "Please provide an example of the relation");
-                DepPathMap depPathMap = DepPathMap.getInstance();
                 if (relationInstance == null) {
                     return;
                 }
-                List<String> paths = depPathMap.findPath(relationInstance);
+                List<String> paths = findPathOrClosest (relationInstance);
                 if (paths == null) {
-                    JOptionPane.showMessageDialog(SwingRelationsPanel.this,
-                            "The provided path does not appear in the corpus.",
-                            "Dependency Path Error",
-                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 for (Object entry : entriesListModel.toArray()) {
@@ -314,8 +301,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                         return;
                     }
                 }
-                entriesListModel.addElement(relationInstance);
-                // currentRelation.getPaths().add(path);
+                entriesListModel.addElement(closestPhrase);
+                currentRelation.getPaths().addAll(paths);
             }
         });
 
@@ -399,20 +386,61 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
 
     }
 
+    public String closestPhrase;
+
     /**
-     *  Creates a new IceRelation.  This method is invoked in response to
+     *  Finds the LDPs which corresponds to the English phrase 'relationInstance'. If
+     *  'relationInstance' is not derived from any LDP in the corpus, search for the
+     *  most similar phrase (in edit distance) which is derived from an LDP in the
+     *  corpus, ask the user if they want to use this phrase instead, and return
+     *  the LDPs associated with this phrase.
+     *  <br>
+     *  As a side effect, sets 'closestPhrase' to the corresponding English phrase.
+     */
+
+    public List<String> findPathOrClosest (String relationInstance) {
+        DepPathMap depPathMap = DepPathMap.getInstance();
+        depPathMap.load();
+        List<String> paths = depPathMap.findPath(relationInstance);
+        if (paths != null) {
+            closestPhrase = relationInstance;
+            return paths;
+        }
+        closestPhrase = depPathMap.findClosest(relationInstance);
+        if (closestPhrase == null) {
+            System.err.println("*** findPathOrClosest failed.");
+            return null;
+        }
+        int n = JOptionPane.showConfirmDialog(
+                SwingRelationsPanel.this,
+                String.format("No example in the corpus for [%s]\nDo you want to use [%s]?", 
+                    relationInstance, closestPhrase),
+                "Path Suggestion",
+                JOptionPane.YES_NO_OPTION);
+        if (n == JOptionPane.NO_OPTION) 
+            return null;
+        paths = depPathMap.findPath(closestPhrase);
+        if (paths == null) {
+            System.err.println("*** findPathOrClosest failed.");
+            return null;
+        }
+        return paths;
+    }
+
+    /**
+     *  Creates a new IceRelation named 'relationName'.  This method is invoked in response to
      *  the AddRelation button.
      */
 
     private void installSeedRelation(String relationName, List<String> paths) {
-        String arg1 = "";
-        String arg2 = "";
-        for (String path : paths) {
-            IceRelation.reportInvalidPath (path);
-            String[] parts = path.split("--");
-            arg1 = parts[0].trim();
-            arg2 = parts[2].trim();
-        }
+        String path = paths.get(0);
+        String[] parts = path.split("--");
+        String arg1 = parts[0].trim();
+        if (arg1.endsWith("(1)") || arg1.endsWith("(2)"))
+            arg1 = arg1.substring(0, arg1.length() - 3);
+        String arg2 = parts[2].trim();
+        if (arg2.endsWith("(1)") || arg2.endsWith("(2)"))
+            arg2 = arg2.substring(0, arg2.length() - 3);
 
         IceRelation iceRelation = new IceRelation(relationName);
         iceRelation.setArg1type(arg1);
@@ -421,9 +449,12 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         iceRelation.setPaths(paths);
         relationListModel.addElement(iceRelation);
         relationList.setSelectedValue(iceRelation, true);
+        // selecting new element forces refresh
         currentRelation = iceRelation;
-        if (!iceRelation.isValid())
-            System.err.println("Invalid path in IceRelation.");
+        if (!iceRelation.isValid()) {
+            System.err.println("Error in IceRelation:");
+            System.err.println(iceRelation.report());
+        }
     }
 
     /**

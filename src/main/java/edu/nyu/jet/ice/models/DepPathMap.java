@@ -67,7 +67,29 @@ public class DepPathMap {
      */
 
     public List<String> findPath(String repr) {
-        return reprPathMap.get(normalizeRepr(repr));
+        String norm = normalizeRepr(repr);
+        List<String> paths = reprPathMap.get(norm);
+        if (paths != null)
+            return paths;
+        String norm2 = swap12(norm);
+        paths = reprPathMap.get(norm2);
+        if (paths == null)
+            return null;
+        List<String> q = new ArrayList<String>();
+        for (String p : paths)
+            q.add(swap12(p));
+        return q;
+    }
+
+    /**
+     *  Interchanges the subscripts (1) and (2) in a path.
+     */
+
+    public String swap12 (String s) {
+        String temp1 = s.replaceAll("(2)", "#");
+        String temp2 = temp1.replaceAll("(1)", "(2)");
+        String temp3 = temp2.replaceAll("#", "(1)");
+        return temp3;
     }
 
     /**
@@ -210,4 +232,71 @@ public class DepPathMap {
         return repr.toLowerCase().replaceAll("\\s+", " ").trim();
     }
 
+    /**
+     *  Find the English phrase most similar to 'repr' (as measured by edit
+     *  distance) which is the representation of a dependency path.
+     */
+
+    public String findClosest (String repr) {
+        String norm = normalizeRepr(repr);
+        int distance = 1000;
+        String closest = null;
+        for (String p : reprPathMap.keySet()) {
+            int d = minDistance (norm, p);
+            if (d < distance) {
+                distance = d;
+                closest = p;
+            }
+        }
+        return closest;
+    }
+
+    /**
+     *  maximum length of arguments to minDistance
+     */
+    static final int MAX_MINDISTANCE = 100;
+
+    private static int[][] dp = new int[MAX_MINDISTANCE][MAX_MINDISTANCE];
+
+    /**
+     * Computes the minimum edit distance between strings 'word1' and 'word2'.
+     */
+
+    public static int minDistance(String word1, String word2) {
+        int len1 = word1.length();
+        int len2 = word2.length();
+        if (len1 >= MAX_MINDISTANCE || len2 >= MAX_MINDISTANCE) 
+            return 1001;
+
+        for (int i = 0; i <= len1; i++) {
+            dp[i][0] = i;
+        }
+
+        for (int j = 0; j <= len2; j++) {
+            dp[0][j] = j;
+        }
+
+        //iterate through, and check last char
+	for (int i = 0; i < len1; i++) {
+            char c1 = word1.charAt(i);
+            for (int j = 0; j < len2; j++) {
+                char c2 = word2.charAt(j);
+
+                //if last two chars equal
+                if (c1 == c2) {
+                    //update dp value for +1 length
+                    dp[i + 1][j + 1] = dp[i][j];
+                } else {
+                    int replace = dp[i][j] + 1;
+                    int insert = dp[i][j + 1] + 1;
+                    int delete = dp[i + 1][j] + 1;
+
+                    int min = replace > insert ? insert : replace;
+                    min = delete > min ? min : delete;
+                    dp[i + 1][j + 1] = min;
+                }
+            }
+        }
+        return dp[len1][len2];
+    }
 }

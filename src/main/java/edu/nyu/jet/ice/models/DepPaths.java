@@ -320,6 +320,11 @@ public class DepPaths {
 
         String type1 = mention1.get("TYPE") != null ? (String) mention1.get("TYPE") : "OTHER";
         String type2 = mention2.get("TYPE") != null ? (String) mention2.get("TYPE") : "OTHER";
+        if (type1.equals(type2) && !type1.equals("OTHER")) {
+            type1 += "(1)";
+            type2 += "(2)";
+        }
+
         String fullPath = type1 + " -- " + regularizedPath + " -- " + type2;
         count(relationTypeCounts, fullPath);
         // collect events
@@ -356,7 +361,7 @@ public class DepPaths {
      */
 
     public static DepPath buildSyntacticPathOnSpans (int fromPosn, int toPosn,
-     Span arg1, Span arg2, SyntacticRelationSet relations, List<Span> localSpans) {
+            Span arg1, Span arg2, SyntacticRelationSet relations, List<Span> localSpans) {
         Map<Integer, DepPath> path = new HashMap<Integer, DepPath>();
         DepPath p = new DepPath(fromPosn, toPosn, arg1, arg2);
         int variable = 0;
