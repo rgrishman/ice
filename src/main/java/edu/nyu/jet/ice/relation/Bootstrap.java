@@ -35,7 +35,7 @@ public class Bootstrap {
      *  seeds and candidate pattern.
      */
 
-    public static final int MIN_RELATION_COUNT = 3;
+    public static final int MIN_RELATION_COUNT = 2;
 
     public static final double MIN_BOOTSTRAP_SCORE = 0.05;
 
@@ -269,7 +269,9 @@ public class Bootstrap {
             if (pExample == null) {
                 continue;
             }
-            IcePath icePath = new IcePath(p, pRepr, "", score);
+            String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
+            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
+            IcePath icePath = new IcePath(p, pRepr, tooltip, score);
             if (pRepr.equals(arg1Type + " " + arg2Type)) {
                 continue;
             }
