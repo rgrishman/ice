@@ -86,8 +86,8 @@ public class DepPathMap {
      */
 
     public String swap12 (String s) {
-        String temp1 = s.replaceAll("(2)", "#");
-        String temp2 = temp1.replaceAll("(1)", "(2)");
+        String temp1 = s.replaceAll("\\(2\\)", "#");
+        String temp2 = temp1.replaceAll("\\(1\\)", "(2)");
         String temp3 = temp2.replaceAll("#", "(1)");
         return temp3;
     }
