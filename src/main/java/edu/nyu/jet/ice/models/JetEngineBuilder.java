@@ -12,9 +12,21 @@ import java.io.*;
 
 public class JetEngineBuilder {
 
-    static Properties props;
-    static String dataDirectory;
-    private static final boolean RECORD_NOUNS_AS_ENAMEX = true;
+    static final boolean RECORD_NOUNS_AS_ENAMEX = true;
+
+    private static Writer commonNounWriter = null;
+    private static Writer properNounWriter = null;
+    private static Writer relationPatternWriter = null;
+    private static Writer negatedPatternWriter = null;
+
+    public static void setCommonNounWriter (Writer w) {
+        commonNounWriter = w;}
+    public static void setProperNounWriter (Writer w) {
+        properNounWriter = w;}
+    public static void setRelationPatternWriter (Writer w) {
+        relationPatternWriter = w;}
+    public static void setNegatedPatternWriter (Writer w) {
+        negatedPatternWriter = w;}
 
     /**
      * writes files to be read by Jet containing information on
@@ -28,15 +40,34 @@ public class JetEngineBuilder {
                 jetHome = "";
             else
                 jetHome += "/";
-            props = new Properties();
+            Properties props = new Properties();
             props.load(new FileReader("parseprops"));
-            dataDirectory = jetHome + props.getProperty("Jet.dataPath") + "/";
-
-            if (!RECORD_NOUNS_AS_ENAMEX) {
-                buildEDTtypeFile();
+            String dataDirectory = jetHome + props.getProperty("Jet.dataPath") + "/";
+            if (commonNounWriter == null) {
+                String commonNounFileName = dataDirectory +
+                    props.getProperty("Ace.EDTtype.auxFileName");
+                commonNounWriter = new FileWriter(commonNounFileName);
             }
-            buildOnoma();
-            buildRelationPatternFile();
+            if (properNounWriter == null) {
+                String properNounFileName = dataDirectory +
+                    props.getProperty("Onoma.fileName");
+                properNounWriter = new FileWriter(properNounFileName);
+            }
+            if (relationPatternWriter == null) {
+                String relationPatternFileName = dataDirectory +
+                    props.getProperty("Ace.RelationModel.fileName");
+                relationPatternWriter = new FileWriter(relationPatternFileName);
+            }
+            if (negatedPatternWriter == null) {
+                String negatedPatternFileName = dataDirectory +
+                    props.getProperty("Ace.RelationModel.fileName") + ".neg";
+                negatedPatternWriter = new FileWriter(negatedPatternFileName);
+            }
+            if (!RECORD_NOUNS_AS_ENAMEX) {
+                buildEDTtypeFile(commonNounWriter);
+            }
+            buildOnoma(properNounWriter);
+            buildRelationPatternFile(relationPatternWriter, negatedPatternWriter);
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
@@ -47,10 +78,8 @@ public class JetEngineBuilder {
      * entity types.
      */
 
-    public static void buildEDTtypeFile() throws IOException {
-        String fileName = dataDirectory +
-                props.getProperty("Ace.EDTtype.auxFileName");
-        PrintWriter pw = new PrintWriter(new FileWriter(fileName));
+    public static void buildEDTtypeFile(Writer w) throws IOException {
+        PrintWriter pw = new PrintWriter(w);
         for (String type : Ice.entitySets.keySet()) {
             IceEntitySet es = Ice.entitySets.get(type);
             List<String> nouns = es.getNouns();
@@ -66,13 +95,11 @@ public class JetEngineBuilder {
      * entity types.
      */
 
-    public static void buildOnoma() throws IOException {
-        String fileName = dataDirectory +
-                props.getProperty("Onoma.fileName");
-        buildOnomaFromNames(fileName, new ArrayList<String>(Ice.entitySets.keySet()));
+    public static void buildOnoma (Writer w) throws IOException {
+        buildOnomaFromNames(w, new ArrayList<String>(Ice.entitySets.keySet()));
     }
 
-    public static void buildOnomaFromNames(String fileName, List<String> entitySetNames) throws IOException {
+    public static void buildOnomaFromNames(Writer w, List<String> entitySetNames) throws IOException {
         List<IceEntitySet> entitySets = new ArrayList<IceEntitySet>();
         for (String type : entitySetNames) {
             IceEntitySet es = Ice.entitySets.get(type);
@@ -80,40 +107,36 @@ public class JetEngineBuilder {
                 entitySets.add(es);
             }
         }
-        buildOnoma(fileName, entitySets);
+        buildOnoma(w, entitySets);
     }
 
-    public static void buildOnoma(String fileName, List<IceEntitySet> entitySets) throws IOException {
-        PrintWriter pw = new PrintWriter(new FileWriter(fileName));
+    public static void buildOnoma(Writer w, List<IceEntitySet> entitySets) throws IOException {
+        PrintWriter pw = new PrintWriter(w);
         for (IceEntitySet entitySet : entitySets) {
-                List<String> names = entitySet.getNames();
-                String type = entitySet.getType();
-                for (String name : names) {
-                    pw.println(name + "\t" + type);
+            List<String> names = entitySet.getNames();
+            String type = entitySet.getType();
+            for (String name : names) {
+                pw.println(name + "\t" + type);
+            }
+            if (RECORD_NOUNS_AS_ENAMEX) {
+                List<String> nouns = entitySet.getNouns();
+                for (String noun : nouns) {
+                    pw.println(noun + "\t" + type);
                 }
-                if (RECORD_NOUNS_AS_ENAMEX) {
-                    List<String> nouns = entitySet.getNouns();
-                    for (String noun : nouns) {
-                        pw.println(noun + "\t" + type);
-                    }
-                }
+            }
         }
         pw.close();
     }
-
-
 
     /**
      * writes file with patterns for new relations.
      */
 
-    public static void buildRelationPatternFile() throws IOException {
-        String fileName = dataDirectory +
-                props.getProperty("Ace.RelationModel.fileName");
-        buildRelationPatternFileFromNames(fileName, new ArrayList<String>(Ice.relations.keySet()));
+    public static void buildRelationPatternFile(Writer w, Writer negw) throws IOException {
+        buildRelationPatternFileFromNames(w, negw, new ArrayList<String>(Ice.relations.keySet()));
     }
 
-    public static void buildRelationPatternFileFromNames(String fileName, List<String> relationNames) throws IOException {
+    public static void buildRelationPatternFileFromNames(Writer w, Writer negw, List<String> relationNames) throws IOException {
         List<IceRelation> relations = new ArrayList<IceRelation>();
         for (String type : relationNames) {
             IceRelation rs = Ice.relations.get(type);
@@ -121,11 +144,11 @@ public class JetEngineBuilder {
                 relations.add(rs);
             }
         }
-        buildRelationPatternFile(fileName, relations);
+        buildRelationPatternFile(w, negw, relations);
     }
 
-    public static void buildRelationPatternFile(String fileName, List<IceRelation> relations) throws IOException {
-        PrintWriter pw = new PrintWriter(new FileWriter(fileName));
+    public static void buildRelationPatternFile(Writer w, Writer negw, List<IceRelation> relations) throws IOException {
+        PrintWriter pw = new PrintWriter(w);
         for (IceRelation rs : relations) {
             List<String> paths = rs.getCleanPaths();
             String type = rs.getName();
@@ -136,7 +159,7 @@ public class JetEngineBuilder {
             }
         }
         pw.close();
-        pw = new PrintWriter(new FileWriter(fileName + ".neg"));
+        pw = new PrintWriter(negw);
         for (IceRelation rs : relations) {
             List<String> paths = rs.getNegPaths();
             if (paths != null) {

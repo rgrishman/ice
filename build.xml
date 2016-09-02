@@ -20,8 +20,8 @@
         <property name="jar.all.filename" value="ice-all.jar" />
         <property name="jar.build.dir" value="build/jar" />
 
-        <property name="debug" value="false" />
-        <property name="optimize" value="true" />
+        <property name="debug" value="true" />
+        <property name="optimize" value="false" />
 
         <path id="build.classpath">
             <fileset dir="${lib.dir}">
@@ -48,6 +48,10 @@
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
                 <include name="junit-4.0.jar" />
+                <include name="fest-swing-1.2.jar" />
+                <include name="fest-assert-1.2.jar" />
+                <include name="fest-reflect-1.2.jar" />
+                <include name="fest-util-1.1.2.jar" />
                 <include name="jet-all-1.9.0.jar" />
             </fileset>
         </path>
