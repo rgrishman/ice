@@ -169,11 +169,12 @@ public class TermCounter extends Thread {
 	// start with counts of terms
 
             try {
-                Map<String, Integer> loadedCount = IcePreprocessor.loadNPs(cacheDir, inputDir, inputFile);
+                IcePreprocessor.fetchAnnotations (cacheDir, inputDir, inputFile);
+                Map<String, Integer> loadedCount = IcePreprocessor.loadTerms(doc);
                 for (String k : loadedCount.keySet()) {
                     localCount.put(k + "/nn", loadedCount.get(k));
                 }
-                IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
+                IcePreprocessor.loadENAMEX(doc);
             }
             catch (IOException e) {
                 e.printStackTrace();

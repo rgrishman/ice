@@ -153,14 +153,12 @@ public class EntitySetIndexer {
                     Ace.monocase = Ace.allLowerCase(doc);
                     Control.processDocument(doc, null, false, docCount);
 
-                    SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
+                    IcePreprocessor.fetchAnnotations(
                             FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
                             inputDir,
                             inputFile);
-                    IcePreprocessor.loadPOS(doc,
-                            FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
-                            inputDir,
-                            inputFile);
+                    IcePreprocessor.loadPOS(doc);
+                    SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet();
 
                     List<Annotation> sentences = doc.annotationsOfType("sentence");
                     if (sentences == null) continue;

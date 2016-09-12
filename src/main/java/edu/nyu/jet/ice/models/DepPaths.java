@@ -153,16 +153,15 @@ public class DepPaths {
                 Ace.monocase = Ace.allLowerCase(doc);
                 Control.processDocument(doc, null, docCount == -1, docCount);
 
-                SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet(
-                        cacheDir, inputDir, inputFile
-                );
+                IcePreprocessor.fetchAnnotations (cacheDir, inputDir, inputFile);
+                SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet();
                 SyntacticRelationSet transformedRelations = transformer.transform(
                         relations.deepCopy(), doc.fullSpan());
                 relations = transformedRelations;
 
                 relations.addInverses();
-                IcePreprocessor.loadPOS(doc, cacheDir, inputDir, inputFile);
-                IcePreprocessor.loadENAMEX(doc, cacheDir, inputDir, inputFile);
+                IcePreprocessor.loadPOS(doc);
+                IcePreprocessor.loadENAMEX(doc);
                 IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
                 IcePreprocessor.addNumberAndTime(doc, cacheDir, inputDir, inputFile);
                 collectPaths(doc, relations, transformedRelations);

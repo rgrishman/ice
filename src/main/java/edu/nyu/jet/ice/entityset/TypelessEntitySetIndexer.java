@@ -149,14 +149,12 @@ public class TypelessEntitySetIndexer {
 				Ace.monocase = Ace.allLowerCase(doc);
 				Control.processDocument(doc, null, false, docCount);
 
-				SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet(
-						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
-						inputDir,
-						inputFile);
-				IcePreprocessor.loadPOS(doc,
-						FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
-						inputDir,
-						inputFile);
+                                IcePreprocessor.fetchAnnotations(
+                                        FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
+                                        inputDir,
+                                        inputFile);
+                                IcePreprocessor.loadPOS(doc);
+                                SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet();
 
 				List<Annotation> sentences = doc.annotationsOfType("sentence");
 				if (sentences == null) continue;

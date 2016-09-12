@@ -359,38 +359,6 @@ public class IceCLI6 {
                     File target = new File(targetFileName);
                     File source = new File(sourceFileName);
                     FileUtils.copyFile(source, target);
-                    sourceFileName = IcePreprocessor.getDepFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getDepFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    copyFile(sourceFileName, targetFileName);
-                    sourceFileName = IcePreprocessor.getJetExtentsFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getJetExtentsFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    copyFile(sourceFileName, targetFileName);
-                    sourceFileName = IcePreprocessor.getNamesFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getNamesFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    copyFile(sourceFileName, targetFileName);
-                    sourceFileName = IcePreprocessor.getNpsFileName(currentPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName
-                    );
-                    targetFileName = IcePreprocessor.getNpsFileName(origPreprocessDir,
-                            Ice.selectedCorpus.directory,
-                            docName);
-                    copyFile(sourceFileName, targetFileName);
                     sourceFileName = IcePreprocessor.getPosFileName(currentPreprocessDir,
                             Ice.selectedCorpus.directory,
                             docName

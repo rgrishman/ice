@@ -549,50 +549,6 @@ public class IceCLI {
         copyFile(sourceFileName, targetFileName);
 
 
-        sourceFileName = IcePreprocessor.getDepFileName(sourceCacheDir,
-                sourceSourceDir,
-                sourceDocName
-        );
-        targetFileName = IcePreprocessor.getDepFileName(targetCacheDir,
-                targetSourceDir,
-                targetDocName);
-        copyFile(sourceFileName, targetFileName);
-
-
-
-        sourceFileName = IcePreprocessor.getJetExtentsFileName(sourceCacheDir,
-                sourceSourceDir,
-                sourceDocName
-        );
-        targetFileName = IcePreprocessor.getJetExtentsFileName(targetCacheDir,
-                targetSourceDir,
-                targetDocName);
-        copyFile(sourceFileName, targetFileName);
-
-
-
-        sourceFileName = IcePreprocessor.getNamesFileName(sourceCacheDir,
-                sourceSourceDir,
-                sourceDocName
-        );
-        targetFileName = IcePreprocessor.getNamesFileName(targetCacheDir,
-                targetSourceDir,
-                targetDocName);
-        copyFile(sourceFileName, targetFileName);
-
-
-
-        sourceFileName = IcePreprocessor.getNpsFileName(sourceCacheDir,
-                sourceSourceDir,
-                sourceDocName
-        );
-        targetFileName = IcePreprocessor.getNpsFileName(targetCacheDir,
-                targetSourceDir,
-                targetDocName);
-        copyFile(sourceFileName, targetFileName);
-
-
-
         sourceFileName = IcePreprocessor.getPosFileName(sourceCacheDir,
                 sourceSourceDir,
                 sourceDocName

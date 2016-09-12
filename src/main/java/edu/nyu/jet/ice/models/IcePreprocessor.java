@@ -33,17 +33,44 @@ import java.nio.file.*;
 import java.util.*;
 
 /**
- * computes and saves a variety of NLP features of a corpus.
- * Invoked whenever a new corpus is added to ICE. Saves <ul>
- * <li> ENAMEX tags for each document </li>
+ * Computes and saves a variety of NLP features of a corpus in
+ * order to speed up the reanalysis required during entity set
+ * and relation development.  Preprocessing is invoked
+ * either through the GUI or the command-line interface whenever
+ * a new corpus is added to ICE.
+ * <p>
+ * Preprocessing invokes JET to perform the standard analysis
+ * steps (POS tagging, name tagging, dependency parsing, reference
+ * resolution).  Preprocessing then saves 
+ * <ul>
  * <li> POS tags for each document </li>
+ * <li> ENAMEX tags for each document </li>
+ * <li> the ACE entities and entity mentions for a document</li>
  * <li> the extent of each entity mention in a document </li>
  * <li> the count of each possible term in each document </li>
  * <li> dependency parse of each document </li>
+ * </ul>
+ * For a corpus X, this information is saved in directory
+ * cache/X/preprocess.  This information does not change over
+ * the course of entity set and relation customization.
+ * <p>
+ * The second stage of processing loads this information, invokes
+ * the onoma name tagger to add ENAMEX tags for members of
+ * user-created entity sets, adds prenominal mentions of named
+ * entities, and adds TIME and NUMBER tags.  It then computes
+ * and saves: <ul>
  * <li> aggregate term counts over the corpus </li>
  * <li> dependency paths over the corpus </li>
  * </ul>
- * All this information is stored as files within the cache directory.
+ * This information is stored as files within the cache directory.
+ * If new entity sets are added, dependency paths can be rapidly
+ * recomputed using information computed in the first stage.
+ * <p>
+ * Annotation Cache:  all information from the first stage (except
+ * the ACE entities) is stored in a single file. This information
+ * is initially loaded from disk into an <i>annotation cache</i>
+ * by method fetchAnnotations;  specific methods (loadPOS,
+ * load ENAMEX, ...) then extract information from the cache.
  */
 
 public class IcePreprocessor extends Thread {
@@ -86,6 +113,7 @@ public class IcePreprocessor extends Thread {
      * @param inputSuffix file extension to be added to document name to obtain name of input file
      * @param cacheDir    cache directory for the given corpus
      */
+
     public IcePreprocessor(String inputDir, String propsFile, String docList, String inputSuffix, String cacheDir) {
         this.inputDir = inputDir;
         this.propsFile = propsFile;
@@ -131,6 +159,7 @@ public class IcePreprocessor extends Thread {
     /**
      * preprocess all the files in a corpus.
      */
+
     private void processFiles(String selectedCorpusDir, String selectedCorpusName) {
 
         System.out.println("Starting Jet Preprocessor ...");
@@ -154,9 +183,6 @@ public class IcePreprocessor extends Thread {
         }
         // load ACE type dictionary
         EDTtype.readTypeDict();
-        // turn off traces
-        Pat.trace = false;
-        Resolve.trace = false;
         // ACE mode (provides additional antecedents ...)
         Resolve.ACE = true;
 
@@ -207,15 +233,11 @@ public class IcePreprocessor extends Thread {
                                     new FileWriter(getAceFileName(cacheDir, inputDir, inputFile)))), doc);
                     // ---------------
                     // IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
-                    saveENAMEX(doc, getNamesFileName(cacheDir, inputDir, inputFile));
-                    savePOS(doc, getPosFileName(cacheDir, inputDir, inputFile));
-                    saveJetExtents(aceDoc, getJetExtentsFileName(cacheDir, inputDir, inputFile));
-                    saveNPs(doc, getNpsFileName(cacheDir, inputDir, inputFile));
+                    saveAnnotations(doc, aceDoc, getPosFileName(cacheDir, inputDir, inputFile));
+
                     doc.removeAnnotationsOfType("ENAMEX");
                     doc.removeAnnotationsOfType("entity");
                     SyntacticRelationSet relations = doc.relations;
-                    saveSyntacticRelationSet(relations, getDepFileName(cacheDir, inputDir, inputFile));
-
                     if (relations == null) {
                         continue;
                     }
@@ -259,6 +281,97 @@ public class IcePreprocessor extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     *  Saves POS tags, name tags, terms, dependency parses, and the extents
+     *  of entity mentions.  This information is saved in a single file;  the first
+     *  token in each line of the file indicates the type of information in that line.
+     */
+
+    public static void saveAnnotations (Document doc, AceDocument aceDoc, String fn) throws IOException {
+        PrintWriter pw = new PrintWriter (new FileWriter (fn));
+        savePOS (doc, pw);
+        saveENAMEX (doc, pw);
+        saveTerms (doc, pw);
+        saveJetExtents (aceDoc, pw);
+        saveSyntacticRelationSet (doc.relations, pw);
+        pw.close();
+    }
+
+    /**
+     *  Saves POS tags.
+     */
+
+    public static void savePOS (Document doc, PrintWriter pw) {
+        List<Annotation> names = doc.annotationsOfType("tagger");
+        if (names != null) {
+            for (Annotation name : names) {
+                saveAnnotation(pw, "tagger", name.span(), (String) name.get("cat"));
+            }
+        }
+    }
+
+    public static void saveAnnotation (PrintWriter pw, String type, Span s, String feat) {
+        saveAnnotation (pw, type, String.format("%d\t%d\t%s", s.start(), s.end(), feat));
+    }
+
+    public static void saveAnnotation (PrintWriter pw, String type, String feat) {
+        pw.println(String.format("%s\t%s", type, feat));
+    }
+
+    /**
+     * save each name (ENAMEX annotation) in document <CODE>doc</CODE> to PrintWriter 
+     * <CODE>pw</CODE>.  File format: one name per line:  ENAMEX + start + end + type
+     */
+
+//    public static void saveENAMEX(Document doc, String fileName) throws IOException {
+//        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+//        List<Annotation> names = doc.annotationsOfType("ENAMEX");
+//        if (names != null) {
+//            for (Annotation name : names) {
+//                pw.println(String.format("%s\t%d\t%d\t%s\t%s",
+//                        name.get("TYPE"), name.start(), name.end(),
+//                        name.get("val") != null ? name.get("val") : doc.text(name).replaceAll("\\s+", " ").trim(),
+//                        name.get("mType") != null ? name.get("mType") : name.get("TYPE")));
+//            }
+//        }
+//        pw.close();
+//    }
+
+    public static void saveENAMEX (Document doc, PrintWriter pw) {
+        List<Annotation> names = doc.annotationsOfType("ENAMEX");
+        if (names != null) {
+            for (Annotation name : names) {
+                saveAnnotation(pw, "ENAMEX", name.span(), (String) name.get("type"));
+            }
+        }
+    }
+
+    /**
+     * compute the local count of each potential term
+     * (head of NP with preceding nouns and adjectives) in document <CODE>doc</CODE>
+     * and save the result in PrintWriter <CODE>pw</CODE>.  File format:
+     * one term per line.  Names [tagged with ENAMEX] are not included.
+     */
+
+    public static void saveTerms(Document doc, PrintWriter pw) throws IOException {
+        List<Annotation> nps = doc.annotationsOfType("ng");
+        Map<String, Integer> localCount = new HashMap<String, Integer>();
+        if (nps != null) {
+            for (Annotation np : nps) {
+                List<String> termsFound = TermCounter.extractPossibleTerms(doc, np.span());
+                for (String term : termsFound) {
+                    if (!localCount.containsKey(term)) {
+                        localCount.put(term, 0);
+                    }
+                    localCount.put(term, localCount.get(term) + 1);
+                }
+            }
+        }
+        for (String k : localCount.keySet()) {
+            saveAnnotation (pw, "term", k + "\t" + localCount.get(k));
         }
     }
 
@@ -316,56 +429,21 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     * part of preprocessing:  compute the local count of each potential term
-     * (head of NP with preceding nouns and adjectives) in document <CODE>doc</CODE>
-     * and save the result in file <CODE>fileName</CODE>.  File format:
-     * one term per line.  Names [tagged with ENAMEX] are not included.
+     *  Load from the annotation cache the counts of all terms in docuemnt
+     *  <CODE>doc</CODE>.
      */
-    public static void saveNPs(Document doc, String fileName) throws IOException {
-        List<Annotation> nps = doc.annotationsOfType("ng");
+
+    public static Map<String, Integer> loadTerms (Document doc) throws IOException {
         Map<String, Integer> localCount = new HashMap<String, Integer>();
-        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-        if (nps != null) {
-            for (Annotation np : nps) {
-                List<String> termsFound = TermCounter.extractPossibleTerms(doc, np.span());
-                for (String term : termsFound) {
-                    if (!localCount.containsKey(term)) {
-                        localCount.put(term, 0);
-                    }
-                    localCount.put(term, localCount.get(term) + 1);
-                }
+        for (String line : annotationCache) {
+            if (line.startsWith("term")) {
+                String[] parts = line.split("\\t");
+                String term = parts[1];
+                int count = Integer.valueOf(parts[2]);
+                localCount.put(term, count);
             }
         }
-        for (String k : localCount.keySet()) {
-            pw.println(k.trim() + "\t" + localCount.get(k));
-        }
-        pw.close();
-    }
-
-    /**
-     *  Load from the 'nps' cache file the counts of all terms in docuemnt
-     *  <CODE>inputFile</CODE>.
-     */
-
-    public static Map<String, Integer> loadNPs(String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = getNpsFileName(cacheDir, inputDir, inputFile);
-        Map<String, Integer> localCount = new HashMap<String, Integer>();
-        BufferedReader br = new BufferedReader(new FileReader(inputFileName));
-        String line = null;
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
-            String term = parts[0];
-            int count = Integer.valueOf(parts[1]);
-
-            localCount.put(term, count);
-        }
-        br.close();
         return localCount;
-
-    }
-
-    public static String getNpsFileName(String cacheDir, String inputDir, String inputFile) {
-        return cacheFileName(cacheDir, inputDir, inputFile) + ".nps";
     }
 
     public static Annotation findTermHead(Document doc, Annotation term, SyntacticRelationSet relations) {
@@ -405,120 +483,70 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     * part of preprocessing:  save every Ace entity mention in <CODE>aceDocument</CODE>
+     * Save every Ace entity mention in <CODE>aceDocument</CODE>
      * along with its extent.  Format:  one mention per line, mention id + start + end.
      */
 
-    public static void saveJetExtents(AceDocument aceDocument, String fileName) throws IOException {
-        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+    public static void saveJetExtents(AceDocument aceDocument, PrintWriter pw) throws IOException {
         List<AceEntity> entities = aceDocument.entities;
         if (entities != null) {
             for (AceEntity entity : entities) {
                 for (AceEntityMention mention : entity.mentions) {
-                    pw.println(
-                            String.format("%s\t%d\t%d", mention.id, mention.jetHead.start(), mention.jetHead.end()));
+                    saveAnnotation (pw, "jetExtent", mention.jetHead, mention.id);
                 }
             }
         }
-        pw.close();
     }
 
-    public static Map<String, Span> loadJetExtents(String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = getJetExtentsFileName(cacheDir, inputDir, inputFile);
+    public static Map<String, Span> loadJetExtents() throws IOException {
         Map<String, Span> jetExtentsMap = new HashMap<String, Span>();
-        BufferedReader br = new BufferedReader(new FileReader(inputFileName));
-        String line = null;
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
-            String id = parts[0];
-            int start = Integer.valueOf(parts[1]);
-            int end = Integer.valueOf(parts[2]);
-            jetExtentsMap.put(id, new Span(start, end));
+        for (String line : annotationCache) {
+            if (line.startsWith("jetExtent")) {
+                String[] parts = line.split("\\t");
+                int start = Integer.valueOf(parts[1]);
+                int end = Integer.valueOf(parts[2]);
+                String id = parts[3];
+                jetExtentsMap.put(id, new Span(start, end));
+            }
         }
-        br.close();
         return jetExtentsMap;
     }
 
-    public static String getJetExtentsFileName(String cacheDir, String inputDir, String inputFile) {
-        return cacheFileName(cacheDir, inputDir, inputFile) + ".jetExtents";
-    }
-
-
     /**
-     * part of preprocessing:  save each name (ENAMEX annotation) in document
-     * <CODE>doc</CODE> to file <CODE>fileName</CODE>.  File format:
-     * one name per line:  type + start + end
+     * regenerate <CODE>ENAMEX</CODE> annotations from file saved by saveENAMEX.
      */
 
-    public static void saveENAMEX(Document doc, String fileName) throws IOException {
-        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-        List<Annotation> names = doc.annotationsOfType("ENAMEX");
-        if (names != null) {
-            for (Annotation name : names) {
-                pw.println(String.format("%s\t%d\t%d",
-                        name.get("TYPE"), name.start(), name.end()));
-            }
-        }
-        pw.close();
-    }
-
-//    public static void saveENAMEX(Document doc, String fileName) throws IOException {
-//        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-//        List<Annotation> names = doc.annotationsOfType("ENAMEX");
-//        if (names != null) {
-//            for (Annotation name : names) {
-//                pw.println(String.format("%s\t%d\t%d\t%s\t%s",
-//                        name.get("TYPE"), name.start(), name.end(),
-//                        name.get("val") != null ? name.get("val") : doc.text(name).replaceAll("\\s+", " ").trim(),
-//                        name.get("mType") != null ? name.get("mType") : name.get("TYPE")));
-//            }
-//        }
-//        pw.close();
-//    }
-
-    /**
-     * regenerate <CODE>ENAMEX</CODE> and generate <CODE>enamex</CODE> annotations from
-     * file saved by saveENAMEX.
-     */
-
-    public static void loadENAMEX(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
-        String inputFileName = getNamesFileName(cacheDir, inputDir, inputFile);
-        BufferedReader br = new BufferedReader(new FileReader(inputFileName));
-        String line = null;
+    public static void loadENAMEX (Document doc) throws IOException {
         List<Annotation> existingNames = doc.annotationsOfType("ENAMEX");
         existingNames = existingNames == null ? new ArrayList<Annotation>() : existingNames;
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
-            if (parts.length != 5 && parts.length != 3) {
-                System.err.println("Format error in ENAMEX cache:" + inputFileName);
-                System.err.println("\tline:" + line);
-                continue;
-            }
-            String type = parts[0];
-            int start = Integer.valueOf(parts[1]);
-            int end = Integer.valueOf(parts[2]);
-            String val  = parts.length == 5 ? parts[3].trim() : "UNK";
-            String mType = parts.length == 5 ? parts[4].trim() : "UNK";
-            Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
-                    new FeatureSet("TYPE", type));
+        for (String line : annotationCache) {
+            if (line.startsWith("ENAMEX")) {
+                String[] parts = line.split("\\t");
+                if (parts.length != 4 && parts.length != 6) {
+                    System.err.println("Format error in ENAMEX cache:");
+                    System.err.println("\tline:" + line);
+                    continue;
+                }
+                int start = Integer.valueOf(parts[1]);
+                int end = Integer.valueOf(parts[2]);
+                String type = parts[3];
+                String val  = parts.length == 6 ? parts[4].trim() : "UNK";
+                String mType = parts.length == 6 ? parts[5].trim() : "UNK";
+                Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
+                        new FeatureSet("TYPE", type));
 
-            boolean conflict = false;
-            for (Annotation existingAnn : existingNames) {
-                if (isCrossed(newAnn, existingAnn)) {
-                    conflict = true;
+                boolean conflict = false;
+                for (Annotation existingAnn : existingNames) {
+                    if (isCrossed(newAnn, existingAnn)) {
+                        conflict = true;
+                    }
+                }
+                if (!conflict) {
+                    doc.addAnnotation(newAnn);
                 }
             }
-            if (!conflict) {
-                doc.addAnnotation(newAnn);
-            }
         }
-        br.close();
     }
-
-    public static String getNamesFileName(String cacheDir, String inputDir, String inputFile) {
-        return cacheFileName(cacheDir, inputDir, inputFile) + ".names";
-    }
-
     /**
      *  For each ACE entity which includes a named mention, tag all other
      *  mentions of the entity with the same ENAMEX tag, including name
@@ -539,7 +567,7 @@ public class IcePreprocessor extends Thread {
         }
 
         // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
-        Map<String, Span> jetExtentsMap = loadJetExtents(cacheDir, inputDir, inputFile);
+        Map<String, Span> jetExtentsMap = loadJetExtents();
         AceDocument aceDocument = new AceDocument(txtFileName, aceFileName);
         if (aceDocument.entities != null) {
             for (AceEntity aceEntity : aceDocument.entities) {
@@ -663,71 +691,62 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     * part of preprocessing:  save part-of-speech information for <CODE>doc</CODE>
-     * to file <CODE>fileName</CODE>.  Format:  one token per line, POS + start + end.
+     *  Loads the annotation cache from file cacheDir/inputDir/inputFile.
      */
-    public static void savePOS(Document doc, String fileName) throws IOException {
-        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-        List<Annotation> names = doc.annotationsOfType("tagger");
-        if (names != null) {
-            for (Annotation name : names) {
-                pw.println(String.format("%s\t%d\t%d", name.get("cat"), name.start(), name.end()));
-            }
-        }
-        pw.close();
-    }
 
-    /**
-     * regenerate <CODE>tagger</CODE> annotations from cache file produced by savePOS.
-     */
-    public static void loadPOS(Document doc, String cacheDir, String inputDir, String inputFile) throws IOException {
+    public static void fetchAnnotations (String cacheDir, String inputDir, String inputFile) throws IOException {
         String inputFileName = getPosFileName(cacheDir, inputDir, inputFile);
         BufferedReader br = new BufferedReader(new FileReader(inputFileName));
+        annotationCache.clear();
         String line = null;
         while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
-            String cat = parts[0];
-            int start = Integer.valueOf(parts[1]);
-            int end = Integer.valueOf(parts[2]);
-            doc.addAnnotation(new Annotation("tagger", new Span(start, end), new FeatureSet("cat", cat)));
+            annotationCache.add(line);
         }
         br.close();
     }
+
+    private static List<String> annotationCache = new ArrayList<String> ();
 
     public static String getPosFileName(String cacheDir, String inputDir, String inputFile) {
         return cacheFileName(cacheDir, inputDir, inputFile) + ".pos";
     }
 
-    public static void saveSyntacticRelationSet(SyntacticRelationSet relationSet, String fileName) throws IOException {
-        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-        relationSet.write(pw);
-        pw.close();
-    }
+    /**
+     * Regenerate <CODE>tagger</CODE> annotations from annotation cache.
+     */
 
-    public static void appendSyntacticRelationSet(SyntacticRelationSet relationSet, PrintWriter pw, int sid) throws IOException {
-        // PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-        pw.println("SID=" + sid);
-        relationSet.write(pw);
-        pw.println();
-        // pw.close();
-    }
-
-    public static SyntacticRelationSet loadSyntacticRelationSet(String cacheDir,
-                                                                String inputDir,
-                                                                String inputFile) throws IOException {
-        String inputFileName = getDepFileName(cacheDir, inputDir, inputFile);
-        SyntacticRelationSet relations = new SyntacticRelationSet();
-        if (!(new File(inputFileName).exists())) {
-            return relations;
+    public static void loadPOS (Document doc) {
+        for (String line : annotationCache) {
+            if (line.startsWith("tagger")) {
+                String[] parts = line.split("\\t");
+                int start = Integer.valueOf(parts[1]);
+                int end = Integer.valueOf(parts[2]);
+                String cat = parts[3];
+                doc.addAnnotation(new Annotation("tagger", new Span(start, end), new FeatureSet("cat", cat)));
+            }
         }
-        BufferedReader br = new BufferedReader(new FileReader(inputFileName));
-        relations.read(br);
-        br.close();
-        return relations;
     }
 
-    public static String getDepFileName(String cacheDir, String inputDir, String inputFile) {
-        return cacheFileName(cacheDir, inputDir, inputFile) + ".dep";
+    public static void saveSyntacticRelationSet(SyntacticRelationSet relationSet, PrintWriter pw) throws IOException {
+        for (SyntacticRelation sr : relationSet)
+            saveAnnotation (pw, "dep", relationToString(sr));
+    }
+
+    private static String relationToString (SyntacticRelation sr) {
+        return sr.type + " | " 
+               + sr.sourceWord + " | " + sr.sourcePosn + " | " + sr.sourcePos + " | "
+               + sr.targetWord + " | " + sr.targetPosn + " | " + sr.targetPos;
+    }
+
+    public static SyntacticRelationSet loadSyntacticRelationSet() throws IOException {
+        SyntacticRelationSet relations = new SyntacticRelationSet();
+        for (String line : annotationCache) {
+            if (line.startsWith("dep")) {
+                line = line.substring(4);
+                relations.add(new SyntacticRelation(line));
+            }
+        }
+        return relations;
     }
 
     public static String cacheFileName(String cacheDir,
