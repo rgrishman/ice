@@ -30,7 +30,7 @@ import java.awt.event.*;
 import java.util.List;
 
 /**
- *  a corpus (set of documents) for ICE.
+ *  A corpus (set of documents) for ICE.
  *
  *  A corpus is specified by the root directory of a directory tree and
  *  a file extension filter:  it consists of all non-directory files under the
@@ -156,10 +156,8 @@ public class Corpus {
         this("?");
     }
 
-    //List<JRadioButton> backgroundCorpusButtons = new ArrayList<JRadioButton>();
     JTextArea textArea;
     JTextArea relationTextArea;
-
 
     public void countWords(ProgressMonitorI monitor) {
         wordCountFileName = FileNameSchema.getWordCountFileName(name);
@@ -203,131 +201,6 @@ public class Corpus {
         }
     }
 
-    /**
-     * box for term finder
-     */
-
-    public Box termBox() {
-
-        Box box = Box.createVerticalBox();
-        box.setMinimumSize(new Dimension(480, 400));
-        TitledBorder border = new TitledBorder("Find Terms");
-        border.setTitleColor(Color.RED);
-        box.setBorder(border);
-
-        Box countAndRatioBox = Box.createHorizontalBox();
-
-        JButton countWordsButton = new JButton("count words");
-        countAndRatioBox.add(countWordsButton);
-        JButton findTermsButton = new JButton("find terms");
-        // findTermsButton.setEnabled(wordCountFileName != null);
-        countAndRatioBox.add(findTermsButton);
-        box.add(countAndRatioBox);
-
-        box.add(termFilter.makeBox());
-
-        textArea = new JTextArea(5, 30);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        if (termFileName != null)
-            displayTerms(termFileName, 100, textArea, termFilter);
-        box.add(scrollPane);
-
-        // listeners -----------
-
-        countWordsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-
-                wordProgressMonitor =
-                        new SwingProgressMonitor(Ice.mainFrame, "Counting words",
-                                "Initializing Jet", 0, numberOfDocs);
-                ((SwingProgressMonitor)wordProgressMonitor).setMillisToDecideToPopup(5);
-                countWords(wordProgressMonitor);
-            }
-        });
-
-        findTermsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-
-                if (backgroundCorpus == null || !Ice.corpora.containsKey(backgroundCorpus)) {
-                    JOptionPane.showMessageDialog(Ice.mainFrame, "Please choose background corpus first!");
-                    return;
-                }
-
-                if (wordCountFileName == null) {
-                    JOptionPane.showMessageDialog(Ice.mainFrame, "Please count words first!");
-                }
-
-                findTerms(Ice.corpora.get(backgroundCorpus));
-                displayTerms(termFileName, 100, textArea, termFilter);
-            }
-        });
-
-        return box;
-    }
-
-    /**
-     * box for term finder
-     */
-
-    public Box swingTermBox() {
-
-        Box box = Box.createVerticalBox();
-        box.setOpaque(false);
-        box.setMinimumSize(new Dimension(480, 270));
-        TitledBorder border = new TitledBorder("Find Entities");
-        //border.setTitleColor(Color.RED);
-        box.setBorder(border);
-
-        Box countAndRatioBox = Box.createHorizontalBox();
-
-        JButton countWordsButton = new JButton("Count words");
-        countAndRatioBox.add(countWordsButton);
-        JButton findTermsButton = new JButton("Find entities");
-        // findTermsButton.setEnabled(wordCountFileName != null);
-        countAndRatioBox.add(findTermsButton);
-        box.add(countAndRatioBox);
-
-        box.add(termFilter.makeBox());
-
-        textArea = new JTextArea(8, 20);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        if (termFileName != null)
-            displayTerms(termFileName, 100, textArea, termFilter);
-        box.add(scrollPane);
-
-        // listeners -----------
-
-        countWordsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-
-                wordProgressMonitor =
-                        new SwingProgressMonitor(Ice.mainFrame, "Counting words",
-                                "Initializing Jet", 0, numberOfDocs);
-                countWords(wordProgressMonitor);
-            }
-        });
-
-        findTermsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-
-                if (backgroundCorpus == null || !Ice.corpora.containsKey(backgroundCorpus)) {
-                    JOptionPane.showMessageDialog(Ice.mainFrame, "Please choose background corpus first!");
-                    return;
-                }
-
-                if (wordCountFileName == null) {
-                    JOptionPane.showMessageDialog(Ice.mainFrame, "Please count words first!");
-                }
-
-                findTerms(Ice.corpora.get(backgroundCorpus));
-                displayTerms(termFileName, 100, textArea, termFilter);
-            }
-        });
-
-        return box;
-    }
-
-
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor, RelationFilter relationFilter) {
         relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
         relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
@@ -356,7 +229,6 @@ public class Corpus {
         relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
         relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
         docListFileName = FileNameSchema.getDocListFileName(name);
-
 
         RelationFinder finder = new RelationFinder(
                 docListFileName, directory, filter, relationInstanceFileName,
@@ -392,114 +264,6 @@ public class Corpus {
         //return new ArrayList<String>();
     }
 
-    /**
-     * box for relation finder:  displays frequent patterns
-     */
-
-    public Box swingPatternBox() {
-
-        Box box = Box.createVerticalBox();
-        box.setOpaque(false);
-        box.setMinimumSize(new Dimension(500, 300));
-        TitledBorder border = new TitledBorder("Find Phrases");
-        // border.setTitleColor(Color.RED);
-        box.setBorder(border);
-
-        Box buttonsBox = Box.createHorizontalBox();
-        JButton findRelationsButton = new JButton("Find Phrases");
-        JButton rankRelationsButton = new JButton("Rank Phrases");
-        buttonsBox.add(findRelationsButton);
-        buttonsBox.add(rankRelationsButton);
-        box.add(buttonsBox);
-
-        box.add(relationFilter.makeBox());
-
-        relationTextArea = new JTextArea(10, 30);
-        JScrollPane scrollPane = new JScrollPane(relationTextArea);
-        relationFilter.setArea(relationTextArea);
-
-        if (relationTypeFileName != null)
-            //Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, null);
-
-            Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, relationFilter);
-        box.add(scrollPane);
-
-        // listener -----
-
-        findRelationsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-                checkForAndFindRelations(new SwingProgressMonitor(Ice.mainFrame,
-                        "Extracting relation phrases",
-                        "Initializing Jet", 0, numberOfDocs), relationFilter);
-            }
-        });
-
-        rankRelationsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                rankRelations();
-
-                String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
-                String sortedRatioFileName = ratioFileName + ".sorted";
-                Corpus.displayTerms(sortedRatioFileName, 40, relationTextArea, relationFilter);
-            }
-        });
-
-        return box;
-    }
-
-
-    /**
-     * box for relation finder:  displays frequent patterns
-     */
-
-    public Box patternBox() {
-
-        Box box = Box.createVerticalBox();
-        TitledBorder border = new TitledBorder("Find Phrases");
-        border.setTitleColor(Color.RED);
-        box.setBorder(border);
-
-        Box buttonsBox = Box.createHorizontalBox();
-        JButton findRelationsButton = new JButton("Find Phrases");
-        JButton rankRelationsButton = new JButton("Rank Phrases");
-        buttonsBox.add(findRelationsButton);
-        buttonsBox.add(rankRelationsButton);
-        box.add(buttonsBox);
-
-        box.add(relationFilter.makeBox());
-
-        relationTextArea = new JTextArea(5, 30);
-        JScrollPane scrollPane = new JScrollPane(relationTextArea);
-        relationFilter.setArea(relationTextArea);
-
-        if (relationTypeFileName != null)
-            //Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, null);
-
-            Corpus.displayTerms(relationTypeFileName, 40, relationTextArea, relationFilter);
-        box.add(scrollPane);
-
-        // listener -----
-
-        findRelationsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-                checkForAndFindRelations(new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
-                                "Initializing Jet", 0, numberOfDocs), relationFilter);
-            }
-        });
-
-        rankRelationsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                rankRelations();
-
-                String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
-                String sortedRatioFileName = ratioFileName + ".sorted";
-                Corpus.displayTerms(sortedRatioFileName, 40, relationTextArea, relationFilter);
-            }
-        });
-
-        return box;
-    }
-
     static void sort(String infile, String outfile) throws IOException{
         //run("Sort", "./numsort " + infile + " " + outfile);
         IceUtils.numsort(infile, outfile);
@@ -524,6 +288,12 @@ public class Corpus {
         return findAllFiles(sDir, sDir, filter);
     }
 
+    /**
+     *  Determines the files in a corpus.  Returns a list of files beneath <CODE>sDir</CODE>
+     *  whose file name has extension <CODE>filter</CODE>.  If <CODE>filter</CODE> is "*",
+     *  all files are included regardless of file extension.
+     */
+
     private static List<String> findAllFiles(String sDir, String topDir, String filter) {
         List<String> allFiles = new ArrayList<String>();
         File[] faFiles = new File(sDir).listFiles();
@@ -534,7 +304,7 @@ public class Corpus {
                     ("*".equals(filter.trim()) ||
                         file.getName().endsWith(String.format(".%s", filter))
                     )
-            ) {
+               ) {
                 allFiles.add(file.getAbsolutePath().substring(topPath.length() + 1));
             }
             if (file.isDirectory()) {
@@ -544,12 +314,11 @@ public class Corpus {
         return allFiles;
     }
 
-
     public void writeDocumentList() {
         String[] docs = buildDocumentList();
         if (docs == null) return;
         try {
-			docListFileName = FileNameSchema.getDocListFileName(name);
+            docListFileName = FileNameSchema.getDocListFileName(name);
             File docListFile = new File(docListFileName);
             PrintWriter writer = new PrintWriter(new FileWriter(docListFile));
             for (String doc : docs) {
