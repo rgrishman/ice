@@ -236,7 +236,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                             String.format("Do you want to start with path [%s]?", relationInstance),
                             "Path Suggestion",
                             JOptionPane.YES_NO_OPTION);
-                    if (n == 0) {
+                    if (n == JOptionPane.YES_OPTION) {
                         String relationName = JOptionPane.showInputDialog("Name of the relation");
                         if (relationName == null) {
                             return;
@@ -547,6 +547,13 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         entriesList.setModel(entriesListModel);
     }
 
+    /**
+     *  Suggests a path to use as a seed for building a new relation.  It selects
+     *  a path which is a sentential (subject-verb-object) structure, has not
+     *  been suggested before (for this corpus), and is not a member of an
+     *  existing relation.
+     */
+
     public String suggestRelation() {
         String result = "";
         try {
@@ -554,30 +561,28 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     IceUtils.readLines(FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName));
             DepPathMap depPathMap = DepPathMap.getInstance();
             depPathMap.load();
-            for (String line : lines) {
+      loop: for (String line : lines) {
                 String[] parts = line.split("\t");
                 String path = parts[1];
-                if (!path.matches(".*nsubj-1:.*:dobj.*")) {
+                if (!path.matches(".*nsubj-1:.*:dobj.*")) 
                     continue;
-                }
-                parts = path.split("--");
-                if (parts.length == 3 && (
-                        !ACE_TYPES.contains(parts[0].trim()) ||
-                        !ACE_TYPES.contains(parts[2].trim()))) {
-                    if (depPathMap.findRepr(path) != null) {
-                        return depPathMap.findRepr(path);
+                String phrase = depPathMap.findRepr(path);
+                if (phrase == null)
+                    continue;
+                // skip phrase if prevoously suggested
+                if (Ice.selectedCorpus.relationsSuggested.contains(phrase))
+                    continue;
+                // skip phrase if it is part of an existing relation
+                for (IceRelation relation : Ice.relations.values()) {
+                    for (String relPath : relation.getPaths()) {
+                        String repr = depPathMap.findRepr(relPath);
+                        if (phrase.equals(repr)) {
+                            continue loop;
+                        }
                     }
                 }
-            }
-            for (String line : lines) {
-                String[] parts = line.split("\t");
-                String path = parts[1];
-                if (!path.matches(".*nsubj-1:.*:dobj.*")) {
-                    continue;
-                }
-                if (depPathMap.findRepr(path) != null) {
-                    return depPathMap.findRepr(path);
-                }
+                Ice.selectedCorpus.relationsSuggested.add(phrase);
+                return phrase;
             }
         }
         catch (IOException e) {
