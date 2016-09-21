@@ -55,6 +55,8 @@ public class Corpus {
     public String relationTypeFileName;
     public String relationInstanceFileName;
     public RelationBuilder relationBuilder;
+
+    public Set<String> entitiesSuggested = new HashSet<String>();
     public Set<String> relationsSuggested = new HashSet<String>();
 
     public TermFilter termFilter = new TermFilter();

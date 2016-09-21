@@ -1,5 +1,7 @@
 package edu.nyu.jet.ice.entityset;
 
+import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.models.IceEntitySet;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
@@ -46,10 +48,14 @@ public class EntitySetExpander {
 
     /**
      * Based on an entity index and a terms file, recommend seeds for entity set construction.
+     * Uses agglomerative clustering to build some clusteers of terms and returns
+     * the highest-raanking cluster.  Terms which are already part of an entity set
+     * are not included, nor are terms which have been previously suggested.
+     *
      * @param indexFileName
      * @param termFileName
      * @param type
-     * @return
+     * @return   a list of suggested seeds
      */
     public static List<String> recommendSeeds(String indexFileName, String termFileName, String type) {
         Map<String, Vector> entityFeatureDict = new HashMap<String, Vector>();
@@ -91,6 +97,14 @@ public class EntitySetExpander {
                         Character.isUpperCase(text.charAt(0))) {
                     continue;
                 }
+                if (Ice.selectedCorpus.entitiesSuggested.contains(text))
+                    continue;
+                for (IceEntitySet eset : Ice.entitySets.values()) {
+                    if(eset.getNames().contains(text))
+                        continue;
+                    if(eset.getNouns().contains(text))
+                        continue;
+                }
                 String entityType = subParts[1];
                 if (!entityType.equals(type)) {
                     continue;
@@ -129,7 +143,10 @@ public class EntitySetExpander {
             }
         }
 
-        return extractSeeds(chosen);
+        List<String> suggestion = extractSeeds(chosen);
+        for (String term : suggestion)
+            Ice.selectedCorpus.entitiesSuggested.add(term);
+        return suggestion;
     }
 
     private static List<String> extractSeeds(DataPointCluster c) {
