@@ -344,7 +344,7 @@ public class IcePreprocessor extends Thread {
         List<Annotation> names = doc.annotationsOfType("ENAMEX");
         if (names != null) {
             for (Annotation name : names) {
-                saveAnnotation(pw, "ENAMEX", name.span(), (String) name.get("type"));
+                saveAnnotation(pw, "ENAMEX", name.span(), (String) name.get("TYPE"));
             }
         }
     }
