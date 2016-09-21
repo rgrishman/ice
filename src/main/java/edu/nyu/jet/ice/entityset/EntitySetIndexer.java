@@ -146,24 +146,28 @@ public class EntitySetIndexer {
                         inputFile = inputFile + "." + inputSuffix;
                     }
                     System.out.println ("\nIndexing terms in document " + docCount + ": " + inputFile);
-                    ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
-                    doc.setAllTags(true);
-                    doc.open();
-                    // process document
-                    Ace.monocase = Ace.allLowerCase(doc);
-                    Control.processDocument(doc, null, false, docCount);
+                    try {
+                        ExternalDocument doc = new ExternalDocument ("sgml", inputDir, inputFile);
+                        doc.setAllTags(true);
+                        doc.open();
+                        // process document
+                        Ace.monocase = Ace.allLowerCase(doc);
+                        Control.processDocument(doc, null, false, docCount);
 
-                    IcePreprocessor.fetchAnnotations(
-                            FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
-                            inputDir,
-                            inputFile);
-                    IcePreprocessor.loadPOS(doc);
-                    SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet();
-
-                    List<Annotation> sentences = doc.annotationsOfType("sentence");
-                    if (sentences == null) continue;
-                    for (Annotation sentence : sentences) {
-                        allEvents.addAll(processSentence(sentence, doc, syntacticRelationSet, words));
+                        IcePreprocessor.fetchAnnotations(
+                                FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName),
+                                inputDir,
+                                inputFile);
+                        IcePreprocessor.loadPOS(doc);
+                        SyntacticRelationSet syntacticRelationSet = IcePreprocessor.loadSyntacticRelationSet();
+                        List<Annotation> sentences = doc.annotationsOfType("sentence");
+                        if (sentences == null) continue;
+                        for (Annotation sentence : sentences) {
+                            allEvents.addAll(processSentence(sentence, doc, syntacticRelationSet, words));
+                        }
+                    }
+                    catch (Exception e) {
+                        System.err.println("EntitySetIndexer: unable to read document " + inputFile);
                     }
                     if (progressMonitor != null) {
                         if (progressMonitor.isCanceled()) {
