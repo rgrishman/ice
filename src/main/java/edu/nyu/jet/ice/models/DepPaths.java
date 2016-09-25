@@ -284,11 +284,14 @@ public class DepPaths {
     }
 
     /**
-     *  records dependency path 'path' from 'mention1' to 'mention2' as follows:
+     *  Records dependency path 'path' from 'mention1' to 'mention2' as follows:
      *  <ul>
      *  <li> with its actual arguments, in 'relationInstanceCounts'            </li>
      *  <li> with its argument types, in 'relationTypeCounts'                  </li>
-     *  <li> with its argument types, in 'sourceDict' and 'linearizationDict'  </li>
+     *  <li> as a mapping from paths to the linearized form of the path,
+     *       in linearizationDict                                              </li>
+     *  <li> as a mapping from paths to an example sentence containing that path,
+     *       in sourceDict                                                     </li>
      *  </ul>
      */
 

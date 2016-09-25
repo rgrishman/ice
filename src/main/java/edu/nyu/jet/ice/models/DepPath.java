@@ -25,18 +25,22 @@ public class DepPath {
     // otherwise, the string representation will be computed on-the-fly
     String path = null;
 
-    Span arg1 = null;
-    Span arg2 = null;
+    // the span of the first node on the path
+    private Span arg1;
 
-    // Dependency triples on the path
-    List<SyntacticRelation> relations = new ArrayList<SyntacticRelation>();
+    // the span of the last node on the path
+    private Span arg2;
+
+    // dependency triples on the path
+    private List<SyntacticRelation> relations = new ArrayList<SyntacticRelation>();
+
+    // the position of the head of the first node on the path
+    private int start;
+
+    // the position of the head of the last node on the path
+    private int end;
 
     static Stemmer stemmer = Stemmer.getDefaultStemmer();
-
-    int start = -1;
-
-    int end = -1;
-
 
     /**
      * Constructor that allows the user to set spans for both arguments
@@ -54,6 +58,14 @@ public class DepPath {
         this.end = toPosn;
         this.arg1 = arg1;
         this.arg2 = arg2;
+    }
+
+    /*
+     *  Creates a copy of a DepPath with an empty list of relations.
+     */
+
+    public DepPath copy () {
+        return new DepPath(start, end, arg1, arg2);
     }
 
     /**
@@ -131,6 +143,10 @@ public class DepPath {
 
     public void setEnd(int end) {
         this.end = end;
+    }
+    
+    public List<SyntacticRelation> getRelations() {
+        return relations;
     }
 
     public int length() {

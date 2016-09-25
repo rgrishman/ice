@@ -38,10 +38,10 @@ public class DepPathRegularizer {
      */
 
     public DepPath regularize(DepPath p) {
-        DepPath result =  new DepPath(p.start, p.end, p.arg1, p.arg2);
+        DepPath result =  p.copy();
 
         SyntacticRelation prevRelation = null;
-        for (SyntacticRelation r : p.relations) {
+        for (SyntacticRelation r : p.getRelations()) {
             // prep_of: when using transformation
             // prep: when not using transformation
             if ((r.type.equals("prep_of") || r.type.equals("prep")) &&
