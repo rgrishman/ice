@@ -68,6 +68,7 @@ public class Nice {
 
     public void setRelationsPanel(SwingRelationsPanel relationsPanel) {
         this.relationsPanel = relationsPanel;
+        relationsPanel.setName("relations panel");
     }
 
     public void setEntitySetPanel(SwingEntitySetPanel entitySetPanel) {
