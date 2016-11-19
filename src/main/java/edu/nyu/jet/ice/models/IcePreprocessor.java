@@ -738,14 +738,23 @@ public class IcePreprocessor extends Thread {
                + sr.targetWord + " | " + sr.targetPosn + " | " + sr.targetPos;
     }
 
+    /**
+     *  Fetch the dependency information from the annotation cache.  Issues a warning
+     *  message if the cache has no dependency information.
+     */
+
     public static SyntacticRelationSet loadSyntacticRelationSet() throws IOException {
         SyntacticRelationSet relations = new SyntacticRelationSet();
+        boolean found = false;
         for (String line : annotationCache) {
             if (line.startsWith("dep")) {
                 line = line.substring(4);
                 relations.add(new SyntacticRelation(line));
+                found = true;
             }
         }
+        if (!found)
+            System.out.println("Warning: no dependency information in annotation cache.");
         return relations;
     }
 
