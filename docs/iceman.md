@@ -31,22 +31,27 @@ Unzip the package and run:
 
     java -Xmx4g -cp ICE-0.2.0-jar-with-dependencies.jar edu.nyu.jet.ice.controllers.Nice
 
+or, if you have updated PATH in your shell to include JET and ICE commands, simply enter
+
+    runice
+
 ![The corpus panel](ice1.png)
 
 ## The Corpus Panel
 
-__ Adding a new corpus__
+__Adding a new corpus__
 
- A corpus is defined by a directory and a file extension.  The set of non-directory files dominated by that directory and ending in the specified extension constitute an ICE corpus. 
+ A corpus is defined by a directory and a file extension.  The set of non-directory files dominated by that directory and ending in the specified extension constitute an ICE corpus.
 
 To add a new corpus, first click *add corpus* , then either enter the path of the
 root directory of the corpus or click *browse* to select the directory where the
-files are located. You can apply a filter on the extension of the filename (e.g. sgm) 
-in the corresponding text filter;  You need to click "Apply" to apply the filter.
+files are located. You can apply a filter on the extension of the filename (e.g. sgm)
+in the corresponding text filter;  You need to click "Preprocess" to apply the filter.
 
-Clicking "Apply" will start the preprocessing process, which is rather **slow**.
+Clicking "Preprocess" will start the preprocessing process, which is rather **slow**.
 This process will perform dependency parsing, name tagging, and coref resolution, and
 will save the result of these steps for use by the following components.
+(You may want to do this offline, as described at the end of this manual.)
 
 __The background corpus__
 
@@ -61,7 +66,7 @@ currently analyzing.  A set of red and green status messages indicate what
 pre-processing steps have been performed on the corpus.  The *refresh*
 button updates these messages.
 
-Two more buttons complete this panel.  The *persist* button saves the 
+Two more buttons complete this panel.  The *persist* button saves the
 current status of ICE, including the corpus that you worked on, as well
 as extracted entity sets and relations.  The *export* button saves the
 information on entity sets and relations in a format that can be loaded
@@ -71,19 +76,14 @@ into Jet.
 
 ## Finding entities
 
-__Finding salient terms__
-
 The first step in analyzing the corpus is to identify the salient terms --
-those which occur more frequently in this corpus than in a 'background 
-corpus'.  This is done in two steps.  First you *count words* in the
-corpus; this produces raw word counts.  Then you select a background 
-corpus to compare against and *find terms*.  The result will be a list of terms
-ranked by their relative frequency in the two corpora (those with the 
+those which occur more frequently in this corpus than in a 'background
+corpus'.  This is done on the entities panel using the
+*find terms* button.  The result will be a list of terms
+ranked by their relative frequency in the two corpora (those with the
 highest frequency appearing first).
 
-You can select to display nouns, names, verbs, or some combination.
-
-Note that, you can also index entities in this panel. This is necessary
+Note that you can also index entities in this panel. This is necessary
 for building entity sets. Please refer to the next section for more information.
 
 ![The entity sets panel](ice3.png)
@@ -92,14 +92,14 @@ for building entity sets. Please refer to the next section for more information.
 
 __Basic approach__
 
-You may have some prior notion from the domain of the texts or from 
-the analysis task as to what entity sets should be added.  Alternatively, 
+You may have some prior notion from the domain of the texts or from
+the analysis task as to what entity sets should be added.  Alternatively,
 the top ranked unassigned terms from the term finder may suggest a needed
-class.  Either way, you are ready to start building a new entity class 
-(this is in addition to the classes {person, organization, geo-political entity, 
+class.  Either way, you are ready to start building a new entity class
+(this is in addition to the classes {person, organization, geo-political entity,
 location, facility, vehicle, weapon} predefined by ACE.
 
-The set builder is based on distributional similarity:  Words which appear 
+The set builder is based on distributional similarity:  Words which appear
 in the same contexts (e.g., as the subject of the same set of verbs) are likely
 to be semantically similar.  You start the process by giving some seeds -- typical
 members of the set.  The tool then ranks the other words in the corpus based on
@@ -111,7 +111,7 @@ you save these words as the definition of a new entity set.
 
 __Indexing__
 
-To make the process efficient, ICE keeps an index of the words appearing 
+To make the process efficient, ICE keeps an index of the words appearing
 at least n times in a given context.  Before you build the first entity
 set from a new corpus, you have to build this index.  Go to the *Entities*
 panel, set the cutoff (minimum value of n, default = 1, we recommend n \> 3)
@@ -119,17 +119,16 @@ and select *Index*; this will take a while.
 
 __Building a set__
 
-You are now ready to build an entity set.  Select the *Add* button on the 
+You are now ready to build an entity set.  Select the *Add* button on the
 left side of the *Entity Set* panel and provide a name for the entity set.
 Next add at least two seeds to the set, using the *Add* button on the
 right side, under "Members". Click *Suggest* if you want Ice to suggest
-seeds for you. (Currently *Suggest* will always suggest the same seeds
-even if you click it multiple times.)
+seeds for you. (Multiple clicks on *Suggest* will cycle through the terms in the corpus.)
 
 Once you have entered your seeds, select *Expand*.  ICE will compute
 similarities as described above and display a list of terms, ranked
 by their similarity to the seeds. You mark items as correct or
-incorrect, rerank if you want, and select save when satisfied with the set.
+incorrect, rerank if you want, and select *save* when satisfied with the set.
 
 ![Ranking entities](rankentities.png)
 
@@ -159,14 +158,16 @@ A pattern is a sequence of words connecting two entities of specified types. (Ac
 specifies the grammatical relation between these words, but this level of detail is hidden from the user.)  Because the
 pattern must connect two entities, defining new entity types can lead to new patterns connecting these entities.
 
-To find the most common patterns in a corpus, use the *Find common patterns* button. (
-If *Show only sentential patterns* is selected, only patterns of the subject - verb - object form
+To find the most patterns that are most specific to a domain, use the *All phrases* or the *Sentential phrases*
+button on this panel. (If *Sentential patterns* is selected, only patterns of the subject - verb - object form
 are displayed.  This is useful for finding events.)
-
-To find the patterns that are most specific to a domain, use the *Rank patterns* button.
 This will rank the patterns based on the ratio between their frequency in the current
 corpus and their frequency in the background corpus. This is similar to what the *Find entities*
 button does for entities.
+
+Finding all patterns can be aa slow process if the corpora are large. This needs to be redone only when the
+entity sets change. To save time, ICE saves the most recently
+computed set of patterns and asks whether it is OK to display this older set.
 
 ![The relations panel](ice5.png)
 
@@ -176,8 +177,14 @@ Building relations is just like building entity sets.  Select the *Add* button o
 left side of the *Relations* panel and provide a name for the relation.
 Next add at least one seed to the set, using the *Add* button on the
 right side, under "Members". Click *Suggest* if you want Ice to suggest a seed pattern
-for you. (Currently *Suggest* will always suggest the same seeds
- even if you click it multiple times.)
+for you. (Repeatedly clicking *Suggest* will cycle through the patterns extracted
+from the corpus.)
+
+Note that the seeds you provide must be patterns extracted from the corpus.  For a
+relation these patterns include the entity types of the two arguments of the
+relation, as well as the base forms of the words in between.  If you enter
+a seed not in the corpus, ICE will find the most similar valid seed and
+present it to you for your approval or rejection.
 
 Once you have entered your seeds, select *Expand*.  ICE will bootstrap
 patterns that distribute similarly to your seed pattern. You mark items as correct or
@@ -200,13 +207,37 @@ Like building entity sets, you can choose whether you want to accept or reject a
  the ice.yml file, so that these entities will be available after Ice is closed and
   re-opened. Click *Export* to export all entity sets in the ice.yml file to Jet.
 
+  __Indexed relation arguments__
+
+A relation expresses a relationship between two arguments.  If these arguments
+are of different types, there is no ambiguity in how they correspond to
+elements in a pattern.  But there is an ambiguity if the two arguments are
+of the same type.  Suppose we wanted to define a *child* relation in which the
+first argument is the parent and the second argument is the child.  Consider
+four patterns expressing this relation:
+
+    PERSON 's son , PERSON
+    PERSON 's daughter , PERSON
+    PERSON 's father , PERSON
+    PERSON 's mother , PERSON
+
+In the first two patterns, the first instance of *PERSON* corresponds to the first
+argument of the relation;  in the third and fourth patterns it corresponds to the
+second argument.  We can specify this by
+
+    PERSON(1) 's son , PERSON(2)
+    PERSON(1) 's daughter , PERSON(2)
+    PERSON(2) 's father , PERSON(1)
+    PERSON(2) 's mother , PERSON(1)
+
+
 ## ICECLI: The Command Line Interface
 
 ICE also provides a command line interface for actions that do not require human intervention.
 This can be called in the following command:
 
     icecli ACTION CORPUS [OPTIONS]
-        
+
 ### The _addCorpus_ action
 
 This action adds a new corpus to the ICE system and preprocess it. It is a time-consuming action.
@@ -217,14 +248,14 @@ The following command creates a new corpus called deaatl, from txt files in the 
 and use apw-nov (which already exists in ICE) as background.
 
     icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov
-    
+
 ### Parallel _addCorpus_ action
 
 When processing very large corpus on a server with abundant memory, it is possible to spawn multiple
 processes using the --processes option. It will start multiple icecli script to process input data
 in parallel. By default, each icecli script requires 4GB of memory.
 
-The following command creates a new corpus called deaatl, from txt files in the corpus/dea_processed/atl 
+The following command creates a new corpus called deaatl, from txt files in the corpus/dea_processed/atl
 directory using apw-nov (which already exists in ICE) as background with 8 parallel processes.
 
     icecli addCorpus deaatl --inputDir corpus/dea_processed/atl --filter txt --background apw-nov --processes 8
@@ -236,10 +267,10 @@ the same filter (file extension). This action only works for Java 7+.
 
 The following command merges 3 corpora apw, afp, and xin into a large corpus, which we call "three". Symlinks
 to all source files will be created in the threeDir/ directory.
- 
+
      icecli mergeCorporaInto three --targeDir threeDir --filter sgm --fromCorpora apw,afp,xin
 
-### The _setBackgroundFor_ action 
+### The _setBackgroundFor_ action
 
 This action set the background corpus of a given corpus in ICE. The following command set the background corpus
 of deaatl to be apw-nov.
@@ -257,7 +288,7 @@ be properly set first. The following command finds entities (domain-specific nou
 
 This command index entities in a given corpus. findEntities should be run at least once before this command can run
 successfully. We have the opportunity to set the cutoff here. With a higher cutoff, a smaller portion of more specific
-terms will be kept in the index. If the cutoff is not set, it defaults to 3.0. 
+terms will be kept in the index. If the cutoff is not set, it defaults to 3.0.
 
 The following command indexes entities in deaatl, and sets cutoff to 4.0.
 
@@ -270,3 +301,12 @@ it will also generate a pattern ratio file, which contains a list of phrases ran
 command extracts phrases from deaatl.  
 
     icecli findPhrases deaatl
+
+### Multiple branches
+
+Consider the situation where you have multiple small corpora which you would like to preprocess
+in parallel and then combine.  By default ICE and IceCLI read from and update a file *ice.yml*,
+so running multiple copies of IceCLI in parallel would not work.  The *branch* prameter
+changes the file name to *branch*.yml, so multiple copies of IceCLI can be run in parallel
+with different values of *branch*.  These can then be combined by an *import* action
+with a *fromBranch* parameter followed by a *mergeCorporaInto* action.
