@@ -249,7 +249,9 @@ public class DepPaths {
             for (Annotation name : names) {
                 if (annotationInSentence(name, sentence)) {
                     localNames.add(name);
-                    localHeadSpans.add(IcePreprocessor.findTermHead(doc, name, relations).span());
+                    // do not use 'findTerminalHead' till it is improved
+                    // localHeadSpans.add(IcePreprocessor.findTermHead(doc, name, relations).span()); >>> check
+                    localHeadSpans.add(name.span());
                 }
             }
             if (localNames.size() > MAX_MENTIONS_IN_SENTENCE) {
