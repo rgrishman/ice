@@ -1,60 +1,46 @@
 #!/usr/bin/env bash
+#
+#  input: JET distribution tar
+#         $ICE_HOME
+#  output:  ICE distribution tar
+#
 # Run this script in a fresh directory
-JET_PACKAGE=http://cs.nyu.edu/grishman/jet/jet-150509.tar.gz
-PARSER_MODEL=http://cs.nyu.edu/grishman/jet/parseModel.gz
-NE_MODELS=http://cs.nyu.edu/grishman/jet/AceOntoMeneModel.gz
-ICE_JAR=ice-all.jar
+#
+JET_PACKAGE=$JET_HOME/export/jet-161201.tar.gz
 export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
-echo "Fetching Jet package..."
-curl $JET_PACKAGE > jet.tar.gz
-echo "Fetching parser model..."
-curl $PARSER_MODEL > parseModel.gz
-echo "Fetching NE tagger models..."
-curl $NE_MODELS > AceOntoMeneModel.gz
-gunzip AceOntoMeneModel.gz
 curl http://daringfireball.net/projects/downloads/Markdown_1.0.1.zip > Markdown_1.0.1.zip
 unzip Markdown_1.0.1.zip
-rm -rf ice-bin
-mkdir ice-bin
-cd ice-bin
-mv ../jet.tar.gz ./
-tar zxvf jet.tar.gz
+echo "Unpacking Jet package..."
+tar zxvf $JET_PACKAGE
 mv props jet-props
-mv ../parseModel.gz data/
-mv ../AceOntoMeneModel acedata/
-rm build.xml
-rm jet.tar.gz
-rm -rf parser-stub-src
-rm -rf src
-rm -rf test
-git clone https://github.com/ivanhe/ice.git
-cd ice
-# Temporary: Should use master branch
-# git checkout rc-dec15
-ant
-perl ../../Markdown_1.0.1/Markdown.pl README.md > README.html
-cd ..
-perl ../Markdown_1.0.1/Markdown.pl ice/docs/iceman.md > ice/docs/iceman.html
-mv ice/README.html ./
-cp ice/docs/* docs/
-rm docs/*.md
-cp ice/LICENSE ./
-cp ice/COPYRIGHT ./
-cp ice/$ICE_JAR ./
-cp ice/src/scripts/runice.sh ./
-cp ice/src/scripts/runtagger.sh ./
-cp ice/src/scripts/icecli ./
-cp ice/src/scripts/icecli6 ./
-cp ice/src/props/* ./
-cp ice/src/models/data/* ./data/
+cp jet-all.jar $ICE_HOME/lib
+pushd $ICE_HOME
+# ant dist-all-jar
+popd
+perl Markdown_1.0.1/Markdown.pl $ICE_HOME/README.md > README.html
+perl Markdown_1.0.1/Markdown.pl $ICE_HOME/docs/iceman.md > docs/iceman.html
+perl Markdown_1.0.1/Markdown.pl $ICE_HOME/docs/ICE_Design.md > docs/ICE_Design.html
+cp $ICE_HOME/docs/*.png docs/
+cp $ICE_HOME/LICENSE ./
+cp $ICE_HOME/COPYRIGHT ./
+#  scripts
+cp $ICE_HOME/src/scripts/runice.sh ./bin
+cp $ICE_HOME/src/scripts/runtagger.sh ./bin
+cp $ICE_HOME/src/scripts/icecli ./bin
+cp $ICE_HOME/src/scripts/icecli6 ./bin
+#  ice.yml, iceprops, onomaprops, parseprops, props
+cp $ICE_HOME/src/props/* ./
+#  quantifierPatterns and ACE DTD
+cp $ICE_HOME/src/models/data/* ./data/
+#  files for export from ICE
 touch acedata/ice_onoma.dict
 touch acedata/EDTypesFromUser.dict
 touch acedata/iceRelationModel
-chmod u+x runice.sh
-chmod u+x runtagger.sh
-chmod u+x icecli6
-chmod u+x icecli
-rm -rf ice
-cd ..
+chmod u+x bin/runice.sh
+chmod u+x bin/runtagger.sh
+chmod u+x bin/icecli6
+chmod u+x bin/icecli
 rm -rf Markdown*
-zip -r -X ice-bin.zip ice-bin/
+eco "Building ICE tar"
+set date = `date +'%y%m%d'`
+tar zcvf ice-$date.tar.gz *
