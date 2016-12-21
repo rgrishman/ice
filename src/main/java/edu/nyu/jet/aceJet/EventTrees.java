@@ -98,7 +98,8 @@ public class EventTrees {
                     // collect local mentions
                     System.err.println("SENTENCE:" + doc.text(sentence));
                     DepParser.parseSentence(doc, sentence.span(), relations);
-                    IcePreprocessor.appendSyntacticRelationSet(relations, parsesWriter, sid);
+                    // ****** must be updated to reflect new representation ***********
+                    // IcePreprocessor.appendSyntacticRelationSet(relations, parsesWriter, sid);
 
                     List<Annotation> localNames = new ArrayList<Annotation>();
                     List<Span> localHeadSpans   = new ArrayList<Span>();
