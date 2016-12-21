@@ -33,7 +33,7 @@
                 <include name="la4j-0.6.0.jar" />
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
-                <include name="jet-all-1.9.0.jar" />
+                <include name="jet-all.jar" />
             </fileset>
         </path>
 
@@ -52,7 +52,7 @@
                 <include name="fest-assert-1.2.jar" />
                 <include name="fest-reflect-1.2.jar" />
                 <include name="fest-util-1.1.2.jar" />
-                <include name="jet-all-1.9.0.jar" />
+                <include name="jet-all.jar" />
             </fileset>
         </path>
     </target>
@@ -64,7 +64,6 @@
     <target name="compile" depends="prepare">
         <javac srcdir="${src.dir}"
                destdir="${build.dir}"
-               target="1.7"
                encoding="UTF-8"
                classpathref="build.classpath"
                optimize="${optimize}"
@@ -95,7 +94,7 @@
     <target name="test" depends="compile-tests">
         <mkdir dir="${test.report.dir}" />
 
-        <junit printsummary="yes" fork="no" maxmemory="400m">
+        <junit printsummary="yes" fork="no" maxmemory="1600m">
             <classpath refid="test.classpath" />
             <classpath>
                 <pathelement path="${build.dir}" />
@@ -153,7 +152,7 @@
                 <include name="la4j-0.6.0.jar" />
                 <include name="miglayout-swing-4.2.jar" />
                 <include name="miglayout-core-4.2.jar" />
-                <include name="jet-all-1.9.0.jar"  />
+                <include name="jet-all.jar"  />
             </fileset>
         </unjar>
         <delete dir="${jar.build.dir}/META-INF" />
