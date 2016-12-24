@@ -35,7 +35,7 @@ public class Bootstrap {
      *  seeds and candidate pattern.
      */
 
-    public static final int MIN_RELATION_COUNT = 2;
+    public static final int MIN_RELATION_COUNT = 1;
 
     public static final double MIN_BOOTSTRAP_SCORE = 0.05;
 
