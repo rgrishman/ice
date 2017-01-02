@@ -1,10 +1,12 @@
-# JET properties file to run ACE with maxent chunker, maxent NE with word clusters + maxent relation tagger
+# JET properties file to run ACE with ICE-generated entity classes and relation patterns
 Jet.batch                = t
 Jet.dataPath             = data
 EnglishLex.fileName1     = Jet4.dict
 EnglishLex.fileName2     = titles.dict
 Gazetteer.fileName       = loc.dict
 NameGender.fileName      = gender.dict
+DepParser.model.fileName         = parseModel.gz
+DepParser.transformations        = t
 Time.fileName            = time_rules.yaml
 Ace.EDTtype.fileName     = ../acedata/EDT type dict 05.txt
 Ace.generic.fileName     = ../acedata/generic dict 05.txt
@@ -14,15 +16,14 @@ Tags.fileName            = pos_hmm.txt
 Pattern.fileName1        = MEchunkPatterns.txt
 Pattern.fileName2	 = NPpatterns.txt
 Chunker.fileName         = chunkModel.txt
-NameTags.ME.fileName = ../acedata/AceOntoMeneModel
-WordClusters.fileName = brownClusters10-2014.txt
-##### ICE USER CONFIG FILES #####
+NameTags.ME.fileName     = ../acedata/AceOntoMeneModel
+WordClusters.fileName    = brownClusters10-2014.txt
+##### ICE GENERATED FILES #####
 Onoma.fileName           = ../acedata/ice_onoma.dict
 Ace.EDTtype.auxFileName  = ../acedata/EDTypesFromUser.dict
-Ace.RelationModel.fileName = ../acedata/iceRelationModel
+Ace.RelationDepPaths.fileName = ../acedata/iceRelationModel
 #################################
-#
 processDocument      = sentenceSplit, sentence:processSentence
-processSentence      = tokenize, lexLookup, pruneTags, tagNames, chunk, \
-                       pat(names), pat(othernames), ng:processNG
+processSentence      = tokenize, lexLookup, pruneTags, tagNames, tagNamesFromOnoma, chunk, \
+                       pat(names), pat(othernames), ng:processNG, depParse, resolve
 processNG            = pat(ng-chunks)
