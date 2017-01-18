@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 /**
- * Describe the code here
+ * Frame for capturing user feedback regarding membership of entities
+ * in an entity set.
  *
  * @author yhe
  * @version 1.0
  */
+
 public class EntitySetRankerFrame extends JFrame {
     private EntitySetExpander expander;
     public JScrollPane listPane;
@@ -166,6 +168,12 @@ public class EntitySetRankerFrame extends JFrame {
             }
         });
 
+        //
+        //  save button
+        //
+        //  build a new IceEntitySet consisting of all terms labeled YES in frame
+        //
+
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 String type = EntitySetRankerFrame.this.name.toUpperCase();
@@ -199,8 +207,8 @@ public class EntitySetRankerFrame extends JFrame {
         // handle the click of [Exit]
         exitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                EntitySetBuilder.currentFrame = Ice.mainFrame;
-				expander.setProgressMonitor(null);
+                // EntitySetBuilder.currentFrame = Ice.mainFrame;
+                expander.setProgressMonitor(null);
 
                 EntitySetRankerFrame.this.dispose();
             }
@@ -209,8 +217,8 @@ public class EntitySetRankerFrame extends JFrame {
         // handle the click of [x]
         this.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                EntitySetBuilder.currentFrame = Ice.mainFrame;
-				expander.setProgressMonitor(null);
+                // EntitySetBuilder.currentFrame = Ice.mainFrame;
+                expander.setProgressMonitor(null);
 
             }
         });
