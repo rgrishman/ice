@@ -6,8 +6,11 @@
 #
 # Run this script in a fresh directory
 #
-setenv JET_PACKAGE $JET_HOME/export/jet-161201.tar.gz
-export JAVA_TOOL_OPTIONS "-Dfile.encoding=UTF-8"
+setenv JET_PACKAGE $JET_HOME/jet-170101.tar.gz
+setenv JAVA_TOOL_OPTIONS "-Dfile.encoding=UTF-8"
+rm -rf ice-bin
+mkdir ice-bin
+cd ice-bin
 curl http://daringfireball.net/projects/downloads/Markdown_1.0.1.zip > Markdown_1.0.1.zip
 unzip Markdown_1.0.1.zip
 echo "Unpacking Jet package..."
@@ -45,6 +48,7 @@ chmod u+x bin/icecli6
 chmod u+x bin/icecli
 rm -rf Markdown*
 rm -rf clone-dir
+cd ..
 echo "Building ICE tar"
 set date = `date +'%y%m%d'`
-tar zcvf ice-$date.tar.gz *
+tar zcvf ice-$date.tar.gz ice-bin/
