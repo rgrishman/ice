@@ -5,7 +5,6 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 //Author:       Ralph Grishman
 //Description:  A Java-based Information Extraction Tool -- Customization Environment
 
-import edu.nyu.jet.ice.uicomps.EntitySetBuilder;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.uicomps.RelationBuilder;
 import edu.nyu.jet.ice.uicomps.ListFilter;
@@ -61,7 +60,6 @@ public class Corpus {
 
     public TermFilter termFilter = new TermFilter();
     static public RelationFilter relationFilter = new RelationFilter();
-    public EntitySetBuilder entitySetBuilder = new EntitySetBuilder();
 
     // property methods
     public String getName() {

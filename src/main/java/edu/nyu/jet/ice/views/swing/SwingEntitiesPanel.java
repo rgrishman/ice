@@ -13,6 +13,7 @@ import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.entityset.EntityIndexerBox;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
 
@@ -78,7 +79,8 @@ public class SwingEntitiesPanel extends JPanel implements Refreshable {
 
         termBox.add(findEntitiesButton);
 
-        Box indexBox = Ice.selectedCorpus.entitySetBuilder.makeSwingBox();
+        EntityIndexerBox eib = new EntityIndexerBox();
+        Box indexBox = eib.makeSwingBox();
         this.add(termBox, "cell 0 0");
         this.add(statusPanel, "cell 1 0 1 2");
         this.add(indexBox, "cell 0 1");
