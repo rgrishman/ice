@@ -2,6 +2,7 @@ package edu.nyu.jet.ice.relation;
 
 import edu.nyu.jet.ice.models.MatcherPath;
 import edu.nyu.jet.ice.models.PathMatcher;
+import edu.nyu.jet.ice.models.WordEmbedding;
 import opennlp.model.Event;
 
 import java.io.BufferedReader;
@@ -68,7 +69,7 @@ public class PathRelationExtractor {
     }
 
     public void loadEmbeddings(String embeddingFile) throws IOException {
-        pathMatcher.loadWordEmbedding(embeddingFile);
+        WordEmbedding.loadWordEmbedding(embeddingFile);
     }
 
     /**
