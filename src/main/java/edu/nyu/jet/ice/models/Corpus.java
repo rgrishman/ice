@@ -315,6 +315,11 @@ public class Corpus {
         return allFiles;
     }
 
+    /**
+     *  Writes to the docListFileName (as specified by the FileNameSchema) the
+     *  names of all files in the corpus, excludng the file extension.
+     */
+
     public void writeDocumentList() {
         String[] docs = buildDocumentList();
         if (docs == null) return;

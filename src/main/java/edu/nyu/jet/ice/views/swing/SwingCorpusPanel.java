@@ -158,6 +158,11 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
             public void actionPerformed(ActionEvent actionEvent) {
                 Object[] options = {"No",
                         "Yes"};
+                setFilter(filterTextField.getText());
+                if (Ice.selectedCorpus.getNumberOfDocs()  == 0) {
+                    JOptionPane.showMessageDialog(null, "Corpus is empty.", "alert", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 int n = JOptionPane.showOptionDialog(null,
                         "Preprocessing is the (only) time consuming step in ICE\n" +
                         "Do you wish to continue?",
@@ -170,7 +175,6 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                 if (n == 0) {
                     return;
                 }
-                setFilter(filterTextField.getText());
                 IcePreprocessor icePreprocessor = new IcePreprocessor(
                         Ice.selectedCorpus.directory,
                         Ice.iceProperties.getProperty("Ice.IcePreprocessor.parseprops"),
@@ -329,6 +333,9 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
     }
 
     public void setFilter(String filterName) {
+        if (filterName.startsWith(".")) {
+            filterName = filterName.substring(1);
+        }
         Ice.selectedCorpus.setFilter(filterName);
         Ice.selectedCorpus.writeDocumentList();
         // need to update because corpus size may have changed
