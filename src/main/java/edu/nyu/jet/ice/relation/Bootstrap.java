@@ -6,6 +6,7 @@ import edu.nyu.jet.aceJet.SimAnchoredPathSet;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.PathMatcher;
+import edu.nyu.jet.ice.models.WordEmbedding;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
@@ -48,12 +49,6 @@ public class Bootstrap {
 
     public List<IcePath> foundPatterns = new ArrayList<IcePath>();
 
-    public Set<String> getSeedPaths() {
-        return seedPaths;
-    }
-
-    public Set<String> getRejects() {return rejects; }
-
     private ProgressMonitorI progressMonitor = null;
 
     private String relationName = "";
@@ -66,14 +61,48 @@ public class Bootstrap {
         this.relationName = relationName;
     }
 
+    /**
+     *  Paths accepted by user (in the form of String representation of dependency path).
+     *  Initialized by 'initialize', augmented by 'iterate', used by 'bootstrap'.
+     */
+
     Set<String> seedPaths = new HashSet<String>();
 
     /**
-     *  Paths explicitly rejected by user.
+     *  Paths accepted by user (in the form of String representation of dependency path).
+     */
+
+    public Set<String> getSeedPaths() {
+        return seedPaths;
+    }
+
+    /**
+     *  Paths explicitly rejected by user 
+     *  (in the form of String representation of dependency paths).
      */
 
     Set<String> rejects = new HashSet<String>();
+
+    /**
+     *  Paths explicitly rejected by user 
+     *  (in the form of String representation of dependency paths).
+     */
+
+    public Set<String> getRejects() {
+        return rejects; }
+
+    /**
+     *  Set of all paths in corpus.
+     */
+
     AnchoredPathSet pathSet;
+
+    /**
+     *  Sum of word embeddings of seeds.
+     */
+
+    double[] seedEmbedding;
+
     String arg1Type = "";
     String arg2Type = "";
 
@@ -111,26 +140,43 @@ public class Bootstrap {
      *  Initialize the process of bootstrapping to build a relation model,
      *  creating an initial set of candidate paths.  These candidates are
      *  returned throguh the variable <CODE>foundPatterns</CODE>.
+     *  Invoked by pressing the "expand" button on the relation panel.
      *
-     *  @param  seedPath    one or more English expressions, separated by
-     *                      ':::', the seed for the bootstrapping
-     *  @param  patternFileName
+     *  @param  bigSeedString    one or more English expressions, separated by
+     *                           ':::', the seed for the bootstrapping
+     *  @param  patternFileName  name of file containing all dependency
+     *                           path instances extracted from the corpus
      */
 
-    public List<IcePath> initialize(String seedPath, String patternFileName) {
+    public List<IcePath> initialize(String bigSeedString, String patternFileName) {
         try {
             DepPathMap depPathMap = DepPathMap.getInstance();
-            String[] splitPaths = seedPath.split(":::");
+            String[] splitSeedString = bigSeedString.split(":::");
             List<String> allPaths = new ArrayList<String>();
-            for (String p : splitPaths) {
+            seedEmbedding = null;
+            // iterate over all seed English expressions,
+            // finding for each expression the dependency paths (if any)
+            // and putting these paths together in seedPaths
+            for (String p : splitSeedString) {
+                // >>>>>>>>>>>>>> convert directly to AnchoredPath
                 List<String> currentPaths = depPathMap.findPath(p);
                 if (currentPaths != null) {
                     for (String currentPath : currentPaths) {
                         String[] parts = currentPath.split("--");
-                        //firstSeedPath = parts[1].trim();
                         allPaths.add(parts[1].trim());
                         arg1Type = parts[0].trim();
                         arg2Type = parts[2].trim();
+                    }
+                }
+                String[] wordsInSeed = p.split(" ");
+                double[] v = WordEmbedding.embed(wordsInSeed);
+                if (v != null) {
+                    if (seedEmbedding == null) {
+                        seedEmbedding = v;
+                    } else {
+                        for (int i = 0; i < v.length; i++) {
+                            seedEmbedding[i] += v[i];
+                        }
                     }
                 }
             }
@@ -142,6 +188,7 @@ public class Bootstrap {
                 return foundPatterns;
             }
             seedPaths.addAll(allPaths);
+
             pathSet = new AnchoredPathSet(patternFileName);
             bootstrap(arg1Type, arg2Type);
         }
@@ -156,13 +203,27 @@ public class Bootstrap {
      *  Perform the next iteration of bootstrapping to build a relation model
      *  (in response to the Iterate button of the relation panel):  adds
      *  <code>approvedPaths</CODE> to the set of positive seeds, adds
-     *  <CODE>rejctedPaths</CODE> to the set of negative seeds, and then
+     *  <CODE>rejectedPaths</CODE> to the set of negative seeds, and then
      *  selects the next set of path candidates.
      */
 
     public List<IcePath> iterate(List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
         addPathsToSeedSet(approvedPaths, seedPaths);
         addPathsToSeedSet(rejectedPaths, rejects);
+        for (IcePath approvedPath : approvedPaths) {
+            String p = approvedPath.getRepr();
+            String[] wordsInSeed = p.split(" ");
+            double[] v = WordEmbedding.embed(wordsInSeed);
+            if (v != null) {
+                if (seedEmbedding == null) {
+                    seedEmbedding = v;
+                } else {
+                    for (int i = 0; i < v.length; i++) {
+                        seedEmbedding[i] += v[i];
+                    }
+                }
+            }
+        }
         bootstrap(arg1Type, arg2Type);
         return foundPatterns;
     }
@@ -177,10 +238,14 @@ public class Bootstrap {
         this.progressMonitor = progressMonitor;
     }
 
+    Map<String, Integer> sharedCount = new HashMap<String, Integer>();
+    Map<String, Integer> totalCount = new HashMap<String, Integer>();
+
     /**
      *  Starting from a set of seed paths, generate a ranked list of candidate paths
      *  to be displayed and (if approved by the user) added to the path set
-     *  for this relation.  This list is returned in <CODE>foundPatterns</CODE>.
+     *  for this relation.  This list is returned in <CODE>foundPatterns</CODE>
+     *  (a list of IcePaths).
      */
 
     private void bootstrap(String arg1Type, String arg2Type) {
@@ -191,93 +256,13 @@ public class Bootstrap {
         foundPatterns.clear();
         DepPathMap depPathMap = DepPathMap.getInstance();
 
-        List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
-
-        for (String sp : seedPaths) {
-            List<AnchoredPath> posPaths = pathSet.getByPath(sp);
-            if (posPaths != null) {
-                for (AnchoredPath p : posPaths) {
-                    seedPathInstances.add(new BootstrapAnchoredPath(p,
-                            sp,
-                            BootstrapAnchoredPathType.POSITIVE));
-                }
-            }
-        }
-        if (seedPathInstances == null) {
-            System.out.println("No examples of this path.");
-            return;
-        }
-        System.out.println(seedPathInstances.size() + " examples of this path.");
-
-        if (progressMonitor != null) {
-            progressMonitor.setNote("Collecting argument pairs");
-            progressMonitor.setProgress(1);
-        }
-
-        // collect other paths connecting the same argument pairs connected by seeds
-        //   shared = set of arg pairs this pattern shares with seeds
-        Map<String, Set<String>> shared = new HashMap<String, Set<String>>();
-        Map<String, BootstrapAnchoredPathType> pathSourceMap =
-                new HashMap<String, BootstrapAnchoredPathType>();
-        for (BootstrapAnchoredPath seed : seedPathInstances) {
-            for (AnchoredPath p : pathSet.getByArgs(seed.argPair())) {
-                String pp = p.path;
-                if (seedPaths.contains(pp)) continue;
-                if (rejects.contains(pp)) continue;
-                if (shared.get(pp) == null) {
-                    shared.put(pp, new HashSet<String>());
-                }
-                shared.get(pp).add(seed.argPair());
-                if (pathSourceMap.containsKey(pp) && pathSourceMap.get(pp) != seed.type) {
-                    pathSourceMap.put(pp, BootstrapAnchoredPathType.BOTH);
-                }
-                else {
-                    pathSourceMap.put(pp, seed.type);
-                }
-            }
-        }
-
         if (progressMonitor != null) {
             progressMonitor.setNote("Computing scores");
             progressMonitor.setProgress(4);
         }
 
-        // for each path which shares pairs with the seed, compute
-        // -- sharedCount = number of distinct argument pairs it shares
-        // -- totalCount = total number of argument pairs for this path
-        // -- score
-        Map<String, Integer> sharedCount = new HashMap<String, Integer>();
-        Map<String, Integer> totalCount = new HashMap<String, Integer>();
-
-        List<IcePath> scoreList = new ArrayList<IcePath>();
-        for (String p : shared.keySet()) {
-            sharedCount.put(p, shared.get(p).size());
-            if (sharedCount.get(p) < MIN_RELATION_COUNT) continue;
-            Set<String> argPairsForP = new HashSet<String>();
-            for (AnchoredPath ap : pathSet.getByPath(p)) {
-                argPairsForP.add(ap.arg1 + ":" + ap.arg2);
-            }
-            totalCount.put(p, argPairsForP.size());
-            double score = (double)sharedCount.get(p) / totalCount.get(p) * Math.log(sharedCount.get(p));
-
-            String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
-            String pRepr = depPathMap.findRepr(fullp);
-            if (pRepr == null) {
-                continue;
-            }
-            String pExample = depPathMap.findExample(fullp);
-            if (pExample == null) {
-                continue;
-            }
-            String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
-            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
-            IcePath icePath = new IcePath(p, pRepr, tooltip, score);
-            if (pRepr.equals(arg1Type + " " + arg2Type)) {
-                continue;
-            }
-            scoreList.add(icePath);
-        }
-
+        List<IcePath> scoreList = WordEmbedding.isLoaded() ? scoreUsingWordEmbeddings() : scoreUsingSharedArguments();
+        if (scoreList == null) return;
         //
         // sort the patterns by score
         //
@@ -317,7 +302,130 @@ public class Bootstrap {
         if (RelationOracle.exists()) {
             RelationOracle.label(foundPatterns);
         }
-                
+    }
+
+    /**
+     *  Construct a list of candidate relation patterns, with scores
+     *  based on number of shared arguments.
+     */
+
+    List<IcePath> scoreUsingSharedArguments () {
+
+        List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
+
+        for (String sp : seedPaths) {
+            List<AnchoredPath> posPaths = pathSet.getByPath(sp);
+            if (posPaths != null) {
+                for (AnchoredPath p : posPaths) {
+                    seedPathInstances.add(new BootstrapAnchoredPath(p,
+                            sp,
+                            BootstrapAnchoredPathType.POSITIVE));
+                }
+            }
+        }
+        if (seedPathInstances == null) {
+            System.out.println("No examples of this path.");
+            return null;
+        }
+        System.out.println(seedPathInstances.size() + " examples of this path.");
+
+        if (progressMonitor != null) {
+            progressMonitor.setNote("Collecting argument pairs");
+            progressMonitor.setProgress(1);
+        }
+        // collect other paths connecting the same argument pairs connected by seeds
+        //   shared = set of arg pairs this pattern shares with seeds
+        Map<String, Set<String>> shared = new HashMap<String, Set<String>>();
+        Map<String, BootstrapAnchoredPathType> pathSourceMap =
+                new HashMap<String, BootstrapAnchoredPathType>();
+        for (BootstrapAnchoredPath seed : seedPathInstances) {
+            for (AnchoredPath p : pathSet.getByArgs(seed.argPair())) {
+                String pp = p.path;
+                if (seedPaths.contains(pp)) continue;
+                if (rejects.contains(pp)) continue;
+                if (shared.get(pp) == null) {
+                    shared.put(pp, new HashSet<String>());
+                }
+                shared.get(pp).add(seed.argPair());
+                if (pathSourceMap.containsKey(pp) && pathSourceMap.get(pp) != seed.type) {
+                    pathSourceMap.put(pp, BootstrapAnchoredPathType.BOTH);
+                }
+                else {
+                    pathSourceMap.put(pp, seed.type);
+                }
+            }
+        }
+        List<IcePath> scoreList = new ArrayList<IcePath>();
+        DepPathMap depPathMap = DepPathMap.getInstance();
+
+        // for each path which shares pairs with the seed, compute
+        // -- sharedCount = number of distinct argument pairs it shares
+        // -- totalCount = total number of argument pairs for this path
+        // -- score
+        for (String p : shared.keySet()) {
+            sharedCount.put(p, shared.get(p).size());
+            if (sharedCount.get(p) < MIN_RELATION_COUNT) continue;
+            Set<String> argPairsForP = new HashSet<String>();
+            for (AnchoredPath ap : pathSet.getByPath(p)) {
+                argPairsForP.add(ap.arg1 + ":" + ap.arg2);
+            }
+            totalCount.put(p, argPairsForP.size());
+            double score = (double)sharedCount.get(p) / totalCount.get(p) * Math.log(sharedCount.get(p));
+
+            String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
+            String pRepr = depPathMap.findRepr(fullp);
+            if (pRepr == null) {
+                continue;
+            }
+            String pExample = depPathMap.findExample(fullp);
+            if (pExample == null) {
+                continue;
+            }
+            String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
+            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
+            IcePath icePath = new IcePath(p, pRepr, tooltip, score);
+            if (pRepr.equals(arg1Type + " " + arg2Type)) {
+                continue;
+            }
+            scoreList.add(icePath);
+        }
+        return scoreList;
+    }
+
+    /**
+     *  Construct a list of candidate relation patterns with scores based on
+     *  similarities of embeddings.
+     */
+
+    List<IcePath> scoreUsingWordEmbeddings () {
+        List<IcePath> scoreList = new ArrayList<IcePath>();
+        DepPathMap depPathMap = DepPathMap.getInstance();
+        for (String fullp : depPathMap.getPathSet()) {
+            AnchoredPath a = new AnchoredPath(fullp);
+            String pRepr = depPathMap.findRepr(fullp);
+            if (pRepr == null) {
+                continue;
+            }
+            String pExample = depPathMap.findExample(fullp);
+            if (pExample == null) {
+                continue;
+            }
+            String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
+            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
+
+            if (! arg1Type.equals(a.arg1)) continue;
+            if (! arg2Type.equals(a.arg2)) continue;
+            String[] words = pRepr.split(" ");
+            double[] v = WordEmbedding.embed(words);
+            double score = WordEmbedding.similarity(v, seedEmbedding);
+
+            IcePath icePath = new IcePath(a.path, pRepr, tooltip, score);
+            if (pRepr.equals(arg1Type + " " + arg2Type)) {
+                continue;
+            }
+            scoreList.add(icePath);
+        }
+        return scoreList;
     }
 
     public enum BootstrapAnchoredPathType {

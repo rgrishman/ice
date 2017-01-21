@@ -43,53 +43,6 @@ public class PathMatcher {
         weights.put("delete", delete);
     }
 
-    public void loadWordEmbedding(String embeddingFile) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(embeddingFile));
-        String line;
-        embeddings = new HashMap<String, double[]>();
-        int count = 1;
-        System.err.println("Load embeddings...");
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split(" ");
-            double[] embedding = new double[parts.length - 1];
-            for (int i = 1; i < parts.length; i++) {
-                embedding[i - 1] = Double.valueOf(parts[i]);
-            }
-            embeddings.put(parts[0], embedding);
-            if (count % 10000 == 0) {
-                System.err.print(count + "...");
-            }
-            count++;
-        }
-        System.err.println();
-        br.close();
-    }
-
-    public double similarity(String word1, String word2) {
-        if (embeddings == null) return word1.equals(word2) ? 1 : 0;
-        double[] embedding1 = embeddings.get(word1);
-        double[] embedding2 = embeddings.get(word2);
-        if (embedding1 == null || embedding2 == null) return 0;
-        return dotProduct(embedding1, embedding2) /
-                (norm(embedding1) * norm(embedding2));
-    }
-
-    public double dotProduct(double[] v1, double[] v2) {
-        double result = 0;
-        for (int i = 0; i < v1.length && i < v2.length; i++) {
-            result += v1[i] * v2[i];
-        }
-        return result;
-    }
-
-    public double norm(double[] v) {
-        double result = 0;
-        for (int i = 0; i < v.length; i++) {
-            result += v[i] * v[i];
-        }
-        return Math.sqrt(result);
-    }
-
     public double matchPaths(String path1, String path2) {
         MatcherPath matcherPath1 = new MatcherPath(path1);
         MatcherPath matcherPath2 = new MatcherPath(path2);
@@ -134,7 +87,7 @@ public class PathMatcher {
                             labelWeights.get(c1.label) : 1;
                     double replacePenalty = c1.label.equals(c2.label) ?
                             1 : LABEL_MISMATCH_PENALTY;
-                    double replaceCost = 1 - similarity(c1.token, c2.token);
+                    double replaceCost = 1 - WordEmbedding.similarity(c1.token, c2.token);
 //                    if (c1.token.equals("distribute") || c2.token.equals("distribute")) {
 //                        System.err.println("[LOG] " + c1.token + " " + c2.token + " " + replaceCost);
 //                    }

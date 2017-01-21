@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.controllers;
 
 import edu.nyu.jet.ice.models.Corpus;
+import edu.nyu.jet.ice.models.WordEmbedding;
 import edu.nyu.jet.ice.models.JetEngineBuilder;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.relation.Bootstrap;
@@ -188,7 +189,7 @@ public class NiceBootstrapper {
         Bootstrap.pathMatcher = new PathMatcher();
         if (iceProperties.getProperty("Ice.DepEmbeddings.fileName") != null) {
             try {
-                Bootstrap.pathMatcher.loadWordEmbedding(
+                WordEmbedding.loadWordEmbedding(
                         iceProperties.getProperty("Ice.DepEmbeddings.fileName").trim());
             } catch (IOException e) {
                 e.printStackTrace();
