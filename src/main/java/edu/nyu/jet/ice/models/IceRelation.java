@@ -92,7 +92,11 @@ public class IceRelation {
          */
 
         public boolean invertedPath (String path) {
-            return inverted.get(path);
+            if (inverted == null)
+                analyzeSubscripts(paths);
+            Boolean r = inverted.get(path);
+            if (r == null) return false;
+            return r;
         }
 
         /**
