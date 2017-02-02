@@ -51,6 +51,10 @@ public class DepPathMap {
         return instance;
     }
 
+    public Set<String> getPathSet () {
+        return pathReprMap.keySet();
+    }
+
     /**
      *  Given a dependency path, returns its linearization as
      *  an English phrase, or <CODE>null</CODE> if this path does
