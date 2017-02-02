@@ -19,11 +19,7 @@ import javax.swing.*;
 /**
  * a simple bootstrapping learner for relations.  Given a set of seed
  * patterns, it ranks each candidate pattern (lexical dependency path) P by
- *
- *            s log s / t
- *
- * where s is the number of argument pairs shared by the seed and P
- * and t is the total number of argument paiirs of P.
+ * the number of argument pairs shared by the seed and P.
  */
 
 public class Bootstrap {
@@ -169,13 +165,15 @@ public class Bootstrap {
                     }
                 }
                 String[] wordsInSeed = p.split(" ");
-                double[] v = WordEmbedding.embed(wordsInSeed);
-                if (v != null) {
-                    if (seedEmbedding == null) {
-                        seedEmbedding = v;
-                    } else {
-                        for (int i = 0; i < v.length; i++) {
-                            seedEmbedding[i] += v[i];
+                if (WordEmbedding.isLoaded()) {
+                    double[] v = WordEmbedding.embed(wordsInSeed);
+                    if (v != null) {
+                        if (seedEmbedding == null) {
+                            seedEmbedding = v;
+                        } else {
+                            for (int i = 0; i < v.length; i++) {
+                                seedEmbedding[i] += v[i];
+                            }
                         }
                     }
                 }
@@ -213,13 +211,15 @@ public class Bootstrap {
         for (IcePath approvedPath : approvedPaths) {
             String p = approvedPath.getRepr();
             String[] wordsInSeed = p.split(" ");
-            double[] v = WordEmbedding.embed(wordsInSeed);
-            if (v != null) {
-                if (seedEmbedding == null) {
-                    seedEmbedding = v;
-                } else {
-                    for (int i = 0; i < v.length; i++) {
-                        seedEmbedding[i] += v[i];
+            if (WordEmbedding.isLoaded()) {
+                double[] v = WordEmbedding.embed(wordsInSeed);
+                if (v != null) {
+                    if (seedEmbedding == null) {
+                        seedEmbedding = v;
+                    } else {
+                        for (int i = 0; i < v.length; i++) {
+                            seedEmbedding[i] += v[i];
+                        }
                     }
                 }
             }
@@ -360,7 +360,7 @@ public class Bootstrap {
 
         // for each path which shares pairs with the seed, compute
         // -- sharedCount = number of distinct argument pairs it shares
-        // -- totalCount = total number of argument pairs for this path
+        // -- totalCount = total number of argument pairs for this path (not currently used)
         // -- score
         for (String p : shared.keySet()) {
             sharedCount.put(p, shared.get(p).size());
@@ -370,7 +370,8 @@ public class Bootstrap {
                 argPairsForP.add(ap.arg1 + ":" + ap.arg2);
             }
             totalCount.put(p, argPairsForP.size());
-            double score = (double)sharedCount.get(p) / totalCount.get(p) * Math.log(sharedCount.get(p));
+            // double score = (double)sharedCount.get(p) / totalCount.get(p) * Math.log(sharedCount.get(p) + 1);
+            double score = (double)sharedCount.get(p);
 
             String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
             String pRepr = depPathMap.findRepr(fullp);
