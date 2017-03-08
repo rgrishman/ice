@@ -31,12 +31,11 @@ import java.util.Timer;
  * @author yhe
  */
 public class SwingEntitySetPanel extends JPanel implements Refreshable {
-    JList entitySetList;
-    JList entriesList;
+    JList<IceEntitySet> entitySetList;
+    JList<String> entriesList;
     DefaultListModel entityListModel;
     DefaultListModel entriesListModel;
     JTextField nameTextField;
-    IceEntitySet currentEntitySet;
     private static final int DELAY_MS = 250;
     private final SwingIceStatusPanel iceStatusPanel;
 
@@ -91,8 +90,6 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         leftPanel.add(suggestEntitySetButton, "wrap");
         JButton deleteEntitySetButton = new JButton("Delete");
         leftPanel.add(deleteEntitySetButton);
-        JButton saveEntitySetsButton = new JButton("Save");
-        leftPanel.add(saveEntitySetsButton);
 
         JLabel nameLabel = new JLabel("Type");
         rightPanel.add(nameLabel);
@@ -104,7 +101,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         JLabel itemsLabel = new JLabel("Items");
         rightPanel.add(itemsLabel, "span");
 
-        entriesList   = new JList();
+        entriesList   = new JList<String>();
 
         entriesList.setSize(205, 190);
         entriesList.setMinimumSize(new Dimension(205, 190));
@@ -121,8 +118,6 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         rightPanel.add(expandEntitySetButton, "wrap");
         JButton deleteEntryButton = new JButton("Delete");
         rightPanel.add(deleteEntryButton);
-        JButton saveEntitySetButton = new JButton("Save");
-        rightPanel.add(saveEntitySetButton);
         entriesSetPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         iceStatusPanel = new SwingIceStatusPanel();
@@ -147,10 +142,15 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                         null,
                         null,
                         "");
-
-                if ((s != null) && (s.length() > 0)) {
-                    entriesListModel.addElement(s);
-                }
+                if ((s == null) || (s.length() == 0)) 
+			return;
+		IceEntitySet currentEntitySet = entitySetList.getSelectedValue();
+		if (currentEntitySet == null) {
+			System.err.println("Error in addEntryButton: currentEntitySet == null");
+			return;
+		}
+		entriesListModel.addElement(s);
+		currentEntitySet.addNoun(s);
             }
         });
 
@@ -189,6 +189,8 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                         entitySetList.setSelectedValue(ies, true);
                         entriesListModel.addElement(seeds.get(0));
                         entriesListModel.addElement(seeds.get(1));
+			ies.addNoun(seeds.get(0));
+			ies.addNoun(seeds.get(1));
                     }
                 }
             }
@@ -199,26 +201,14 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 if (entriesListModel == null) return;
                 int idx = entriesList.getSelectedIndex();
                 if (idx < 0) return;
+		String entry = (String) entriesListModel.get(idx);
+		IceEntitySet currentEntitySet = entitySetList.getSelectedValue();
+		if (currentEntitySet == null) {
+			System.err.println("Error in deleteEntryButton: currentEntitySet == null");
+			return;
+		}
                 entriesListModel.remove(idx);
-            }
-        });
-
-        saveEntitySetButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                if (currentEntitySet == null ||
-                        nameTextField.getText().trim().length() == 0 ||
-                        entriesListModel == null ||
-                        entriesListModel.size() == 0) {
-                    return;
-                }
-                currentEntitySet.setType(nameTextField.getText().trim());
-                java.util.List<String> nouns = new ArrayList<String>();
-                for (Object e : entriesListModel.toArray()) {
-                    nouns.add((String)e);
-                }
-                currentEntitySet.setNouns(nouns);
-                entitySetList.revalidate();
-                entitySetList.repaint();
+		currentEntitySet.removeNoun(entry);
             }
         });
 
@@ -238,21 +228,8 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     entriesListModel.clear();
                     entriesListModel = null;
                     nameTextField.setText("");
-                    currentEntitySet = null;
+		    Ice.removeEntitySet(e.getType());
                 }
-            }
-        });
-
-        saveEntitySetsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                Ice.entitySets.clear();
-                for (Object e : entityListModel.toArray()) {
-                    IceEntitySet es = (IceEntitySet)e;
-                    Ice.entitySets.put(es.getType(), es);
-                }
-                JOptionPane.showMessageDialog(SwingEntitySetPanel.this,
-                        "Entity sets in ICE updated. You will still need to save/export to Jet\n" +
-                                "if you want to save entity sets to hard disk.");
             }
         });
 
@@ -275,6 +252,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                 IceEntitySet ies = new IceEntitySet(entitySetName);
                 entityListModel.addElement(ies);
                 entitySetList.setSelectedValue(ies, true);
+		Ice.addEntitySet(ies);
             }
         });
 
@@ -320,9 +298,11 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
             }
         });
 
-        // add to UI
-        //this.add(entitySetPanel);
     }
+
+    /**
+     *  Redraws the currently selected entitySet.
+     */
 
     public void refresh() {
         iceStatusPanel.refresh();
@@ -330,26 +310,21 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         if (idx < 0) {
             return;
         }
-        // System.err.println(idx);
         IceEntitySet entitySet = (IceEntitySet)entityListModel.getElementAt(idx);
         if (entitySet == null) {
             System.err.println("ICE internal error in SwingEntitySetPanel, entitySet is null");
             return;
         }
-        // System.err.println(entitySet.getType());
-        if (Ice.entitySets.containsKey(entitySet.getType())) {
-            entitySet = Ice.entitySets.get(entitySet.getType());
-            entityListModel.setElementAt(entitySet, idx);
-            entitySetList.setSelectedIndex(idx);
-        }
-        currentEntitySet = entitySet;
+        // if (Ice.entitySets.containsKey(entitySet.getType())) {
+        //     entitySet = Ice.entitySets.get(entitySet.getType());
+        //     entityListModel.setElementAt(entitySet, idx);
+        //     entitySetList.setSelectedIndex(idx);
+        //  }
         nameTextField.setText(entitySet.getType());
         DefaultListModel newListModel = new DefaultListModel();
         for (String noun : entitySet.getNouns()) {
             newListModel.addElement(noun);
         }
-        //System.err.println(newListModel.size());
-
         entriesListModel = newListModel;
         entriesList.setModel(entriesListModel);
     }

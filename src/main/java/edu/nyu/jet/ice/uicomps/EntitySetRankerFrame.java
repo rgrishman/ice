@@ -176,27 +176,18 @@ public class EntitySetRankerFrame extends JFrame {
 
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                String type = EntitySetRankerFrame.this.name.toUpperCase();
-                ArrayList<String> elements = new ArrayList<String>();
+                String type = EntitySetRankerFrame.this.name;
+		IceEntitySet ies = Ice.getEntitySet(type);
+		if (ies == null) {
+			System.err.println("Error in save button: unknown entity set " + type);
+			return;
+			}
                 for (Object o : rankedListModel.toArray()) {
                     RankChoiceEntity e = (RankChoiceEntity) o;
                     if (e.getDecision() == RankChoiceEntity.EntityDecision.YES) {
-                        elements.add(e.getText().trim());
+                        ies.addNoun(e.getText().trim());
                     }
                 }
-                System.err.println(type);
-                IceEntitySet es = Ice.entitySets.get(type);
-                //if (es == null) {
-                es = new IceEntitySet(type);
-                Ice.entitySets.put(type, es);
-                //}
-                //if (EntitySetBuilder.type.equals("nn"))
-                es.setNouns(elements);
-                System.err.println(es.getNouns().size());
-                System.err.println(elements.size());
-                //else
-                //    es.setNames(elements);
-                //saveEntitySetToAuxFile(type);
                 if (callingPanel != null) {
                     callingPanel.refresh();
                 }

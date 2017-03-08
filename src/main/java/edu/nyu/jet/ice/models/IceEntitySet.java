@@ -3,7 +3,8 @@ package edu.nyu.jet.ice.models;
 import java.util.*;
 
 /**
- *  an entity type defined through ICE
+ *  An entity type defined through ICE, consisting of a set of names
+ *  and a set of nouns.  (At present, only the nouns are used.)
  */
 
 public class IceEntitySet {
@@ -32,6 +33,15 @@ public class IceEntitySet {
 		nouns = ls;
 	}
 
+	public void addNoun (String noun) {
+	    	if (!nouns.contains(noun))
+		    	nouns.add(noun);
+	}
+
+	public void removeNoun (String noun) {
+	    	nouns.remove(noun);
+	}
+
 	public List<String> getNames () {
 		return names;
 	}
@@ -40,6 +50,14 @@ public class IceEntitySet {
 		names = ls;
 	}
 
+	public void addName (String name) {
+	    	if (!names.contains(name))
+		    	names.add(name);
+	}
+
+	public void removeName (String name) {
+	    	names.remove(name);
+	}
 	// ----- constructors -----
 
 	public IceEntitySet (String s) {
@@ -52,7 +70,7 @@ public class IceEntitySet {
 		this("?");
 	}
 
-    public String toString() {
-        return type;
-    }
+	public String toString() {
+	    return type;
+	}
 }

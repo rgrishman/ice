@@ -35,4 +35,16 @@ public class Ice {
         selectedCorpusName = corpus;
         selectedCorpus = corpora.get(selectedCorpusName);
     }
+
+    public static void addEntitySet (IceEntitySet entitySet) {
+	entitySets.put(entitySet.getType(), entitySet);
+    }
+
+    public static IceEntitySet getEntitySet (String type) {
+	return entitySets.get(type);
+    }
+
+    public static void removeEntitySet (String type) {
+	entitySets.remove(type);
+    }
 }
