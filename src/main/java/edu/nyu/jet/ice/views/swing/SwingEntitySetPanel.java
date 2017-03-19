@@ -85,6 +85,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         entitySetList.setModel(entityListModel);
 
         JButton addEntitySetButton = new JButton("Add");
+	addEntitySetButton.setName("addEntitySetButton");
         leftPanel.add(addEntitySetButton);
         JButton suggestEntitySetButton = new JButton("Suggest");
         leftPanel.add(suggestEntitySetButton, "wrap");
@@ -113,6 +114,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
 
         rightPanel.add(entriesSetPane, "span");
         JButton addEntryButton = new JButton("Add");
+	addEntryButton.setName("addEntityButton");
         rightPanel.add(addEntryButton);
         JButton expandEntitySetButton = new JButton("Expand");
         rightPanel.add(expandEntitySetButton, "wrap");

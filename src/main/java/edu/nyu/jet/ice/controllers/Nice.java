@@ -74,6 +74,7 @@ public class Nice {
 
     public void setEntitySetPanel(SwingEntitySetPanel entitySetPanel) {
         this.entitySetPanel = entitySetPanel;
+	entitySetPanel.setName("entity set panel");
     }
 
     public void saveProgress() {
