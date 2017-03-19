@@ -21,16 +21,17 @@ import static org.junit.Assert.assertTrue;
 /**
  *  System-level tests of ICE using FEST
  *
- *  Initial tests:  defining new relations
+ *  Initial tests:  defining new entities and relations
  */
 
 public class FestTest {
  
-	private FrameFixture demo;
-        JPanelFixture relationsPanel;
+	private static FrameFixture demo;
+        static JPanelFixture relationsPanel;
+        static JPanelFixture entitySetPanel;
 	
-        @Before
- 	public void setUp() throws IOException, InterruptedException {
+        @BeforeClass
+ 	public static void setUp() throws IOException, InterruptedException {
 	    //
 	    // start up
 	    //
@@ -51,13 +52,35 @@ public class FestTest {
             demo.target.toFront();
         }
 
-        @After
-        public void tearDown() {
+        @AfterClass
+        public static void tearDown() {
             demo.cleanUp();
         }
 
+	@Test
+	public void testEntitySetPane() {
+
+	    JTabbedPaneFixture tabbedPane = findTabbedPane();
+	    System.out.println("Found tabbed pane " + tabbedPane);
+	    tabbedPane.selectTab("Entity sets");
+	    System.out.println("Selected entity sets tab");
+	    entitySetPanel = findPanel("entity set panel");
+	    System.out.println("Found entity set panel " + entitySetPanel);
+            //
+            //  define new entity set
+            //
+	    addEntitySet ("drug-set");
+	    addEntity ("warfarin");
+	    addEntity ("aspirin");
+	    //
+	    //  define a second set
+	    //
+	    addEntitySet ("official");
+	    addEntity ("prosecutor");
+	}
+
         @Test
-        public void test(){
+        public void testRelationPane(){
 	    
 	    JTabbedPaneFixture tabbedPane = findTabbedPane();
 	    System.out.println("Found tabbed pane " + tabbedPane);
@@ -70,35 +93,56 @@ public class FestTest {
             //
             addRelation ("CITIZEN", "GPE PERSON");
             addRelationMember ("PERSON of GPE");
-	    JButtonFixture saveRelationButton = findButtonNamed("saveRelationButton");
-	    saveRelationButton.click();
-	    System.out.println("Clicked saveRelationButton " + saveRelationButton);
             //
             //  define new relation:  same type
             //
             addRelation ("PAIR", "PERSON(1) PERSON(2)");
             addRelationMember ("PERSON(2) , PERSON(1)");
-	    saveRelationButton.click();
-	    System.out.println("Clicked saveRelationButton " + saveRelationButton);
             //
-            //  save relations, export, and exit
+            //  export and exit
             //
-	    JButtonFixture saveRelationsButton = findButtonNamed("saveRelationsButton");
-	    saveRelationsButton.click();
-	    System.out.println("Clicked saveRelationsButton " + saveRelationsButton);
-	    JOptionPaneFixture jOptionPane = JOptionPaneFinder.findOptionPane().using(demo.robot);
-	    System.out.println("Found jOptionPane " + jOptionPane + " (message)");
-	    JButtonFixture button2 = jOptionPane.okButton();
-	    button2.click();
-	    System.out.println("Clicked OK button " + button2);
             captureJetEngine();
 	    JButtonFixture exportButton = findButton(relationsPanel, "Export");
 	    exportButton.click();
 	    System.out.println("Clicked exportButton " + exportButton);
+	    reportEntitySets();
             reportRelationPatterns();
             // demo.close();
         }
 
+	public void addEntitySet (String entitySet) {
+            //
+            // add an entity set
+            //
+	    JButtonFixture addEntitySetButton = findButtonNamed(entitySetPanel, "addEntitySetButton");
+	    addEntitySetButton.click();
+	    System.out.println("Clicked addEntitySetButton " + addEntitySetButton);
+	    JOptionPaneFixture jOptionPane = JOptionPaneFinder.findOptionPane().withTimeout(20000).using(demo.robot);
+	    System.out.println("Found jOptionPane " + jOptionPane + " (request for entity set name)");
+	    JTextComponentFixture jtcf = jOptionPane.textBox();
+	    jtcf.enterText(entitySet);
+	    System.out.println("Entered entity set name:  " + entitySet);
+	    JButtonFixture button2 = jOptionPane.okButton();
+	    button2.click();
+	    System.out.println("Clicked OK button " + button2);
+	}
+
+	public void addEntity (String entity) {
+            //
+            // add an entity to an entity set
+            //
+	    JButtonFixture addEntityButton = findButtonNamed(entitySetPanel, "addEntityButton");
+	    addEntityButton.click();
+	    System.out.println("Clicked addEntityButton " + addEntityButton);
+	    JOptionPaneFixture jOptionPane = JOptionPaneFinder.findOptionPane().withTimeout(20000).using(demo.robot);
+	    System.out.println("Found jOptionPane " + jOptionPane + " (request for entity set name)");
+	    JTextComponentFixture jtcf = jOptionPane.textBox();
+	    jtcf.enterText(entity);
+	    System.out.println("Entered entity name:  " + entity);
+	    JButtonFixture button2 = jOptionPane.okButton();
+	    button2.click();
+	    System.out.println("Clicked OK button " + button2);
+	}
         public void addRelation (String relation, String example) {
             //
             // add a relation
@@ -249,18 +293,33 @@ public class FestTest {
 		});
 	}
 
+        StringWriter sw1;
+        StringWriter sw2;
         StringWriter sw3;
+        StringWriter sw4;
 
         void captureJetEngine () {
-            StringWriter sw1 = new StringWriter();
+            sw1 = new StringWriter();
             JetEngineBuilder.setCommonNounWriter(sw1);
-            StringWriter sw2 = new StringWriter();
+            sw2 = new StringWriter();
             JetEngineBuilder.setProperNounWriter(sw2);
             sw3 = new StringWriter();
             JetEngineBuilder.setRelationPatternWriter(sw3);
-            StringWriter sw4 = new StringWriter();
+            sw4 = new StringWriter();
             JetEngineBuilder.setNegatedPatternWriter(sw4);
         }
+
+	void reportEntitySets () {
+	    sw2.flush();
+	    String p = sw2.toString();
+	    System.out.println("Entities: \n" + p);
+	    assertTrue("missing onoma entry:  warfarin > DRUG-SET",
+		       p.contains("warfarin\tDRUG-SET"));
+	    assertTrue("missing onoma entry:  aspirin > DRUG-SET",
+		       p.contains("aspirin\tDRUG-SET"));
+	    assertTrue("missing onoma entry:  prosecutor > OFFICIAL",
+		       p.contains("prosecutor\tOFFICIAL"));
+	}
 
         void reportRelationPatterns () {
             sw3.flush();
