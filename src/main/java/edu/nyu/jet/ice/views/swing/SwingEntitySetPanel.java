@@ -186,6 +186,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                             JOptionPane.YES_NO_OPTION);
                     if (n == 0) {
                         String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
+			entitySetName = entitySetName.toUpperCase();
                         IceEntitySet ies = new IceEntitySet(entitySetName);
                         entityListModel.addElement(ies);
                         entitySetList.setSelectedValue(ies, true);
@@ -193,6 +194,7 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                         entriesListModel.addElement(seeds.get(1));
 			ies.addNoun(seeds.get(0));
 			ies.addNoun(seeds.get(1));
+			Ice.addEntitySet(ies);
                     }
                 }
             }
