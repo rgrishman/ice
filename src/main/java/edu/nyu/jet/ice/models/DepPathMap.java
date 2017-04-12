@@ -64,6 +64,9 @@ public class DepPathMap {
     public String findRepr(String path) {
         return pathReprMap.get(path);
     }
+    public String findRepr(AnchoredPath  path) {
+        return pathReprMap.get(path.toString());
+    }
 
     /**
      *  Given a linearized English phrase derived from a

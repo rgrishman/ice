@@ -47,7 +47,7 @@ public class Bootstrap {
 
     private ProgressMonitorI progressMonitor = null;
 
-    private String relationName = "";
+    public String relationName = "";
 
     public String getRelationName() {
         return relationName;
@@ -62,7 +62,7 @@ public class Bootstrap {
      *  Initialized by 'initialize', augmented by 'iterate', used by 'bootstrap'.
      */
 
-    Set<String> seedPaths = new HashSet<String>();
+    public Set<String> seedPaths = new HashSet<String>();
 
     /**
      *  Paths accepted by user (in the form of String representation of dependency path).
@@ -77,7 +77,7 @@ public class Bootstrap {
      *  (in the form of String representation of dependency paths).
      */
 
-    Set<String> rejects = new HashSet<String>();
+    public Set<String> rejects = new HashSet<String>();
 
     /**
      *  Paths explicitly rejected by user 

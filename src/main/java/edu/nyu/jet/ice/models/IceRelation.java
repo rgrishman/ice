@@ -15,6 +15,8 @@ public class IceRelation {
 
 	String arg2type = "";
 
+	private List<String> reprs = new ArrayList<String>();
+
 	List<String> paths = new ArrayList<String>();
 
 	List<String> cleanPaths = new ArrayList<String>();
@@ -27,8 +29,40 @@ public class IceRelation {
 
 	// ---- property methods -----
 
+	/**
+	 *  Returns the name of the relation.
+	 */
+
 	public String getName() {return name;}
+
 	public void setName (String s) {name = s;}
+
+	/**
+	 *  Add 'repr' to the set of English phrases representing the relation.
+	 */
+
+	public void addRepr (String repr) {
+	    if (! reprs.contains(repr))
+		reprs.add(repr);
+	}
+
+	public void removeRepr (String repr) {
+	    reprs.remove(repr);
+	}
+
+	public List<String> getReprs() {
+	    return reprs;
+	}
+
+	public void updatePaths() {
+	    DepPathMap depPathMap = DepPathMap.getInstance();
+	    depPathMap.load();
+	    paths.clear();
+	    for (String repr : reprs) {
+		List<String> paths = depPathMap.findPath(repr);
+		addPaths(paths);
+	    }
+	}
 
         /**
          *  Returns the list of paths associated with this relation,
@@ -50,6 +84,20 @@ public class IceRelation {
 	public void setPaths(List<String> s) {
             analyzeSubscripts (s);
         }
+
+	public void addPath (String path) {
+	    if (! paths.contains(path)) {
+		paths.add(path);
+		analyzeSubscripts(paths);
+		System.out.println("Added path " + path + " to relation " + name); // <<<
+	    }
+	}
+
+	public void addPaths (List<String> paths) {
+	    for (String p : paths)
+		addPath(p);
+	}
+
 	public String getArg1type() {return arg1type;}
 	public void setArg1type (String s) {arg1type = s;}
 	public String getArg2type() {return arg2type;}

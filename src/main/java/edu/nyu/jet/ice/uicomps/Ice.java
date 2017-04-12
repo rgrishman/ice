@@ -47,4 +47,16 @@ public class Ice {
     public static void removeEntitySet (String type) {
 	entitySets.remove(type);
     }
+
+    public static void addRelation (IceRelation relation) {
+	relations.put(relation.getName(), relation);
+    }
+
+    public static IceRelation getRelation (String type) {
+	return relations.get(type);
+    }
+
+    public static void removeRelation (String type) {
+	relations.remove(type);
+    }
 }

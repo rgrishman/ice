@@ -4,7 +4,12 @@ import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.swing.SwingRelationsPanel;
 
 /**
- * Created by yhe on 10/14/14.
+ *  When the 'expand' button om the relation frame is pushed, the SwingRelationPanel 
+ *  creates a RelationBuilderThread to perform the computations required to
+ *  generate a list of candidate relation patterns (which are then reviewed
+ *  by the user).
+ *
+ *  Created by yhe on 10/14/14.
  */
 public class RelationBuilderThread extends Thread {
 
@@ -27,7 +32,6 @@ public class RelationBuilderThread extends Thread {
             arg2 = parts[parts.length - 1].toUpperCase();
         }
         args[1] = relationInstanceFileName;
-        System.out.println("plfn = " + pathListFileName);
         args[2] = pathListFileName;
         this.builder = builder;
         this.bootstrap = bootstrap;
