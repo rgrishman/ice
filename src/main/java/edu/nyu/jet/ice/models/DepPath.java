@@ -194,7 +194,7 @@ public class DepPath {
      * @return Linearized version of the dependency path
      */
     public String linearize(Document doc, SyntacticRelationSet relations,
-                            String type1, String type2) {
+                            String type1, String type2, boolean stem) {
         // PriorityQueue is maintained as a min-heap, so that the dependency relations
         // in the heap are sorted by the offset of the governed word
         PriorityQueue<SyntacticRelation> nodes = new PriorityQueue<SyntacticRelation>(
@@ -274,7 +274,7 @@ public class DepPath {
         // nodes is an ordered heap based on targetPosn
         while (!nodes.isEmpty()) {
             SyntacticRelation node = nodes.poll();
-            String targetWord = wordOnPath(node);
+            String targetWord = wordOnPath(node, stem);
             // Avoid "Tom and and Jerry", "Tom and or Jerry" etc.
             if (targetWord.equals("and") ||
                     targetWord.equals("or") ||
@@ -353,7 +353,7 @@ public class DepPath {
 
     }
 
-    private String wordOnPath(SyntacticRelation node) {
+    private String wordOnPath(SyntacticRelation node, boolean stem) {
         if (node.type.equals("NAMETAG") || node.type.equals("NODETYPE")) {
             return node.targetWord.trim();
         }
@@ -361,10 +361,12 @@ public class DepPath {
                 node.sourcePosn < node.targetPosn) {
             return node.targetWord.trim();
         }
-        else {
+        else if (stem) {
             return stemmer.getStem(node.targetWord.toLowerCase().trim(),
                     node.targetPos).trim();
-        }
+        } else {
+	    return node.targetWord.trim();
+	}
     }
 
     /**

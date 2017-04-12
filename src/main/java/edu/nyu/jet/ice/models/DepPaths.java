@@ -33,9 +33,6 @@ import java.util.*;
  * Collect a list of all dependency paths connecting two named entity mentions.
  */
 
-//  uses cache now
-
-
 public class DepPaths {
 
     final static Logger logger = LoggerFactory.getLogger(DepPaths.class);
@@ -78,10 +75,12 @@ public class DepPaths {
     }
 
     /**
-     * counts the number of instances of each dependency triple in a set
-     * of files.  Invoked by <br>
+     * counts the number of instances of each dependency path connecting
+     * two entity mentions in a set of files.  Invoked by <br>
+     *
      * DepPaths      propsFile docList inputDir inputSuffix outputFile
-     * <p/>
+     * 
+     * <br>
      * propsFile     Jet properties file
      * docList       file containing list of documents to be processed, 1 per line
      * inputDir      directory containing files to be processed
@@ -100,7 +99,7 @@ public class DepPaths {
         DepTransformer transformer = new DepTransformer("yes");
         transformer.setUsePrepositionTransformation(false);
         if (args.length != 7 && args.length != 8) {
-            System.err.println("DepCounter requires 7 arguments:");
+            System.err.println("DepPaths requires 7 or 8 arguments:");
             System.err.println("  propsFile docList inputDir inputSuffix outputFile");
             System.exit(1);
         }
@@ -154,12 +153,14 @@ public class DepPaths {
                 Control.processDocument(doc, null, docCount == -1, docCount);
 
                 IcePreprocessor.fetchAnnotations (cacheDir, inputDir, inputFile);
+		// maintain two dependency trees:
+		//   relations is original parse, for generating repr (English phrase)
+		//   transformedRelations is transformed parse, for generating path
                 SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet();
                 SyntacticRelationSet transformedRelations = transformer.transform(
                         relations.deepCopy(), doc.fullSpan());
-                relations = transformedRelations;
-
                 relations.addInverses();
+                transformedRelations.addInverses();
                 IcePreprocessor.loadPOS(doc);
                 IcePreprocessor.loadENAMEX(doc);
                 IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
@@ -269,7 +270,10 @@ public class DepPaths {
                     DepPath path = buildSyntacticPathOnSpans(h1.start(), h2.start(),
                             localNames.get(i).span(), localNames.get(j).span(),
                             relations, localHeadSpans);
-                    recordPath(doc, sentence, relations, localNames.get(i), path, localNames.get(j));
+                    DepPath transPath = buildSyntacticPathOnSpans(h1.start(), h2.start(),
+                            localNames.get(i).span(), localNames.get(j).span(),
+                            transformedRelations, localHeadSpans);
+                    recordPath(doc, sentence, relations, localNames.get(i), path,  transPath, localNames.get(j));
                 }
             }
         }
@@ -298,10 +302,10 @@ public class DepPaths {
      */
 
     static void recordPath(Document doc, Annotation sentence, SyntacticRelationSet relations,
-                           Annotation mention1, DepPath path, Annotation mention2) {
+                           Annotation mention1, DepPath path, DepPath transPath, Annotation mention2) {
 
-        if (path == null) return;
-        DepPath regularizedPath = depPathRegularizer.regularize(path);
+        if (transPath == null || path == null) return;
+        DepPath regularizedPath = depPathRegularizer.regularize(transPath);
 
         if (regularizedPath.length() > 5) {
             return;
@@ -347,7 +351,7 @@ public class DepPaths {
         if (!sourceDict.containsKey(fullPath)) {
             sourceDict.put(fullPath, source);
         }
-        String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2);
+        String linearizedPath = path.linearize(doc, relations, type1, type2, false);
         if (!linearizationDict.containsKey(fullPath)) {
             linearizationDict.put(fullPath, linearizedPath);
         }
