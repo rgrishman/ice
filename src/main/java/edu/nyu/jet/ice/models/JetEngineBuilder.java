@@ -155,7 +155,7 @@ public class JetEngineBuilder {
             for (String path : paths) {
                 boolean inv = rs.invertedPath(path);
                 String pattern = path.replaceAll(" -- ", "--");
-                pw.println(pattern + "\t" + type + (inv ? "-1" : ""));
+                pw.println(pattern + " = " + type + (inv ? "-1" : ""));
             }
         }
         pw.close();
@@ -167,7 +167,7 @@ public class JetEngineBuilder {
                 for (String path : paths) {
                     boolean inv = rs.invertedPath(path);
                     String pattern = path.replaceAll(" -- ", "--");
-                    pw.println(pattern + "\t" + type + (inv ? "-1" : ""));
+                    pw.println(pattern + " = " + type + (inv ? "-1" : ""));
                 }
             }
         }
