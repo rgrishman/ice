@@ -36,31 +36,25 @@ public class JetEngineBuilder {
     public static void build() {
         try {
             String jetHome = System.getProperty("jetHome");
-            if (jetHome == null)
-                jetHome = "";
-            else
-                jetHome += "/";
-            Properties props = new Properties();
-            props.load(new FileReader("parseprops"));
-            String dataDirectory = jetHome + props.getProperty("Jet.dataPath") + "/";
+            if (jetHome == null) {
+		System.err.println("JET_HOME not set, cannot export.");
+		return;
+	    }
+            String dataDirectory = jetHome + "/data/";
             if (commonNounWriter == null) {
-                String commonNounFileName = dataDirectory +
-                    props.getProperty("Ace.EDTtype.auxFileName");
+                String commonNounFileName = dataDirectory + "iceEDTtype.dict";
                 commonNounWriter = new FileWriter(commonNounFileName);
             }
             if (properNounWriter == null) {
-                String properNounFileName = dataDirectory +
-                    props.getProperty("Onoma.fileName");
+                String properNounFileName = dataDirectory + "iceOnoma.dict";
                 properNounWriter = new FileWriter(properNounFileName);
             }
             if (relationPatternWriter == null) {
-                String relationPatternFileName = dataDirectory +
-                    props.getProperty("Ace.RelationModel.fileName");
+                String relationPatternFileName = dataDirectory +"ldpRelationModel";
                 relationPatternWriter = new FileWriter(relationPatternFileName);
             }
             if (negatedPatternWriter == null) {
-                String negatedPatternFileName = dataDirectory +
-                    props.getProperty("Ace.RelationModel.fileName") + ".neg";
+                String negatedPatternFileName = dataDirectory + "ldpNegRelations";
                 negatedPatternWriter = new FileWriter(negatedPatternFileName);
             }
             if (!RECORD_NOUNS_AS_ENAMEX) {
