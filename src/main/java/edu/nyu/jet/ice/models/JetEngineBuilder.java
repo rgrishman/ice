@@ -6,8 +6,17 @@ import java.util.*;
 import java.io.*;
 
 /**
- *  writes files to be read by Jet containing information on
- *  entity sets and relations.
+ *  writes the following files to be read by Jet containing information on
+ *  entity sets and relations.  All files are written in the
+ *  <code>data</code> directory of <code>JET_HOME</code>.
+ *
+ *  <table border="1">
+ *    <tr> <th> information                </th> <th> file name        </th> </tr>
+ *    <tr> <th> common nouns               </th> <th> iceEDTtype.dict  </th> </tr>
+ *    <tr> <th> proper nouns               </th> <th> iceOnoma.dict    </th> </tr>
+ *    <tr> <th> LDP patterns for relations </th> <th> ldpRelationModel </th> </tr>
+ *    <tr> <th> negated relation patterns  </th> <th> ldpNegRelations  </th> </tr>
+ *  </table>
  */
 
 public class JetEngineBuilder {
@@ -62,6 +71,10 @@ public class JetEngineBuilder {
             }
             buildOnoma(properNounWriter);
             buildRelationPatternFile(relationPatternWriter, negatedPatternWriter);
+	    commonNounWriter = null;
+	    properNounWriter = null;
+	    relationPatternWriter = null;
+	    negatedPatternWriter = null;
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
