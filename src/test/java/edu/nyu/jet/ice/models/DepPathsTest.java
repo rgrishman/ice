@@ -57,7 +57,7 @@ public class DepPathsTest {
 	DepPath regularizedPath = depPathRegularizer.regularize(path);
 	String type1 = "PERSON";
 	String type2 = "GPE";
-	String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2);
+	String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2, false);
 	System.out.println(" linearized pah:  " + linearizedPath);
     }
 
@@ -91,7 +91,7 @@ public class DepPathsTest {
 	DepPath regularizedPath = depPathRegularizer.regularize(path);
 	String type1 = "PERSON";
 	String type2 = "GPE";
-	String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2);
+	String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2, false);
 	System.out.println(" linearized pah:  " + linearizedPath);
     }
 
@@ -125,7 +125,7 @@ public class DepPathsTest {
 	DepPath regularizedPath = depPathRegularizer.regularize(path);
 	String type1 = "PERSON";
 	String type2 = "GPE";
-	String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2);
+	String linearizedPath = regularizedPath.linearize(doc, relations, type1, type2, false);
 	System.out.println(" linearized pah:  " + linearizedPath);
     }
 /*  -- unit test to be completed
