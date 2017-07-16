@@ -157,6 +157,21 @@ public class Corpus {
         this("?");
     }
 
+    /**
+     *  Returns true if <CODE>name</CODE> is a valid corpus name:
+     *  a non-empty string with no whitespace or '/'.
+     */
+
+    public static boolean validName (String name) {
+        if (name.isEmpty())
+            return false;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isWhitespace(c) || c == '/')
+                return false;
+        }
+        return true;
+    }
     JTextArea textArea;
     JTextArea relationTextArea;
 

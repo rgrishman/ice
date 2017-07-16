@@ -102,6 +102,13 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
         addButton.addActionListener (new ActionListener() {
             public void actionPerformed (ActionEvent ev) {
                 String corpusName = JOptionPane.showInputDialog("Corpus name");
+                if (! Corpus.validName(corpusName)) {
+                    JOptionPane.showMessageDialog(SwingCorpusPanel.this,
+                            "Invalid corpus name.",
+                            "Corpus Name Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 for (int i = 0; i < corpusSelectionComboBox.getItemCount(); i++) {
                     String elem = (String)corpusSelectionComboBox.getItemAt(i);
                     if (elem.equals(corpusName)) {
