@@ -94,6 +94,23 @@ public class WordEmbedding {
     }
 
     /**
+     *  Returns the similarity of two paths, defined as the product of the similarities
+     *  of the corresponding lexical items in the two paths.  If the paths are of
+     *  different lengths, 0 is returned.
+     */
+
+    public static double pathSimilarity (String path1, String path2) {
+	String[] seq1 = path1.split(":");
+	String[] seq2 = path2.split(":");
+	if (seq1.length != seq2.length) return 0;
+	double sim = 1;
+	for (int i = 1; i < seq1.length; i+=2) {
+	    sim = sim * similarity(seq1[i], seq2[i]);
+	}
+	return sim;
+    }
+
+    /**
      *  Returns the cosine similarity of vectors<CODE>embedding1</CODE> and <CODE>embedding2</CODE>.
      *  If either vector is null, returns 0.
      */
