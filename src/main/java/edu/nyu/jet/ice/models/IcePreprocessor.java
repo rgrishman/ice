@@ -762,7 +762,9 @@ public class IcePreprocessor extends Thread {
                                        String inputDir,
                                        String inputFile) {
         String fn = cacheDir + File.separator + 
-            inputDir.replaceAll("/", "_") + "_" + inputFile.replaceAll("/", "_");
+            inputDir.replaceAll("/", "_").replaceAll("\\\\","_").replaceAll(":","_") 
+	    + "_" +
+	    inputFile.replaceAll("/", "_").replaceAll("\\\\","_").replaceAll(":","_");
         Map<String, String> map = Ice.selectedCorpus.preprocessCacheMap;
         if (map == null) {
             map = loadPreprocessCacheMap();
