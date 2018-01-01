@@ -473,7 +473,7 @@ public class IceCLI {
 
     public static boolean copyApfDTD(String targetCacheDir) throws IOException {
         Properties props = new Properties();
-        props.load(new FileReader("parseprops"));
+        props.load(new FileReader(Nice.locateFile("parseprops")));
         try {
             FileUtils.copyFile(new File(props.getProperty("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
                     new File(targetCacheDir + File.separator + "apf.v5.1.1.dtd"));

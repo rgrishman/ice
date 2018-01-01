@@ -19,6 +19,7 @@ import edu.nyu.jet.pat.Pat;
 import edu.nyu.jet.aceJet.Ace;
 import edu.nyu.jet.JetTest;
 import edu.nyu.jet.lex.*;
+import edu.nyu.jet.ice.controllers.Nice;
 
 /**
  *  process a set of documents through Jet and then accumulate word counts,
@@ -62,7 +63,7 @@ public class Words {
 	// initialize Jet
 		
 	System.out.println("Starting Jet Word Counter ...");
-	JetTest.initializeFromConfig(propsFile);
+	JetTest.initializeFromConfig(Nice.locateFile(propsFile));
 	// load ACE type dictionary
 	EDTtype.readTypeDict();
 	// turn off traces

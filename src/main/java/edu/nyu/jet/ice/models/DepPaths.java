@@ -8,6 +8,7 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 import edu.nyu.jet.aceJet.*;
 import edu.nyu.jet.Control;
 import edu.nyu.jet.parser.DepTransformer;
+import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
@@ -116,7 +117,7 @@ public class DepPaths {
         // initialize Jet
 
         System.out.println("Starting Jet DepCounter ...");
-        JetTest.initializeFromConfig(propsFile);
+        JetTest.initializeFromConfig(Nice.locateFile(propsFile));
         PatternSet patternSet = IcePreprocessor.loadPatternSet(
                 JetTest.getConfig("Jet.dataPath") + File.separator +
                         JetTest.getConfig("Pattern.quantifierFileName"));

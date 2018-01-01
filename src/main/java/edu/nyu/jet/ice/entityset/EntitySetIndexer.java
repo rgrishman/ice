@@ -3,6 +3,7 @@ package edu.nyu.jet.ice.entityset;
 import edu.nyu.jet.aceJet.Ace;
 import edu.nyu.jet.aceJet.Gazetteer;
 import edu.nyu.jet.Control;
+import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
@@ -124,7 +125,7 @@ public class EntitySetIndexer {
                 catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                JetTest.initializeFromConfig(propsFile);
+                JetTest.initializeFromConfig(Nice.locateFile(propsFile));
                 Lexicon.clear();
                 for (String word : words) {
                     Lexicon.addEntry(Gazetteer.splitAtWS(word.replaceAll("_", " ")),

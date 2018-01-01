@@ -111,6 +111,10 @@ public class Nice {
         mainFrame.setLocationRelativeTo(null); // center main window
 
         reassemble();
+
+	// verify that essential files are present
+	locateFile("parseprops");
+	locateFile("onomaprops");
     }
 
     public static void initIce(String branch) {
@@ -164,6 +168,28 @@ public class Nice {
             }
         }
         return iceProperties;
+    }
+
+    /**
+      *  If file 'fname' exists either in the working diretory or in the iceHome directory,
+      *  return that file, else issue a message and quit.
+      */
+
+    public static File locateFile (String fname) {
+        File f = new File(fname);
+	if (f.exists())
+	    return f;
+	String iceHome = System.getProperty("iceHome");
+	if (iceHome == null || iceHome.equals("")) {
+	    System.err.println("jetHome property not set, cannot proceed");
+	    System.exit(1);
+	}
+	f = new File(iceHome, fname);
+	if (f.exists())
+	    return f;
+	System.err.println("Cannot locate file " + fname + ", cannot proceed");
+	System.exit(1);
+	return null;   // required by the compiler
     }
 
     public static void printCover() {

@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.uicomps;
 
+import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.models.IceEntitySet;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
@@ -260,7 +261,7 @@ public class EntitySetRankerFrame extends JFrame {
     private void saveEntitySetToAuxFile(String typeName) {
         try {
             Properties props = new Properties();
-            props.load(new FileReader("parseprops"));
+            props.load(new FileReader(Nice.locateFile("parseprops")));
             String fileName = props.getProperty("Jet.dataPath")
                     + "/"
                     + props.getProperty("Ace.EDTtype.auxFileName");

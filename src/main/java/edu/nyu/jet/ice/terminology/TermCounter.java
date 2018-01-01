@@ -3,6 +3,7 @@ package edu.nyu.jet.ice.terminology;
 import edu.nyu.jet.aceJet.Ace;
 import edu.nyu.jet.aceJet.EDTtype;
 import edu.nyu.jet.Control;
+import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.ice.models.IcePreprocessor;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.AnnotationStartComparator;
@@ -81,7 +82,7 @@ public class TermCounter extends Thread {
             e.printStackTrace();
         }
         resetCounters();
-        JetTest.initializeFromConfig(propsFile);
+        JetTest.initializeFromConfig(Nice.locateFile(propsFile));
         // load ACE type dictionary
         EDTtype.readTypeDict();
         // turn off traces
