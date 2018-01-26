@@ -157,11 +157,13 @@ public class JetEngineBuilder {
     public static void buildRelationPatternFile(Writer w, Writer negw, List<IceRelation> relations) throws IOException {
         PrintWriter pw = new PrintWriter(w);
         for (IceRelation rs : relations) {
-            List<String> paths = rs.getCleanPaths();
+            List<String> paths = rs.getBarePaths();
             String type = rs.getName();
+	    String arg1type = rs.getArg1type();
+	    String arg2type = rs.getArg2type();
             for (String path : paths) {
                 boolean inv = rs.invertedPath(path);
-                String pattern = path.replaceAll(" -- ", "--");
+                String pattern = arg1type + "--" + path + "--" + arg2type;
                 pw.println(pattern + " = " + type + (inv ? "-1" : ""));
             }
         }
