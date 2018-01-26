@@ -396,10 +396,6 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         relationList.setSelectedValue(iceRelation, true);
         // selecting new element forces refresh
         currentRelation = iceRelation;
-        if (!iceRelation.isValid()) {
-            System.err.println("Error in IceRelation:");
-            System.err.println(iceRelation.report());
-        }
     }
 
     /**
@@ -469,7 +465,6 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         DepPathMap depPathMap = DepPathMap.getInstance();
         depPathMap.load();
         for (String path : relation.getPaths()) {
-            IceRelation.reportInvalidPath(path);
             String repr = depPathMap.findRepr(path);
             if (repr != null && ! newListModel.contains(repr)) {
                 newListModel.addElement(repr);
