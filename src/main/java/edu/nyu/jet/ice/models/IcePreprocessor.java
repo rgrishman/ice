@@ -11,6 +11,7 @@ import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
+import edu.nyu.jet.ice.controllers.Nice;
 import edu.nyu.jet.JetTest;
 import edu.nyu.jet.lex.Stemmer;
 import edu.nyu.jet.lisp.FeatureSet;
@@ -172,10 +173,10 @@ public class IcePreprocessor extends Thread {
         cacheDirFile.mkdirs();
 
         // initialize Jet
-        JetTest.initializeFromConfig(propsFile);
+        JetTest.initializeFromConfig(Nice.locateFile(propsFile));
 
         try {
-            FileUtils.copyFile(new File(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
+            FileUtils.copyFile(Nice.locateFile(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
                     new File(cacheDir + File.separator + "apf.v5.1.1.dtd"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -421,9 +422,9 @@ public class IcePreprocessor extends Thread {
         fileListWriter.close();
     }
 
-    public static PatternSet loadPatternSet(String fileName) throws IOException {
+    public static PatternSet loadPatternSet(File file) throws IOException {
         PatternCollection pc = new PatternCollection();
-        pc.readPatternCollection(new FileReader(fileName));
+        pc.readPatternCollection(new FileReader(file));
         pc.makePatternGraph();
         return pc.getPatternSet("quantifiers");
     }
@@ -594,9 +595,15 @@ public class IcePreprocessor extends Thread {
     }
 
     /**
-     * Add time and number annotations for bootstrapping
+     * Add time, money, and number annotations for bootstrapping
      * TIMEX will be annotated as <ENAMEX TYPE="TIME"/>
      * NUMBER will be annotated as <ENAMEX TYPE="NUMBER"/>
+     * MONEY will be annotated as <ENAMEX TYPE="MONEY"/>
+     *
+     * Limitations:
+     * Does not compute true value
+     * Does not handle conutry prefix for money (US $)
+     * Does not handle decimals (10.3)
      *
      * @param doc
      * @param cacheDir
@@ -633,23 +640,63 @@ public class IcePreprocessor extends Thread {
             }
         }
 
-        // Now add numbers
+        // Now add numbers (including money)
+
         List<Annotation> tokens = doc.annotationsOfType("token");
         if (tokens != null) {
-            for (Annotation token : tokens) {
-                 if (token.get("intvalue") != null &&
-                         !isCrossedWithList(token, existingNames)) {
-                     Annotation numberAnn = new Annotation("ENAMEX",
-                             new Span(token.start(), token.end()),
-                             new FeatureSet("TYPE", "NUMBER",
-                                     "val", token.get("intValue"),
-                                     "mType", "NUMBER"));
-                     doc.addAnnotation(numberAnn);
+            for (int i = 0; i < tokens.size(); i++) {
+		Annotation token = tokens.get(i);
+                if (token.get("intvalue") != null) {
+		    int value = (int) token.get("intvalue");
+		    Span s = token.span();
+		    String type = "NUMBER";
+		    String prevToken = (i > 0) ?
+			doc.text(tokens.get(i - 1)) : "?";
+		    if (prevToken.equals("$")) {
+			type = "MONEY";
+			s.setStart(tokens.get(i - 1).start());
+		    }
+		    String nextToken = (i < tokens.size() - 1) ?
+			doc.text(tokens.get(i + 1)).trim() : "?";
+		    if (illions.get(nextToken) != null) {
+			value  = illions.get(nextToken);
+			i++;
+			s.setEnd(tokens.get(i).end());
+		    }
+		    Annotation numberAnn = new Annotation("ENAMEX",
+			s,
+			new FeatureSet("TYPE", type,
+			    "val", value,
+			    "mType", type));
+		    if ( !isCrossedWithList(numberAnn, existingNames))
+		    doc.addAnnotation(numberAnn);
                  }
             }
         }
+	/*
+       // this is alternative code which uses Jet 'number' annotations
+	JetTest.getNumberAnnotator().annotate(doc);
+        List<Annotation> numbers = doc.annotationsOfType("number");
+        if (numbers != null) {
+            for (Annotation number : numbers) {
+                 if ( !isCrossedWithList(number, existingNames)) {
+                     Annotation numberAnn = new Annotation("ENAMEX",
+                             number.span(),
+                             new FeatureSet("TYPE", "NUMBER",
+                                     "val", number.get("value"),
+                                     "mType", "NUMBER"));
+                     doc.addAnnotation(numberAnn);
+		     System.out.println("Found number:  " + doc.text(numberAnn) + "   " + numberAnn);
+                 }
+            }
+	} */
+    }
 
-
+    static Map<String, Integer> illions = new HashMap<String, Integer>();
+    static {
+	illions.put("thousand",1000);
+	illions.put("million", 10000);
+	illions.put("billion", 100000);
     }
 
     public static String getAceFileName(String cacheDir, String inputDir, String inputFile) {
