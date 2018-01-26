@@ -511,7 +511,8 @@ public class IceCLI {
 
                 String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                 for (String docName : docList) {
-                    docName = docName + "." + Ice.selectedCorpus.filter;
+		    if (! Ice.selectedCorpus.filter.equals("*"))
+                    	docName = docName + "." + Ice.selectedCorpus.filter;
                     copyCache(currentPreprocessDir, origPreprocessDir, 
                             Ice.selectedCorpus.directory, Ice.selectedCorpus.directory,
                             docName, docName);
