@@ -3,6 +3,8 @@ package edu.nyu.jet.ice.models;
 import edu.nyu.jet.aceJet.AnchoredPath;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
+import edu.nyu.jet.Logger;
+import edu.nyu.jet.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -15,6 +17,9 @@ import java.util.*;
  */
 
 public class DepPathMap {
+
+    Logger logger = LoggerFactory.getLogger(DepPathMap.class);
+
     private static DepPathMap instance = null;
 
     private HashMap<String, String> pathReprMap = new HashMap<String, String>();
@@ -50,6 +55,10 @@ public class DepPathMap {
         }
         return instance;
     }
+
+    /**
+     *  Returns the set of dependency paths for the corpus.
+     */
 
     public Set<String> getPathSet () {
         return pathReprMap.keySet();
@@ -197,9 +206,11 @@ public class DepPathMap {
 
     public boolean load() {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
+	logger.debug ("DepPathMap: load({})", fileName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName) && pathExampleMap.size() > 0) return true; // use old data
+	logger.debug ("DepPathMap: loading");
         pathExampleMap.clear();
         pathReprMap.clear();
         reprPathMap.clear();
