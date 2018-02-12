@@ -37,11 +37,16 @@ public class Bootstrap {
     public static final double MIN_BOOTSTRAP_SCORE = 0.05;
 
     /**
-     *  maximum number of candidates to be displayed in one
+     *  Maximum number of candidates to be displayed in one
      *  bootstrapping iteration.
      */
 
     public static final int    MAX_BOOTSTRAPPED_ITEMS = 200;
+
+    /**
+     *  A ranked list of lexicalized dependency paths which are
+     *  candidates for the relation being built.
+     */
 
     public List<IcePath> foundPatterns = new ArrayList<IcePath>();
 
@@ -91,13 +96,7 @@ public class Bootstrap {
      *  Set of all paths in corpus.
      */
 
-    AnchoredPathSet pathSet;
-
-    /**
-     *  Sum of word embeddings of seeds.
-     */
-
-    double[] seedEmbedding;
+    SimAnchoredPathSet pathSet;
 
     String arg1Type = "";
     String arg2Type = "";
@@ -149,32 +148,20 @@ public class Bootstrap {
             DepPathMap depPathMap = DepPathMap.getInstance();
             String[] splitSeedString = bigSeedString.split(":::");
             List<String> allPaths = new ArrayList<String>();
-            seedEmbedding = null;
             // iterate over all seed English expressions,
             // finding for each expression the dependency paths (if any)
             // and putting these paths together in seedPaths
             for (String p : splitSeedString) {
+System.out.println("Processing seed " + p); // <<<<<<<<<<<<
                 // >>>>>>>>>>>>>> convert directly to AnchoredPath
                 List<String> currentPaths = depPathMap.findPath(p);
+System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size()) + " paths");  // <<<<<<<<<
                 if (currentPaths != null) {
                     for (String currentPath : currentPaths) {
                         String[] parts = currentPath.split("--");
-                        allPaths.add(parts[1].trim());
+                        allPaths.add(currentPath);
                         arg1Type = parts[0].trim();
                         arg2Type = parts[2].trim();
-                    }
-                }
-                String[] wordsInSeed = p.split(" ");
-                if (WordEmbedding.isLoaded()) {
-                    double[] v = WordEmbedding.embed(wordsInSeed);
-                    if (v != null) {
-                        if (seedEmbedding == null) {
-                            seedEmbedding = v;
-                        } else {
-                            for (int i = 0; i < v.length; i++) {
-                                seedEmbedding[i] += v[i];
-                            }
-                        }
                     }
                 }
             }
@@ -187,7 +174,7 @@ public class Bootstrap {
             }
             seedPaths.addAll(allPaths);
 
-            pathSet = new AnchoredPathSet(patternFileName);
+            pathSet = new SimAnchoredPathSet(patternFileName, new PathMatcher(), threshold);
             bootstrap(arg1Type, arg2Type);
         }
         catch (IOException e) {
@@ -196,6 +183,8 @@ public class Bootstrap {
         }
         return foundPatterns;
     }
+
+    double threshold = 0.2;
 
     /**
      *  Perform the next iteration of bootstrapping to build a relation model
@@ -208,22 +197,6 @@ public class Bootstrap {
     public List<IcePath> iterate(List<IcePath> approvedPaths, List<IcePath> rejectedPaths) {
         addPathsToSeedSet(approvedPaths, seedPaths);
         addPathsToSeedSet(rejectedPaths, rejects);
-        for (IcePath approvedPath : approvedPaths) {
-            String p = approvedPath.getRepr();
-            String[] wordsInSeed = p.split(" ");
-            if (WordEmbedding.isLoaded()) {
-                double[] v = WordEmbedding.embed(wordsInSeed);
-                if (v != null) {
-                    if (seedEmbedding == null) {
-                        seedEmbedding = v;
-                    } else {
-                        for (int i = 0; i < v.length; i++) {
-                            seedEmbedding[i] += v[i];
-                        }
-                    }
-                }
-            }
-        }
         bootstrap(arg1Type, arg2Type);
         return foundPatterns;
     }
@@ -248,11 +221,19 @@ public class Bootstrap {
      *  (a list of IcePaths).
      */
 
-    private void bootstrap(String arg1Type, String arg2Type) {
+    public void bootstrap(String arg1Type, String arg2Type) { // <<<<<
         // DEBUG = report counts and score
         if (Ice.iceProperties.getProperty("Ice.Bootstrapper.debug") != null) {
             DEBUG = Boolean.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.debug"));
         }
+	if (Ice.iceProperties.getProperty("Ice.Bootstrapper.threshold") != null) {
+	    try {
+		threshold = Double.valueOf(Ice.iceProperties.getProperty("Ice.Bootstrapper.threshold"));
+	    } catch (NumberFormatException e) {
+		threshold = 0.2;
+	    }
+	    System.out.println ("Bootstrap threshold = " + threshold);
+	}
         foundPatterns.clear();
         DepPathMap depPathMap = DepPathMap.getInstance();
 
@@ -269,9 +250,12 @@ public class Bootstrap {
         Collections.sort(scoreList);
         //
         // filter the pattern set:
-        //   drop paths which have the same linearization as higher-ranked paths
+        //   drop paths which have the same linearization as 
+	//   a seed or a higher-ranked path
         //
         Set<String>   existingReprs = new HashSet<String>();
+	for (String s : seedPaths)
+	    existingReprs.add(depPathMap.findRepr(s));
         Set<String>   foundPatternStrings = new HashSet<String>();
         int count = 0;
         for (IcePath icePath : scoreList) {
@@ -392,41 +376,46 @@ public class Bootstrap {
         }
         return scoreList;
     }
-
+ 
     /**
      *  Construct a list of candidate relation patterns with scores based on
      *  similarities of embeddings.
      */
 
     List<IcePath> scoreUsingWordEmbeddings () {
+	PathMatcher matcher = new PathMatcher();
         List<IcePath> scoreList = new ArrayList<IcePath>();
         DepPathMap depPathMap = DepPathMap.getInstance();
-        for (String fullp : depPathMap.getPathSet()) {
-            AnchoredPath a = new AnchoredPath(fullp);
-            String pRepr = depPathMap.findRepr(fullp);
-            if (pRepr == null) {
-                continue;
-            }
-            String pExample = depPathMap.findExample(fullp);
-            if (pExample == null) {
-                continue;
-            }
-            String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
-            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
+	for (String s : seedPaths) {
+	    if (DEBUG) System.out.println("Expanding seed " + s);
+	    for (AnchoredPath a : pathSet.similarPaths(s)) {
+            String fullp = arg1Type + " -- " + a.path + " -- " + arg2Type;
+		String pRepr = depPathMap.findRepr(fullp);
+		if (pRepr == null) {
+		    continue;
+		}
+		String pExample = depPathMap.findExample(fullp);
+		if (pExample == null) {
+		    continue;
+		}
+		String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
+		tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
 
-            if (! arg1Type.equals(a.arg1)) continue;
-            if (! arg2Type.equals(a.arg2)) continue;
-            String[] words = pRepr.split(" ");
-            double[] v = WordEmbedding.embed(words);
-            double score = WordEmbedding.similarity(v, seedEmbedding);
+		// if (! arg1Type.equals(a.arg1)) continue;
+		// if (! arg2Type.equals(a.arg2)) continue;
+		//double score = matcher.matchPaths("UNK -- " + a.path + " -- UNK",
+			//"UNK -- " + s + " -- UNK") / (s.split(":").length + 1);
+		String[] x = s.split("--");
+		double score = WordEmbedding.pathSimilarity(a.path, x[1].trim());
 
-            IcePath icePath = new IcePath(a.path, pRepr, tooltip, score);
-            if (pRepr.equals(arg1Type + " " + arg2Type)) {
-                continue;
-            }
-            scoreList.add(icePath);
-        }
-        return scoreList;
+		IcePath icePath = new IcePath(fullp, pRepr, tooltip, score);
+		if (pRepr.equals(arg1Type + " " + arg2Type)) {
+		    continue;
+		}
+		scoreList.add(icePath);
+	    }
+	}
+	return scoreList;
     }
 
     public enum BootstrapAnchoredPathType {
