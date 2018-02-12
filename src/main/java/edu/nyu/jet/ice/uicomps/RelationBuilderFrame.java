@@ -181,13 +181,10 @@ public class RelationBuilderFrame extends JFrame {
                 StringBuilder text = new StringBuilder();
                 Set<String> usedRepr = new HashSet<String>();
                 for (String path : bootstrap.getSeedPaths()) {
-		    AnchoredPath ap = new AnchoredPath(bootstrap.getArg1Type(), 
-			                               path, 
-						       bootstrap.getArg2Type());
 		    if (iceRelation != null) {
-			iceRelation.addPath(ap.toString());
+			iceRelation.addPath(path);
 		    }
-                    String repr = depPathMap.findRepr(ap);
+                    String repr = depPathMap.findRepr(path);
                     if (repr != null && !usedRepr.contains(repr)) {
                         text.append(repr).append("\n");
                         usedRepr.add(repr);
