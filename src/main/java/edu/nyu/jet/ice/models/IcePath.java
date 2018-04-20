@@ -118,6 +118,61 @@ public class IcePath implements Comparable<IcePath> {
             }
         }
     }
+
+    public void generalizeLeft () {
+	generalize(0);
+    }
+
+    public void generalizeRight () {
+	generalize(2);
+    }
+
+    private void generalize (int n) {
+	// update path
+	String[] splitPath = path.split("--");
+	if (splitPath.length != 3) return;
+	int argPosn = n;
+	String arg = splitPath[argPosn];
+	int i = arg.indexOf("/");
+	if (i < 0) return;
+	arg = arg.substring(0, i);
+	splitPath[argPosn] = arg;
+	path = splitPath[0] + " -- " + splitPath[1] + " -- " +  splitPath[2];
+	// update repr
+	String[] splitRepr = repr.split(" ");
+	if (splitRepr.length < 3) return;
+	argPosn = -1;
+	if (n == 0) {
+	    for (int x = 0; x < splitRepr.length; x++) {
+		if (allCaps(splitRepr[x])) {
+		    argPosn = x;
+		    break;
+		}
+	    }
+	} else {
+	    for (int x = splitRepr.length - 1; x >= 0; x--) {
+		if (allCaps(splitRepr[x])) {
+		    argPosn = x;
+		    break;
+		}
+	    }
+	}
+	if (argPosn < 0) return;
+	arg = splitRepr[argPosn];
+	int j = arg.indexOf("/");
+	if (j<0) return;
+	arg = arg.substring(0, j);
+	splitRepr[argPosn] = arg;
+	repr = splitRepr[0];
+	for (int k = 1; k < splitRepr.length ; k++)
+	   repr += " " + splitRepr[k]; 
+	DepPathMap depPathMap = DepPathMap.getInstance();
+	depPathMap.setMaps (path, repr, example);
+    }
+
+    private boolean allCaps (String s) {
+	return s.equals(s.toUpperCase());
+    }
 }
 
 

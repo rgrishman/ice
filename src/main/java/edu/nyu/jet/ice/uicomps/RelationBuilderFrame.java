@@ -32,7 +32,7 @@ public class RelationBuilderFrame extends JFrame {
     private Bootstrap bootstrap;
     public JScrollPane listPane;
     public JList rankedList;
-    public DefaultListModel rankedListModel = new DefaultListModel();
+    public DefaultListModel<IcePath> rankedListModel = new DefaultListModel<IcePath>();
     public JRadioButton yesButton;
     public JRadioButton noButton;
     public JRadioButton undecidedButton;
@@ -46,7 +46,7 @@ public class RelationBuilderFrame extends JFrame {
         this.relationBuilder = relationBuilder;
         this.swingRelationsPanel = swingRelationsPanel;
         JPanel entitySetPanel = new JPanel(new MigLayout());
-        entitySetPanel.setSize(400, 700);
+        entitySetPanel.setSize(400, 650);
 
         JLabel rankedListLabel = new JLabel("Bootstrapped patterns");
         entitySetPanel.add(rankedListLabel, "wrap");
@@ -89,8 +89,17 @@ public class RelationBuilderFrame extends JFrame {
         noButton.addActionListener(decisionActionListener);
         undecidedButton.addActionListener(decisionActionListener);
 
+	JButton genLeftButton = new JButton("< Generalize");
+	JButton genRightButton = new JButton("Generalize >");
+	JPanel generalizationPanel = new JPanel(new MigLayout());
+	generalizationPanel.add(genLeftButton);
+	generalizationPanel.add(genRightButton);
+	generalizationPanel.setPreferredSize(new Dimension(350, 100));
+	generalizationPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         entitySetPanel.add(listPane, "wrap");
         entitySetPanel.add(decisionPanel, "wrap");
+        entitySetPanel.add(generalizationPanel, "wrap");
 
         JPanel actionButtonsPanel = new JPanel(new MigLayout());
         JButton iterateButton = new JButton("Iterate");
@@ -107,7 +116,7 @@ public class RelationBuilderFrame extends JFrame {
             public void valueChanged(ListSelectionEvent listSelectionEvent) {
                 int idx = rankedList.getSelectedIndex();
                 if (idx < 0) return;
-                IcePath e = (IcePath) rankedListModel.getElementAt(idx);
+                IcePath e = rankedListModel.getElementAt(idx);
                 if (e.getChoice() == IcePath.IcePathChoice.YES) {
                     yesButton.setSelected(true);
                 }
@@ -120,6 +129,30 @@ public class RelationBuilderFrame extends JFrame {
             }
         });
 
+        genLeftButton.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+		int idx = rankedList.getSelectedIndex();
+		if (idx < 0) return;
+		IcePath e = rankedListModel.getElementAt(idx);
+		e.generalizeLeft();
+		rankedListModel.set(idx,e);
+		// rankedList.revalidate();
+		// rankedList.repaint();
+		}
+	});
+
+        genRightButton.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+		int idx = rankedList.getSelectedIndex();
+		if (idx < 0) return;
+		IcePath e = rankedListModel.getElementAt(idx);
+		e.generalizeRight();
+		rankedListModel.set(idx,e);
+		// rankedList.revalidate();
+		// rankedList.repaint();
+		}
+	});
+
         //
         //  when Iterate button is pressed, collect pattern which have been
         //  labeled YES or NO and start new thread for next bootstrapping iteration
@@ -129,7 +162,7 @@ public class RelationBuilderFrame extends JFrame {
                 java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
                 java.util.List<IcePath> rejectedPaths = new ArrayList<IcePath>();
                 for (Object o : rankedListModel.toArray()) {
-                    IcePath e = (IcePath) o;
+		    IcePath e = (IcePath) o;
                     if (e.getChoice() == IcePath.IcePathChoice.YES) {
                         approvedPaths.add(e);
                     }
@@ -163,7 +196,7 @@ public class RelationBuilderFrame extends JFrame {
                 java.util.List<IcePath> approvedPaths = new ArrayList<IcePath>();
                 java.util.List<IcePath> rejectedPaths = new ArrayList<IcePath>();
                 for (Object o : rankedListModel.toArray()) {
-                    IcePath e = (IcePath) o;
+		    IcePath e = (IcePath) o;
                     if (e.getChoice() == IcePath.IcePathChoice.YES) {
                         approvedPaths.add(e);
                     }
@@ -290,7 +323,7 @@ public class RelationBuilderFrame extends JFrame {
 //    }
 
     public void updateList() {
-        DefaultListModel newListModel = new DefaultListModel();
+        DefaultListModel<IcePath> newListModel = new DefaultListModel<IcePath>();
         for (IcePath s : bootstrap.foundPatterns) {
             newListModel.addElement(s);
         }
@@ -310,7 +343,7 @@ class BootstrappingActionListener implements ActionListener {
     public void actionPerformed(ActionEvent actionEvent) {
         int idx = frame.rankedList.getSelectedIndex();
         if (idx < 0) return;
-        IcePath e = (IcePath) frame.rankedListModel.getElementAt(idx);
+        IcePath e = frame.rankedListModel.getElementAt(idx);
         e.setChoice(IcePath.IcePathChoice.valueOf(actionEvent.getActionCommand()));
         frame.rankedList.revalidate();
         frame.rankedList.repaint();

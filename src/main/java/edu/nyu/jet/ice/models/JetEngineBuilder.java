@@ -163,8 +163,8 @@ public class JetEngineBuilder {
 	    String arg2type = rs.getArg2type();
             for (String path : paths) {
                 boolean inv = rs.invertedPath(path);
-                String pattern = arg1type + "--" + path + "--" + arg2type;
-                pw.println(pattern + " = " + type + (inv ? "-1" : ""));
+                // String pattern = arg1type + "--" + path + "--" + arg2type;
+                pw.println(path + " = " + type + (inv ? "-1" : ""));
             }
         }
         pw.close();

@@ -429,7 +429,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 bootstrap,
                 SwingRelationsPanel.this);
 
-        frame.setSize(400, 580);
+        frame.setSize(400, 650);
         frame.setAlwaysOnTop(true);
         String seed = inSeed;
         RelationBuilderThread builder = new RelationBuilderThread(

@@ -329,6 +329,12 @@ public class DepPaths {
 
         String type1 = mention1.get("TYPE") != null ? (String) mention1.get("TYPE") : "OTHER";
         String type2 = mention2.get("TYPE") != null ? (String) mention2.get("TYPE") : "OTHER";
+	if (typeWithSubtypes(type1))
+	    type1 += "/" + NameSubtyper.classify(m1, type1);
+	if (typeWithSubtypes(type2))
+	    type2 += "/" + NameSubtyper.classify(m2, type2);
+	type1 = type1.toUpperCase();
+	type2 = type2.toUpperCase();
         if (type1.equals(type2) && !type1.equals("OTHER")) {
             type1 += "(1)";
             type2 += "(2)";
@@ -356,6 +362,10 @@ public class DepPaths {
         if (!linearizationDict.containsKey(fullPath)) {
             linearizationDict.put(fullPath, linearizedPath);
         }
+    }
+
+    static boolean typeWithSubtypes (String s) {
+	return !(s.equals("TIME") || s.equals("NUMBER") || s.equals("MONEY"));
     }
 
     /**
