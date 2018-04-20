@@ -169,7 +169,7 @@ public class IceRelation {
 		first = first.substring(0, first.length() - 3);
 	    if (last.endsWith("(1)") || last.endsWith("(2)"))
 		last = last.substring(0, last.length() - 3);
-	    String barePath = mid;
+	    String barePath = first + "--" + mid + "--" + last;
 	    barePaths.add(barePath);
 	    inverted.put(barePath, inv);
 	}

@@ -298,7 +298,7 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
         List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
 
         for (String sp : seedPaths) {
-            List<AnchoredPath> posPaths = pathSet.getByPath(sp);
+            List<AnchoredPath> posPaths = pathSet.getByPath(new AnchoredPath(sp).path);
             if (posPaths != null) {
                 for (AnchoredPath p : posPaths) {
                     seedPathInstances.add(new BootstrapAnchoredPath(p,
@@ -368,7 +368,7 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             }
             String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
             tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
-            IcePath icePath = new IcePath(p, pRepr, tooltip, score);
+            IcePath icePath = new IcePath(fullp, pRepr, tooltip, score);
             if (pRepr.equals(arg1Type + " " + arg2Type)) {
                 continue;
             }

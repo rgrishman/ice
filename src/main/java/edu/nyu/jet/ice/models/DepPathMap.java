@@ -198,6 +198,16 @@ public class DepPathMap {
         return true;
     }
 
+    public void setMaps (String path, String repr, String example) {
+	pathReprMap.put(path, repr);
+	String normalizedRepr = normalizeRepr(repr);
+	if (!reprPathMap.containsKey(normalizedRepr)) {
+	    reprPathMap.put(normalizedRepr, new ArrayList());
+	}
+	reprPathMap.get(normalizedRepr).add(path);
+	pathExampleMap.put(path, example);
+    }
+
     /**
      *  Loads the mappings between paths, linearizations, and examples for the
      *  currently selected corpus from a file.  Skips the load if the mappings
