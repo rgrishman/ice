@@ -280,7 +280,7 @@ public class SwingCorpusPanel extends JComponent implements Refreshable {
                 continue;
             if (Ice.corpora.get(corpus).wordCountFileName == null)
                 continue;
-            if (Ice.corpora.get(corpus).relationTypeFileName == null)
+            if (Ice.corpora.get(corpus).relationTypesFileName == null)
                 continue;
             if (corpus.startsWith(".")) {
                 continue;

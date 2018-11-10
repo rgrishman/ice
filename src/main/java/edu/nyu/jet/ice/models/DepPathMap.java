@@ -121,6 +121,7 @@ public class DepPathMap {
         pathReprMap.clear();
         reprPathMap.clear();
         pathExampleMap.clear();
+	logger.info ("Clearing reprs and tooltips for paths");
     }
 
     public void unpersist() {
@@ -158,16 +159,25 @@ public class DepPathMap {
         }
     }
 
+    public boolean load () {
+	return load (false);
+    }
+
+    public boolean forceLoad () {
+	return load (true);
+    }
+
     /**
      *  Loads the mappings between paths, linearizations, and examples for the
      *  currently selected corpus.
      */
 
-    public boolean forceLoad() {
+    public boolean load (boolean always) {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
-        // if (previousFileName != null && previousFileName.equals(fileName)) return true; // use old data
+        if (previousFileName != null && previousFileName.equals(fileName)) return true;
+	logger.info ("Loading reprs and tooltips from file {}", fileName);
         pathExampleMap.clear();
         pathReprMap.clear();
         reprPathMap.clear();
@@ -208,48 +218,6 @@ public class DepPathMap {
 	pathExampleMap.put(path, example);
     }
 
-    /**
-     *  Loads the mappings between paths, linearizations, and examples for the
-     *  currently selected corpus from a file.  Skips the load if the mappings
-     *  have been previously loaded from the same file.
-     */
-
-    public boolean load() {
-        String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
-	logger.debug ("DepPathMap: load({})", fileName);
-        File f = new File(fileName);
-        if (!f.exists() || f.isDirectory()) return false;
-        if (previousFileName != null && previousFileName.equals(fileName) && pathExampleMap.size() > 0) return true; // use old data
-	logger.debug ("DepPathMap: loading");
-        pathExampleMap.clear();
-        pathReprMap.clear();
-        reprPathMap.clear();
-        try {
-            BufferedReader r = new BufferedReader(new FileReader(f));
-            String line = null;
-            while ((line = r.readLine()) != null) {
-                String[] parts = line.split(":::");
-                if (parts.length != 3) continue;
-                String path = parts[0];
-                String repr = parts[1];
-                String example = parts[2];
-                pathReprMap.put(path, repr);
-                String normalizedRepr = normalizeRepr(repr);
-                if (!reprPathMap.containsKey(normalizedRepr)) {
-                    reprPathMap.put(normalizedRepr, new ArrayList());
-                }
-                reprPathMap.get(normalizedRepr).add(path);
-                pathExampleMap.put(path, example);
-            }
-            r.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        previousFileName = fileName;
-        return true;
-    }
 
     /**
      Normalize the internal copy of DepPath representation: all lowercase, single space, trimmed.
@@ -265,7 +233,7 @@ public class DepPathMap {
      *  distance) which is the representation of a dependency path.
      */
 
-    public String findClosest (String repr) {
+    public String findClosestPath (String repr) {
         String norm = normalizeRepr(repr);
         int distance = 1000;
         String closest = null;

@@ -14,6 +14,7 @@ import java.awt.event.*;
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.IceEntitySet;
 import edu.nyu.jet.ice.models.IceRelation;
+import edu.nyu.jet.ice.events.IceEvent;
 
 /**
  *  Top-level objects for ICE
@@ -24,6 +25,7 @@ public class Ice {
     public static SortedMap<String, Corpus> corpora = new TreeMap<String, Corpus> ();
     public static SortedMap<String, IceEntitySet> entitySets = new TreeMap<String, IceEntitySet>();
     public static SortedMap<String, IceRelation> relations = new TreeMap<String, IceRelation>();
+    public static SortedMap<String, IceEvent> events = new TreeMap<String, IceEvent>();
     public static Corpus selectedCorpus = null;
     public static String selectedCorpusName = null;
 
@@ -58,5 +60,13 @@ public class Ice {
 
     public static void removeRelation (String type) {
 	relations.remove(type);
+    }
+
+    public static void addEvent (IceEvent event) {
+	events.put(event.getName(), event);
+    }
+
+    public static IceEvent getEvent (String type) {
+	return events.get(type);
     }
 }

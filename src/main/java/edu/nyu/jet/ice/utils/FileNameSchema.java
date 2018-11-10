@@ -54,13 +54,25 @@ public class FileNameSchema {
     }
 
     public static String getRelationTypesFileName(String corpusName) {
-        return CACHE_ROOT + File.separator + corpusName + File.separator + "Relationtypes";
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "RelationTypes";
     }
 
     public static String getRelationReprFileName(String corpusName) {
         return CACHE_ROOT + File.separator + corpusName + File.separator + "RelationRepr";
     }
+    
+    public static String getEventsFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "Events";
+    }
 
+    public static String getEventTypesFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "EventTypes";
+    }
+
+    public static String getEventReprFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "EventRepr";
+    }
+    
     public static String getCorpusInfoDirectory(String corpusName) {
         return CACHE_ROOT + File.separatorChar + corpusName;
     }
@@ -83,5 +95,13 @@ public class FileNameSchema {
 
     public static String getPreprocessCacheMapFileName(String corpusName) {
         return CACHE_ROOT + File.separator + corpusName + File.separator + "preprocessCacheMap";
+    }
+
+    public static String getDepPathsLogFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "DepPathsLog";
+    }
+
+    public static String getDepPathsPriorLogFileName(String corpusName) {
+        return CACHE_ROOT + File.separator + corpusName + File.separator + "DepPathsPriorLog";
     }
 }

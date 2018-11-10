@@ -63,7 +63,8 @@ public class ProcessFarm {
                     success = false;
                 }
             }
-            catch (InterruptedException e) {
+             // catch (InterruptedException e) {
+            catch (Exception e) {
                 System.err.println(tasks.get(i) + " encountered interrupted exception:");
                 e.printStackTrace();
                 success = false;

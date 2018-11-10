@@ -13,6 +13,7 @@ import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
+import edu.nyu.jet.ice.events.*;
 import edu.nyu.jet.JetTest;
 import edu.nyu.jet.parser.SyntacticRelation;
 import edu.nyu.jet.parser.SyntacticRelationSet;
@@ -31,18 +32,37 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Collect a list of all dependency paths connecting two named entity mentions.
+ *  Collect a list of all dependency paths connecting two named entity mentions.  This is
+ *  run as a separate process which reads and analyzes a corpus of documents, finally 
+ *  writing a set of files in the cache directory for the corpus.
+ *. <p>
+ *  The dependency paths are affected by the entity sets currently defined, and so
+ *  this operation may be performed frequently. Two measures are taken to speed it up:<ul>
+ *  <li> 
+ *  - the dependency parse is computed once and saved
+ *  <li>
+ *  - the dependency paths are recomputed only for documents containing newly tagged entities
+ *    (decribed further below).
  */
 
 public class DepPaths {
 
     final static Logger logger = LoggerFactory.getLogger(DepPaths.class);
     public static final int MAX_ALLOWABLE_SENTLENGTH_FOR_DEPPATH = 600;
+    public static final int MAX_INTERVENING_MENTIONS = 3;
+    public static int maxInterveningMentions = Nice.iceIntegerProperty
+	("Ice.DepPaths.maxInterveningMentions", MAX_INTERVENING_MENTIONS);
+    public static final int MIN_RELATION_TYPE_FREQ = 1;
+    public static int minRelationTypeFreq = Nice.iceIntegerProperty
+	("Ice.DepPaths.minRelationTypeFreq", MIN_RELATION_TYPE_FREQ);
 
     static Map<String, Integer> relationTypeCounts = new TreeMap<String, Integer>();
     static Map<String, Integer> relationInstanceCounts = new TreeMap<String, Integer>();
+    static Map<String, Integer> eventTypeCount = new TreeMap<String, Integer>();
+    static Map<String, Integer> eventInstanceCounts = new TreeMap<String, Integer>();
     static Map<String, String> sourceDict = new TreeMap<String, String>();
     static Map<String, String> linearizationDict = new TreeMap<String, String>();
+    static Map<String, String> eventLinearizationDict = new TreeMap<String, String>();
 
     static Map<String, String> pathRelations = new TreeMap<String, String>();
     static List<Event> depPathEvents = new ArrayList<Event>();
@@ -75,6 +95,9 @@ public class DepPaths {
         disallowedRelations.add("conj-1");
     }
 
+    static BufferedReader logReader;
+    static PrintWriter logWriter;
+
     /**
      * counts the number of instances of each dependency path connecting
      * two entity mentions in a set of files.  Invoked by <br>
@@ -95,8 +118,11 @@ public class DepPaths {
     public static void main(String[] args) throws IOException {
         relationTypeCounts.clear();
         relationInstanceCounts.clear();
+        eventTypeCount.clear();
+        eventInstanceCounts.clear();
         sourceDict.clear();
         linearizationDict.clear();
+        eventLinearizationDict.clear();
         DepTransformer transformer = new DepTransformer("yes");
         transformer.setUsePrepositionTransformation(false);
         if (args.length != 7 && args.length != 8) {
@@ -114,13 +140,23 @@ public class DepPaths {
         String cacheDir = args.length == 8 ? args[7] :
                 FileNameSchema.getPreprocessCacheDir(Ice.selectedCorpusName);
 
+	File log = new File(FileNameSchema.getDepPathsLogFileName(Ice.selectedCorpusName));
+	File priorlog = new File(FileNameSchema.getDepPathsPriorLogFileName(Ice.selectedCorpusName));
+	boolean priorLogExists = log.exists();
+	if (priorLogExists) {
+	    log.renameTo(priorlog);
+	    logReader = new BufferedReader ( new FileReader (priorlog));
+	}
+	logWriter = new PrintWriter (new FileWriter(log));
+	dpidReset(); 
+	resetTreeCollector();
+
         // initialize Jet
 
         System.out.println("Starting Jet DepCounter ...");
         JetTest.initializeFromConfig(Nice.locateFile(propsFile));
         PatternSet patternSet = IcePreprocessor.loadPatternSet(Nice.locateFile(
-                JetTest.getConfig("Jet.dataPath") + File.separator +
-                        JetTest.getConfig("Pattern.quantifierFileName")));
+                JetTest.getConfig("Jet.dataPath") + File.separator + JetTest.getConfig("Pattern.quantifierFileName")));
         // load ACE type dictionary
         EDTtype.readTypeDict();
         // ACE mode (provides additional antecedents ...)
@@ -134,73 +170,96 @@ public class DepPaths {
         BufferedReader docListReader = new BufferedReader(new FileReader(docList));
         boolean isCanceled = false;
         while ((docName = docListReader.readLine()) != null) {
-            docCount++;
-            try {
-                if ("*".equals(inputSuffix.trim())) {
-                    inputFile = docName;
-                } else {
-                    inputFile = docName + "." + inputSuffix;
-                }
-                System.out.println("Collecting dependency paths in document " + docCount + ": " + inputFile);
-                ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
-                doc.setAllTags(true);
-                doc.open();
-                // process document
-                Ace.monocase = Ace.allLowerCase(doc);
-                // --------------- code from Ace.java
-                doc.stretchAll();
-                // process document
-                Ace.monocase = Ace.allLowerCase(doc);
-                Control.processDocument(doc, null, docCount == -1, docCount);
+	    docCount++;
+	    processDocument(docName, inputSuffix,docCount, priorLogExists, cacheDir, transformer);
+	    if (progressMonitor != null) {
+		progressMonitor.setProgress(docCount);
+		progressMonitor.setNote(docCount + " files processed");
+		
+		if (progressMonitor.isCanceled()) {
+		    isCanceled = true;
+		    System.err.println("Relation path collection canceled.");
+		    break;
+		}
+	    }
+	}
+	if (!isCanceled) {
+	    writePaths(outputFile, typeOutputFile, Ice.selectedCorpusName);
+	    if (Ice.iceProperties.getProperty("Ice.processEvents") != null)
+		writeTrees(Ice.selectedCorpusName);
+	}
+    }
 
-                IcePreprocessor.fetchAnnotations (cacheDir, inputDir, inputFile);
+    public static void processDocument (String docName, String inputSuffix, int docCount, 
+	    boolean priorLogExists, String cacheDir, DepTransformer transformer) {
+	try {
+	    if ("*".equals(inputSuffix.trim())) {
+		inputFile = docName;
+	    } else {
+		inputFile = docName + "." + inputSuffix;
+	    }
+	    System.out.println("Collecting dependency paths in document " + docCount + ": " + inputFile);
+	    if (priorLogExists) dpidRead(logReader);
+	    boolean clean = dpidIsClean();
+	    if (priorLogExists & clean & (Ice.iceProperties.getProperty("Ice.cacheLDPs") != null)) {
+		System.out.println("using previously computed paths");
+	    } else {
+		dpidReset(); 
+		ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+		doc.setAllTags(true);
+		doc.open();
+		Ace.monocase = Ace.allLowerCase(doc);
+		doc.stretchAll();
+		Ace.monocase = Ace.allLowerCase(doc);
+		Control.processDocument(doc, null, docCount == -1, docCount);
+		IcePreprocessor.fetchAnnotations (cacheDir, inputDir, inputFile);
 		// maintain two dependency trees:
 		//   relations is original parse, for generating repr (English phrase)
 		//   transformedRelations is transformed parse, for generating path
-                SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet();
-                SyntacticRelationSet transformedRelations = transformer.transform(
-                        relations.deepCopy(), doc.fullSpan());
-                relations.addInverses();
-                transformedRelations.addInverses();
-                IcePreprocessor.loadPOS(doc);
-                IcePreprocessor.loadENAMEX(doc);
-                IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
-                IcePreprocessor.addNumberAndTime(doc, cacheDir, inputDir, inputFile);
-                collectPaths(doc, relations, transformedRelations);
-                if (progressMonitor != null) {
-                    progressMonitor.setProgress(docCount);
-                    progressMonitor.setNote(docCount + " files processed");
-                    if (progressMonitor.isCanceled()) {
-                        isCanceled = true;
-                        System.err.println("Relation path collection canceled.");
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        // *** write counts
-        if (!isCanceled) {
-            writer = new PrintWriter(new FileWriter(outputFile));
-            typeWriter = new PrintWriter(new FileWriter(typeOutputFile));
-            String relationReprFile = outputFile.substring(0, outputFile.length() - 1) + "Repr";
-            PrintWriter relationReprWriter = new PrintWriter(new FileWriter(relationReprFile));
-//            PrintWriter sourceDictWriter = new PrintWriter(new FileWriter(sourceDictFile));
-            for (String r : relationInstanceCounts.keySet()) {
-                writer.println(relationInstanceCounts.get(r) + "\t" + r);
-            }
-            for (String r : relationTypeCounts.keySet()) {
-                typeWriter.println(relationTypeCounts.get(r) + "\t" + r);
-//                sourceDictWriter.println(relationTypeCounts.get(r) + "\t" + r + " ||| " + sourceDict.get(r));
-                relationReprWriter.println(r + ":::" + linearizationDict.get(r) + ":::" + sourceDict.get(r));
-            }
-            writer.close();
-            typeWriter.close();
-            relationReprWriter.close();
-//            sourceDictWriter.close();
+		SyntacticRelationSet relations = IcePreprocessor.loadSyntacticRelationSet();
+		SyntacticRelationSet transformedRelations = transformer.transform(
+			relations.deepCopy(), doc.fullSpan());
+		relations.addInverses();
+		transformedRelations.addInverses();
+		IcePreprocessor.loadPOS(doc);
+		IcePreprocessor.loadENAMEX(doc);
+		IcePreprocessor.loadAdditionalMentions(doc, cacheDir, inputDir, inputFile);
+		IcePreprocessor.addNumberAndTime(doc, cacheDir, inputDir, inputFile);
+		collectPaths(doc, relations, transformedRelations);
+		doc.relations = transformedRelations;
+	    }
+	    dpidUpdateCorpusCounts();
+	    dpidWrite(logWriter);
 
-        }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+    }
+
+    public static void writePaths (String outputFile, String typeOutputFile) throws IOException {
+	/*
+	String corpusName = Ice.selectedCorpusName;
+	    writer = new PrintWriter (new FileWriter (FileNameSchema.getEventsFileName(corpusName)));
+	    typeWriter = new PrintWriter (new FileWriter (FileNameSchema.getEventTypesFileName(corpusName)));
+	String relationReprFile = outputFile.substring(0, outputFile.length() - 1) + "Repr";
+	PrintWriter relationReprWriter = new PrintWriter(new FileWriter(relationReprFile));
+	// PrintWriter sourceDictWriter = new PrintWriter(new FileWriter(sourceDictFile));
+	for (String r : relationInstanceCounts.keySet()) {
+	    writer.println(relationInstanceCounts.get(r) + "\t" + r);
+            }
+	for (String r : relationTypeCounts.keySet()) {
+	    int count = relationTypeCounts.get(r);
+	    if (count >= MIN_RELATION_TYPE_FREQ) {
+		typeWriter.println(relationTypeCounts.get(r) + "\t" + r);
+		relationReprWriter.println(r + ":::" + linearizationDict.get(r) + ":::" + sourceDict.get(r));
+	    }
+	}
+	writer.close();
+	typeWriter.close();
+	relationReprWriter.close();
+	//            sourceDictWriter.close();
+	*/
+	logWriter.close();
     }
 
     /*Partition POS tag into four types*/
@@ -222,7 +281,7 @@ public class DepPaths {
 
     static void collectPaths(Document doc,
                              SyntacticRelationSet relations,
-                             SyntacticRelationSet transformedRelations) {
+			     SyntacticRelationSet transformedRelations) {
 
         List<Annotation> jetSentences = doc.annotationsOfType("sentence");
         if (jetSentences == null) return;
@@ -260,9 +319,11 @@ public class DepPaths {
                 System.err.println("Too many mentions in one sentence. Skipped.");
                 continue;
             }
+	    Annotation.sortByStartPosition(localNames);
             for (int i = 0; i < localNames.size(); i++) {
                 for (int j = 0; j < localNames.size(); j++) {
                     if (i == j) continue;
+		    if (Math.abs(i - j) > MAX_INTERVENING_MENTIONS) continue;
                     Span h1 = localHeadSpans.get(i);
                     Span h2 = localHeadSpans.get(j);
                     // - mention1 precedes mention2
@@ -277,6 +338,8 @@ public class DepPaths {
                     recordPath(doc, sentence, relations, localNames.get(i), path,  transPath, localNames.get(j));
                 }
             }
+	    if (Ice.iceProperties.getProperty("Ice.processEvents") != null)
+		collectTreesInSentence (doc, sentence, relations, transformedRelations);
         }
     }
 
@@ -297,8 +360,6 @@ public class DepPaths {
      *  <li> with its argument types, in 'relationTypeCounts'                  </li>
      *  <li> as a mapping from paths to the linearized form of the path,
      *       in linearizationDict                                              </li>
-     *  <li> as a mapping from paths to an example sentence containing that path,
-     *       in sourceDict                                                     </li>
      *  </ul>
      */
 
@@ -325,7 +386,7 @@ public class DepPaths {
         }
         String source = pathText(doc, sentence, mention1, mention2);
 
-        count(relationInstanceCounts, m1Val + " -- " + regularizedPath + " -- " + m2Val);
+        pathsWithArguments.add(m1Val + " -- " + regularizedPath + " -- " + m2Val);
 
         String type1 = mention1.get("TYPE") != null ? (String) mention1.get("TYPE") : "OTHER";
         String type2 = mention2.get("TYPE") != null ? (String) mention2.get("TYPE") : "OTHER";
@@ -335,7 +396,7 @@ public class DepPaths {
         }
 
         String fullPath = type1 + " -- " + regularizedPath + " -- " + type2;
-        count(relationTypeCounts, fullPath);
+        pathsWithTypes.add(fullPath);
         // collect events
         // In EntitySetIndexer:
         // Event event = new Event(tokenString, contextList.toArray(new String[contextList.size()]));
@@ -349,18 +410,16 @@ public class DepPaths {
             Event event = new Event(regularizedPath.toString(), contextList.toArray(new String[contextList.size()]));
             depPathEvents.add(event);
         }
-        if (!sourceDict.containsKey(fullPath)) {
-            sourceDict.put(fullPath, source);
-        }
         String linearizedPath = path.linearize(doc, relations, type1, type2, false);
-        if (!linearizationDict.containsKey(fullPath)) {
-            linearizationDict.put(fullPath, linearizedPath);
-        }
+	sources.add(fullPath + " ==> " + source);
+	linearizedPaths.add(fullPath + " --> " + linearizedPath);
     }
 
     /**
-     * returns the syntactic path from the anchor to an argument. path is not allowed if
-     * one of localMentions is on the path (but not at the beginning or end of the path)
+     * Returns the shortest path from 'fromPosn' to 'toPosn' in the dependency tree. 
+     * A path is not allowed if one of localMentions is on the path 
+     * (but not at the beginning or end of the path).
+     * 
      * @param  fromPosn   start of path
      * @param  toPosn     end of path
      * @param  arg1       span of first arg
@@ -380,9 +439,9 @@ public class DepPaths {
 
         while (todo.size() > 0) {
             Integer from = todo.removeFirst();
-            logger.trace("from = " + from);
+            logger.trace("from = {}", from);
             SyntacticRelationSet fromSet = relations.getRelationsFrom(from.intValue());
-            logger.trace("fromSet = " + fromSet);
+            logger.trace("fromSet = {}", fromSet);
             for (int ifrom = 0; ifrom < fromSet.size(); ifrom++) {
                 SyntacticRelation r = fromSet.get(ifrom);
                 if (disallowedRelations.contains(r.type)) {
@@ -396,10 +455,10 @@ public class DepPaths {
                         IceUtils.matchSpan(to, localSpans)) {
                     continue;
                 }
-                logger.trace("to = " + to);
+                logger.trace("to = {}", to);
                 // if 'to' is target
                 if (r.type.equals("-1")) {
-                    System.err.println("WARNING: Label error!");
+                    logger.warn("WARNING: Label error!");
                 }
                 if (to.intValue() == toPosn) {
                     logger.trace("TO is an argument");
@@ -415,7 +474,6 @@ public class DepPaths {
         }
         return null;
     }
-
 
     static void count(Map<String, Integer> map, String s) {
         Integer n = map.get(s);
@@ -449,6 +507,310 @@ public class DepPaths {
         if (head2end < end) text += doc.normalizedText(new Span(head2end, end));
         return text.trim();
     }
+	
+//------------------------- T r e e s   and   e v e n t s
 
+    public static void resetTreeCollector () {
+	treesWithTypes.clear();
+	treesWithArguments.clear();
+	linearizedTrees.clear();
+    }
 
+    public static Span spanOfDependencyNode (Document doc, int posn, SyntacticRelationSet relations) {
+	int start = leftmostExtent(posn, relations); 
+	int end = rightmostExtent(posn, relations);
+	return new Span(start, end);
+    }
+
+    public static int leftmostExtent (int posn, SyntacticRelationSet relations) {
+	SyntacticRelationSet daughters = relations.getRelationsFrom(posn);
+	if (daughters == null || daughters.size() == 0)
+	    return posn;
+	int firstDaughter = -1;
+	for (SyntacticRelation d : daughters) {
+	    if (d.targetPosn < posn) {
+		firstDaughter = d.targetPosn;
+		posn = d.targetPosn;
+	    }
+	}
+	if (firstDaughter >= 0) {
+	    return leftmostExtent(firstDaughter, relations);
+	} else {
+	    return posn;
+	}
+    }
+
+    public static int rightmostExtent (int posn, SyntacticRelationSet relations) {
+	SyntacticRelationSet daughters = relations.getRelationsFrom(posn);
+	if (daughters == null || daughters.size() == 0)
+	    return posn;
+	int lastDaughter = -1;
+	for (SyntacticRelation d : daughters) {
+	    if (d.targetPosn > posn) {
+		lastDaughter = d.targetPosn;
+		posn = d.targetPosn;
+	    }
+	}
+	if (lastDaughter >= 0) {
+	    return rightmostExtent(lastDaughter, relations);
+	} else {
+	    return posn;
+	}
+    }
+
+    public static String treeText (Document doc, Annotation sentence, int posn, SyntacticRelationSet relations) {
+	int sentenceStart = sentence.start();
+	int sentenceEnd = sentence.end();
+	Span span = spanOfDependencyNode (doc, posn, relations);
+	int start = span.start();
+	int end = span.end();
+	String text = "";
+	if (sentenceStart < start) text += doc.normalizedText(new Span(sentenceStart, start));
+	text +=  " [";
+	text += doc.normalizedText(new Span(start, end));
+	text += "] ";
+        if (end < sentenceEnd) text += doc.normalizedText(new Span(end, sentenceEnd));
+        return text.trim();
+    }
+
+    public static void collectTreesInSentence (Document doc, Annotation sentence,
+	    SyntacticRelationSet relations, SyntacticRelationSet transformedRelations) {
+	List<IceTree> rawTrees = IceTree.extract(doc, sentence.span(), transformedRelations);
+	for (IceTree tree : rawTrees) {
+	    IceTree lemmaTree = tree.lemmatize();
+	    IceTree typeTree = lemmaTree.keySignature();
+	    treesWithTypes.add(typeTree.core());
+	    treesWithArguments.add(tree.core());
+	    String source = treeText (doc, sentence, tree.getTriggerPosn(), relations);
+	    sources.add(typeTree + " ==> " + source);
+	    linearizedTrees.add(typeTree + " --> " + tree.linearize());
+	}
+    }
+    public static void writePaths (String outputFile, String typeOutputFile, String corpusName) {
+	try {
+	     PrintWriter pathWriter = new PrintWriter (new FileWriter (outputFile));
+	     PrintWriter pathTypeWriter = new PrintWriter (new FileWriter (typeOutputFile));
+	    PrintWriter pathReprWriter = new PrintWriter (new FileWriter (FileNameSchema.getRelationReprFileName(corpusName)));
+	    for (String r : relationInstanceCounts.keySet()) {
+		pathWriter.println(relationInstanceCounts.get(r) + "\t" + r);
+	    }
+	    for (String r : relationTypeCounts.keySet()) {
+		pathTypeWriter.println(relationTypeCounts.get(r) + "\t" + r);
+		pathReprWriter.println(r + ":::" + linearizationDict.get(r) + ":::" + sourceDict.get(r));
+	    }
+	    pathWriter.close();
+	    pathTypeWriter.close();
+	    pathReprWriter.close();
+	} catch (IOException e) {
+	    System.out.println("IOException writing event trees");
+	    System.out.println(e);
+	}
+    }
+
+    public static void writeTrees(String corpusName) {
+	try {
+	    PrintWriter eventWriter = new PrintWriter (new FileWriter (FileNameSchema.getEventsFileName(corpusName)));
+	    PrintWriter eventTypeWriter = new PrintWriter (new FileWriter (FileNameSchema.getEventTypesFileName(corpusName)));
+	    PrintWriter eventReprWriter = new PrintWriter (new FileWriter (FileNameSchema.getEventReprFileName(corpusName)));
+	    for (String r : eventInstanceCounts.keySet()) {
+		eventWriter.println(eventInstanceCounts.get(r) + "\t" + r);
+	    }
+	    for (String r : eventTypeCount.keySet()) {
+		eventTypeWriter.println(eventTypeCount.get(r) + "\t" + r);
+		eventReprWriter.println(r + ":::" + eventLinearizationDict.get(r) + ":::" + sourceDict.get(r));
+	    }
+	    eventWriter.close();
+	    eventTypeWriter.close();
+	    eventReprWriter.close();
+	} catch (IOException e) {
+	    System.out.println("IOException writing event trees");
+	    System.out.println(e);
+	}
+    }
+
+//------- DepPathsInDocument ---- D e p e n d e n c y   P a t h   C a c h i n g
+
+   // The following code implements Dependency Path caching:  if dependency paths have
+   // been previously generated for a document and the document does not contain any
+   // any words which are members of an entity set, the previosly generated paths
+   // are used.
+
+   // Note that the initial run of DepPaths ill be quite slow as the cache is 
+   // being filled.
+
+   // The cache is maintained as a file 'DepPathsLog' stored in the
+   // cache subdirectory for a corpus.  When DepPaths is invoked on a corpus,
+   // "DepPathsLog' is renamed 'DepPathPriorLog' and a new 'DepPathsLog'
+   // is created.
+
+    static List<String> pathsWithArguments;
+    static List<String> pathsWithTypes;
+    static List<String> treesWithArguments;
+    static List<String> treesWithTypes;
+    static List<String> sources;
+    static List<String> linearizedPaths;
+    static List<String> linearizedTrees;
+    static Set<String> toks;
+
+    static public void dpidReset() {
+	pathsWithArguments = new ArrayList<String>();
+	pathsWithTypes = new ArrayList<String>();
+	treesWithArguments = new ArrayList<String>();
+	treesWithTypes = new ArrayList<String>();
+	sources = new ArrayList<String>();
+	linearizedPaths = new ArrayList<String>();
+	linearizedTrees = new ArrayList<String>();
+	toks = new HashSet<String>();
+    }
+
+    /**
+      *  Reads the information associated with one document 
+      *  from the PriorLog
+      */
+
+    static public void dpidRead(BufferedReader reader) throws IOException {
+	dpidReset();
+	String line;
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    toks.add(line);
+	}
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    pathsWithTypes.add(line);
+	}
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    pathsWithArguments.add(line);
+	}
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    treesWithTypes.add(line);
+	}
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    treesWithArguments.add(line);
+	}
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    sources.add(line);
+	}
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    linearizedPaths.add(line);
+	}
+
+	while ((line = reader.readLine()) != null) {
+	    if (line.equals("<o>")) break;
+	    linearizedTrees.add(line);
+	}
+    }
+
+    /**
+      * A document is clean if it contains no words which are members of an entity set.
+      */
+
+    static public boolean dpidIsClean () {
+	for (IceEntitySet es : Ice.entitySets.values()) {
+	    for (String w : es.getNouns()) {
+		if (toks.contains(w.toLowerCase())) {
+		    return false;
+		}
+	    }
+	}
+	return true;
+    }
+
+    static public void dpidUpdateCorpusCounts () {
+
+	if (pathsWithTypes != null)
+	    for (String s : pathsWithTypes)
+		count(relationTypeCounts, s);
+	if (pathsWithArguments != null)
+	    for (String s : pathsWithArguments)
+		count(relationInstanceCounts, s);
+	if (treesWithTypes != null)
+	    for (String s : treesWithTypes)
+		count(eventTypeCount, s);
+	if (treesWithArguments != null)
+	    for (String s : treesWithArguments)
+		count(eventInstanceCounts, s);
+	if (sources != null) {
+	    for (String s : sources) {
+		String[] ss = s.split(" ==> ");
+		if (ss.length == 2) {
+		    if (!sourceDict.containsKey(ss[0])) {
+			sourceDict.put(ss[0], ss[1]);
+		    }
+		} else {
+		    logger.warn("Error in LDP cache.");
+		}
+	    }
+	}
+	if (linearizedPaths != null) {
+	    for (String s : linearizedPaths) {
+		String[] ss = s.split(" --> ");
+		if (ss.length == 2) {
+		    if (!linearizationDict.containsKey(ss[0])) {
+			linearizationDict.put(ss[0], ss[1]);
+		    }
+		} else {
+		    logger.warn("Error in LDP cache.");
+		}
+	    }
+	}
+	if (linearizedTrees != null) {
+	    for (String s : linearizedTrees) {
+		String[] ss = s.split(" --> ");
+		if (ss.length == 2) {
+		    if (!eventLinearizationDict.containsKey(ss[0])) {
+			eventLinearizationDict.put(ss[0], ss[1]);
+		    }
+		} else {
+		    logger.warn("Error in LDP cache.");
+		}
+	    }
+	}
+    }
+
+    /**
+      * Writes the information associated with a document to
+      * the DepPathsLog.
+      */
+
+    static public void dpidWrite(PrintWriter logWriter) {
+	if (toks != null)
+	    for (String s : toks)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (pathsWithTypes != null)
+	    for (String s : pathsWithTypes)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (pathsWithArguments != null)
+	    for (String s : pathsWithArguments)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (treesWithTypes != null)
+	    for (String s : treesWithTypes)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (treesWithArguments != null)
+	    for (String s : treesWithArguments)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (sources != null)
+	    for (String s : sources)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (linearizedPaths != null)
+	    for (String s : linearizedPaths)
+		logWriter.println(s);
+	logWriter.println("<o>");
+	if (linearizedTrees != null)
+	    for (String s : linearizedTrees)
+		logWriter.println(s);
+	logWriter.println("<o>");
+    }
 }
+

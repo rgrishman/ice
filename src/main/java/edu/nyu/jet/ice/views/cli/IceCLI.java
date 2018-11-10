@@ -92,7 +92,9 @@ public class IceCLI {
                     System.err.println("--filter must be set for the addCorpus action.");
                     printHelp(options);
                     System.exit(-1);
-                }
+                } else if (filterName.equals("none")) {
+		    filterName = "*";
+	        }
                 String numOfProcessesStr = cmd.getOptionValue("processes");
                 if (numOfProcessesStr != null) {
                     try {
@@ -168,8 +170,8 @@ public class IceCLI {
                                             start, end));
                                     splitCorpus.setDocListFileName(docListFileName);
                                     Ice.corpora.put(splitCorpusName(corpusName, splitCount), splitCorpus);
-                                    processFarm.addTask(String.format("./icecli preprocess %s",
-                                            splitCorpusName(corpusName, splitCount)));
+                                    processFarm.addTask(String.format("icecli preprocess %s --branch %s",
+                                            splitCorpusName(corpusName, splitCount), branch));
                                     start = end;
                                     splitCount++;
                                 }
@@ -398,15 +400,16 @@ public class IceCLI {
                         Ice.selectedCorpus.numberOfDocs,
                         null);
                 finder.run();
-                Ice.selectedCorpus.relationTypeFileName =
+                Ice.selectedCorpus.relationTypesFileName =
                         FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
                 Ice.selectedCorpus.relationInstanceFileName =
                         FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
                 if (Ice.selectedCorpus.backgroundCorpus != null) {
                     System.err.println("Generating path ratio file by comparing phrases in background corpus.");
-                    Corpus.rankRelations(Ice.selectedCorpus.backgroundCorpus,
-                            FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
-                                    Ice.selectedCorpus.backgroundCorpus));
+                    Ice.selectedCorpus.rankRelations();
+		    //      Ice.selectedCorpus.backgroundCorpus,
+                    //        FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
+                    //               Ice.selectedCorpus.backgroundCorpus));
                 }
                 else {
                     System.err.println("Background corpus is not selected, so pattern ratio file is not generated. " +
@@ -509,6 +512,9 @@ public class IceCLI {
                 Ice.selectCorpus(currentCorpusName);
                 String currentPreprocessDir = FileNameSchema.getPreprocessCacheDir(currentCorpusName);
 
+	System.out.println("current corpus name = " + currentCorpusName);
+	System.out.println("current preprocessDir = " + currentPreprocessDir);
+
                 String[] docList = IceUtils.readLines(Ice.selectedCorpus.docListFileName);
                 for (String docName : docList) {
 		    if (! Ice.selectedCorpus.filter.equals("*"))
@@ -574,6 +580,9 @@ public class IceCLI {
     static Map<String, Integer> relationCount = new HashMap<String, Integer>();
     static Map<String, Integer> relationTypeCount = new HashMap<String, Integer>();
     static Map<String, String> relationRepr = new HashMap<String, String>();
+    static Map<String, Integer> eventCount = new HashMap<String, Integer>();
+    static Map<String, Integer> eventTypeCount = new HashMap<String, Integer>();
+    static Map<String, String> eventRepr = new HashMap<String, String>();
     static List<String> events = new ArrayList<String>();
 
     /**
@@ -655,14 +664,68 @@ public class IceCLI {
         }
         relationReprReader.close();
 
+	String eventFileName = FileNameSchema.getEventsFileName(corpusName);
+	System.out.println("Reading " + eventFileName);
+        BufferedReader eventReader = new BufferedReader (new FileReader (eventFileName));
+        while ((line = eventReader.readLine()) != null) {
+	    String f[] = line.split("\t", 2);
+	    int count = 0;
+	    try {
+            	count = Integer.valueOf(f[0]);
+	    } catch (NumberFormatException e) {
+		System.out.println ("Error in " + eventFileName);
+	    }
+	    String event = f[1];
+            if (eventCount.get(event) == null) {
+	        eventCount.put(event, count);
+	    } else {
+	        eventCount.put(event, eventCount.get(event) + count);
+	    }
+        }
+        eventReader.close();
+
+	String eventTypesFileName = FileNameSchema.getEventTypesFileName(corpusName);
+	System.out.println("Reading " + eventTypesFileName);
+        BufferedReader eventTypesReader = new BufferedReader (new FileReader (eventTypesFileName));
+        while ((line = eventTypesReader.readLine()) != null) {
+	    String f[] = line.split("\t", 2);
+	    int count = 0;
+	    try {
+            	count = Integer.valueOf(f[0]);
+	    } catch (NumberFormatException e) {
+		System.out.println ("Error in " + eventTypesFileName);
+	    }
+	    String event = f[1];
+            if (eventTypeCount.get(event) == null) {
+	        eventTypeCount.put(event, count);
+	    } else {
+	        eventTypeCount.put(event, eventTypeCount.get(event) + count);
+	    }
+        }
+        eventTypesReader.close();
+
+	String eventReprFileName = FileNameSchema.getEventReprFileName(corpusName);
+	System.out.println("Reading " + eventReprFileName);
+        BufferedReader eventReprReader = new BufferedReader (new FileReader (eventReprFileName));
+        while ((line = eventReprReader.readLine()) != null) {
+	    String f[] = line.split(":::", 2);
+	    String event = f[0];
+	    String repr = f[1];
+            String priorRepr = eventRepr.get(event);
+            if (priorRepr == null || repr.length() < priorRepr.length())
+                // if a choice, take shorter sample sentence
+                eventRepr.put(event, repr);
+        }
+        eventReprReader.close();
+
         String depEventFileName = FileNameSchema.getDependencyEventFileName(corpusName);
         if ((new File(depEventFileName)).exists()) {
             System.out.println("Reading " + depEventFileName);
-            BufferedReader eventReader = new BufferedReader (new FileReader (depEventFileName));
-            while ((line = eventReader.readLine()) != null) {
+            BufferedReader depEventReader = new BufferedReader (new FileReader (depEventFileName));
+            while ((line = depEventReader.readLine()) != null) {
                 events.add(line);
             }
-            eventReader.close();
+            depEventReader.close();
         }
     }
 
@@ -700,7 +763,7 @@ public class IceCLI {
 	    relationTypesWriter.println(relationTypeCount.get(relation) + "\t" + relation);
         }
 	relationTypesWriter.close();
-	mergedCorpus.relationTypeFileName = relationTypesFileName;
+	mergedCorpus.relationTypesFileName = relationTypesFileName;
 
         String relationReprFileName = FileNameSchema.getRelationReprFileName(corpusName);
 	System.out.println("Writing " + relationReprFileName);
@@ -709,6 +772,32 @@ public class IceCLI {
 	    relationReprWriter.println(relation + ":::" + relationRepr.get(relation));
         }
 	relationReprWriter.close();
+        
+        String eventsFileName = FileNameSchema.getEventsFileName(corpusName);
+	System.out.println("Writing " + eventsFileName);
+        PrintWriter eventsWriter = new PrintWriter (new FileWriter (eventsFileName));
+        for (String event : eventCount.keySet()) {
+	    eventsWriter.println(eventCount.get(event) + "\t" + event);
+        }
+	eventsWriter.close();
+	mergedCorpus.eventInstanceFileName = eventsFileName;
+
+        String eventTypesFileName = FileNameSchema.getEventTypesFileName(corpusName);
+	System.out.println("Writing " + eventTypesFileName);
+        PrintWriter eventTypesWriter = new PrintWriter (new FileWriter (eventTypesFileName));
+        for (String event : eventTypeCount.keySet()) {
+	    eventTypesWriter.println(eventTypeCount.get(event) + "\t" + event);
+        }
+	eventTypesWriter.close();
+	mergedCorpus.eventTypesFileName = eventTypesFileName;
+
+        String eventReprFileName = FileNameSchema.getEventReprFileName(corpusName);
+	System.out.println("Writing " + eventReprFileName);
+        PrintWriter eventReprWriter = new PrintWriter (new FileWriter (eventReprFileName));
+        for (String event : eventRepr.keySet()) {
+	    eventReprWriter.println(event + ":::" + eventRepr.get(event));
+        }
+	eventReprWriter.close();
         
         String depEventFileName = FileNameSchema.getDependencyEventFileName(corpusName);
         if (!events.isEmpty()) {
@@ -749,9 +838,15 @@ public class IceCLI {
         }
     }
 
-    private static void validateCorpus(String corpusName) {
+    /**
+      *  If 'corpusname' is not the name of an available ICE corpus (one currently loaded),
+      *  it issues a message and dies.  Because files generatged by subprocesses are not 
+      *  communicated to the main process, all 'split' corpus names are accepted.
+      */
+
+    private static void validateCorpus (String corpusName) {
         if (!Ice.corpora.containsKey(corpusName)) {
-            System.err.println(String.format("corpusName:%s does not exist. Please pick a corpus from the list below:",
+            System.err.println(String.format("corpusName: %s does not exist. Please pick a corpus from the list below:",
                 corpusName));
             printCorporaList();
             System.exit(-1);
@@ -804,6 +899,10 @@ public class IceCLI {
         Nice.printCover();
         Properties iceProperties = Nice.loadIceProperties();
         Nice.initIce(branch);
+	// The following 2 lines are not needed if all Corpora are put on 'corpora'
+	// when they are created.
+	// for (Corpus c : Ice.corpora.values())
+	    // Ice.corpora.put(c.name, c);
         //Nice.loadPathMatcher(iceProperties);
     }
 

@@ -271,7 +271,7 @@ public class IcePreprocessor extends Thread {
                             Ice.selectedCorpus.numberOfDocs,
                             null);
                     finder.run();
-                    Ice.selectedCorpus.relationTypeFileName =
+                    Ice.selectedCorpus.relationTypesFileName =
                             FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
                     Ice.selectedCorpus.relationInstanceFileName =
                             FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
@@ -763,6 +763,7 @@ public class IcePreprocessor extends Thread {
      */
 
     public static void loadPOS (Document doc) {
+	DepPaths.toks = new HashSet<String>();
         for (String line : annotationCache) {
             if (line.startsWith("tagger")) {
                 String[] parts = line.split("\\t");
@@ -770,7 +771,9 @@ public class IcePreprocessor extends Thread {
                 int end = Integer.valueOf(parts[2]);
                 String cat = parts[3];
                 doc.addAnnotation(new Annotation("tagger", new Span(start, end), new FeatureSet("cat", cat)));
-            }
+		String token = doc.text(new Span(start, end)).trim().toLowerCase();
+		DepPaths.toks.add(token);
+	    }
         }
     }
 

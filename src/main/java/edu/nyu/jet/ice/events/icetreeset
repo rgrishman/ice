@@ -1,0 +1,26 @@
+    public class IceTreeSet implements Iterable<IceTree> {
+
+	List<IceTree> list = new ArrayList<IceTree>();
+	int count;
+
+	IceTreeSet (String fileName) {
+	    try {
+		BufferedReader reader = new BufferedReader (new FileReader (fileName));
+		String line;
+		while ((line = reader.readLine()) != null) {
+		    int j = line.indexOf("\t");
+		    if (j >= 0) {
+			count = Integer.parseInt(line.substring(0, j));
+			line = line.substring(j + 1);
+		    }
+		    IceTree iceTree = IceTreeFactory.getIceTree(line);
+		    iceTree.count = count;
+		    list.add(iceTree);
+		}
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    } catch (NumberFormatException e) {
+		e.printStackTrace();
+	    }
+	}
+

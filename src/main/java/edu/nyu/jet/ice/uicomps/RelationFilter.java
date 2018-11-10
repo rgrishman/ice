@@ -51,7 +51,7 @@ public class RelationFilter extends ListFilter {
 		    public void actionPerformed(ActionEvent ev) {
 			onlySententialPatterns = sententialPatternCheckBox.isSelected();
                 try {
-                    Corpus.displayTerms(Ice.selectedCorpus.getRelationTypeFileName(),
+                    Corpus.displayTerms(Ice.selectedCorpus.getRelationTypesFileName(),
                             40,
                             area,
                             Corpus.relationFilter);

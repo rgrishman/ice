@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.models;
 
+import edu.nyu.jet.ice.events.IceTree;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -108,6 +109,15 @@ public class WordEmbedding {
 	    sim = sim * similarity(seq1[i], seq2[i]);
 	}
 	return sim;
+    }
+
+    /**
+     *  Returns the similarity of two trees.  As an initial answer we return the similarity of
+     *  the triggers.
+     */
+
+    public static double treeSimilarity (IceTree tree1, IceTree tree2) {
+	return similarity(tree1.getTrigger(), tree2.getTrigger());
     }
 
     /**

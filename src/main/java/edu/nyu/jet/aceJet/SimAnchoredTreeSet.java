@@ -1,5 +1,6 @@
 package edu.nyu.jet.aceJet;
 
+import edu.nyu.jet.ice.events.IceTree;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.models.WordEmbedding;
 
@@ -14,13 +15,13 @@ import java.util.List;
  * @author yhe
  * @version 1.0
  */
-public class SimAnchoredPathSet extends AnchoredPathSet {
+public class SimAnchoredTreeSet extends AnchoredTreeSet {
 
     private PathMatcher matcher = null;
     private double threshold    = 0.3;
     private boolean useWE = false;
 
-    public SimAnchoredPathSet(String fileName, PathMatcher matcher, double threshold)
+    public SimAnchoredTreeSet(String fileName, PathMatcher matcher, double threshold)
             throws IOException {
         super(fileName);
         this.matcher = matcher;
@@ -28,17 +29,18 @@ public class SimAnchoredPathSet extends AnchoredPathSet {
 	useWE = WordEmbedding.isLoaded();
     }
 
-    public SimAnchoredPathSet(String fileName) throws IOException {
+    public SimAnchoredTreeSet(String fileName) throws IOException {
         super(fileName);
     }
 
-    public List<AnchoredPath> similarPaths(String p) {
+    public List<IceTree> similarPaths(String p) {
 	if (useWE) {
 	    String[] x = p.split("--");
 	    if (x.length > 1) p = x[1].trim();
 	}
-        List<AnchoredPath> result = new ArrayList<AnchoredPath>();
-        for (AnchoredPath path : paths) {
+        List<IceTree> result = new ArrayList<IceTree>();
+	/*
+        for (IceTree path : paths) {
 	    double score;
 	    if (useWE) {
 		score = WordEmbedding.pathSimilarity(p, path.path);
@@ -51,6 +53,7 @@ public class SimAnchoredPathSet extends AnchoredPathSet {
                 result.add(path);
             }
         }
+	*/
         return result;
     }
 }

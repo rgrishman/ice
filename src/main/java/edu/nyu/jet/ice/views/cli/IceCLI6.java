@@ -298,9 +298,10 @@ public class IceCLI6 {
                         FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
                 if (Ice.selectedCorpus.backgroundCorpus != null) {
                     System.err.println("Generating path ratio file by comparing phrases in background corpus.");
-                    Corpus.rankRelations(Ice.selectedCorpus.backgroundCorpus,
-                            FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
-                                    Ice.selectedCorpus.backgroundCorpus));
+                    Ice.selectedCorpus.rankRelations();
+		    // Ice.selectedCorpus.backgroundCorpus,
+                    //      FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
+                   //               Ice.selectedCorpus.backgroundCorpus)); 
                 }
                 else {
                     System.err.println("Background corpus is not selected, so pattern ratio file is not generated. " +

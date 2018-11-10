@@ -1,5 +1,6 @@
-package edu.nyu.jet.ice.models;
+package edu.nyu.jet.ice.events;
 
+import edu.nyu.jet.ice.models.*;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
@@ -10,29 +11,29 @@ import java.io.IOException;
 /**
  * count all dependency paths in corpus.
  */
-public class RelationFinder extends Thread {
+public class EventFinder extends Thread {
 
     String[] args;
     String types;
     JTextArea area;
     int numberOfDocs;
-    ProgressMonitorI relationProgressMonitor = null;
+    ProgressMonitorI eventProgressMonitor = null;
 
-    public RelationFinder(String docListFileName, String directory, String filter,
+    public EventFinder(String docListFileName, String directory, String filter,
                    String instances, String types, JTextArea area, int numberOfDocs,
-                   ProgressMonitorI relationProgressMonitor) {
+                   ProgressMonitorI eventProgressMonitor) {
         args = new String[7];
         args[0] = "onomaprops";
         args[1] = docListFileName;
         args[2] = directory;
         args[3] = filter;
         args[4] = instances;
-        args[5] = "temp";
+        args[5] = "event-temp";   //  <==== lower-level bindings override this
         args[6] = "temp.source.dict";
         this.types = types;
         this.area = area;
         this.numberOfDocs = numberOfDocs;
-        this.relationProgressMonitor = relationProgressMonitor;
+        this.eventProgressMonitor = eventProgressMonitor;
     }
 
     public void run() {
@@ -42,22 +43,20 @@ public class RelationFinder extends Thread {
                 Thread.sleep(1000);
             } catch (InterruptedException ignore) {
             }
-            if (null != relationProgressMonitor) {
-                relationProgressMonitor.setProgress(2);
+            if (null != eventProgressMonitor) {
+                eventProgressMonitor.setProgress(2);
             }
-            DepPathMap depPathMap = DepPathMap.getInstance();
-            depPathMap.unpersist();
-            DepPaths.progressMonitor = relationProgressMonitor;
-	    System.out.println("$$$ types = " + types);
+            DepTreeMap depTreeMap = DepTreeMap.getInstance();
+            depTreeMap.unpersist();
+            DepPaths.progressMonitor = eventProgressMonitor;
             DepPaths.main(args);
-            Corpus.sort("temp", types);
-	    System.out.println("$$$ types = " + types);
-            depPathMap.load(true);
-            if(area != null) {
-                Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
-            }
+       //   Corpus.sort("event-temp", types); //  <=====
+            depTreeMap.load(true);
+            // if(area != null) {
+                // Corpus.displayTerms(types, 40, area, Corpus.eventFilter);
+            // }
         } catch (IOException e) {
-            System.out.println("IOException in DepPaths " + e);
+            System.out.println("IOException in DepTrees " + e);
             e.printStackTrace(System.err);
         }
     }

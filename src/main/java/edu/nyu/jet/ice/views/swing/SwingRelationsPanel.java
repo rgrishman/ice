@@ -339,13 +339,13 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
 
     public List<String> findPathOrClosest (String relationInstance) {
         DepPathMap depPathMap = DepPathMap.getInstance();
-        depPathMap.load();
+        depPathMap.load(false);
         List<String> paths = depPathMap.findPath(relationInstance);
         if (paths != null) {
             closestPhrase = relationInstance;
             return paths;
         }
-        closestPhrase = depPathMap.findClosest(relationInstance);
+        closestPhrase = depPathMap.findClosestPath(relationInstance);
         if (closestPhrase == null) {
             System.err.println("*** findPathOrClosest failed.");
             return null;
@@ -463,7 +463,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         arg2TextField.setText(relation.getArg2type());
         DefaultListModel newListModel = new DefaultListModel();
         DepPathMap depPathMap = DepPathMap.getInstance();
-        depPathMap.load();
+        depPathMap.load(false);
         for (String path : relation.getPaths()) {
             String repr = depPathMap.findRepr(path);
             if (repr != null && ! newListModel.contains(repr)) {
@@ -500,7 +500,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
             String[] lines =
                     IceUtils.readLines(FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName));
             DepPathMap depPathMap = DepPathMap.getInstance();
-            depPathMap.load();
+            depPathMap.load(false);
       loop: for (String line : lines) {
                 String[] parts = line.split("\t");
                 String path = parts[1];

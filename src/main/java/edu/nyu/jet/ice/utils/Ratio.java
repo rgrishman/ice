@@ -27,6 +27,7 @@ public class Ratio {
 	}
 
 	public static void readCounts (String file, Map<String, Integer> counts) throws IOException {
+	        counts.clear();
 		BufferedReader reader = new BufferedReader (new FileReader (file));
 		String line;
 		while ((line = reader.readLine()) != null) {

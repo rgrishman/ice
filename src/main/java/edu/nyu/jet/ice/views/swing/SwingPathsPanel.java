@@ -1,4 +1,4 @@
-package edu.nyu.jet.ice.views.swing;
+package edu.nyu.jet.ice.views.swing;  // -*- tab-width: 4 -*-
 
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.DepPathMap;
@@ -8,8 +8,10 @@ import edu.nyu.jet.ice.uicomps.RelationFilter;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.views.Refreshable;
 import net.miginfocom.swing.MigLayout;
+import edu.nyu.jet.ice.events.*;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -25,8 +27,10 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Panel that extracts dependency paths from in the current corpus
- *
+ * Panel that extracts dependency paths or trees from the current corpus
+ * These are displayed in a scrolling window and also made available as
+ * files in the cache. 
+ * 
  * @author yhe
  */
 
@@ -34,7 +38,8 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 
     private SwingIceStatusPanel iceStatusPanel;
     private JList patternList;
-    private boolean sententialOnly;
+    // private boolean sententialOnly;
+    private boolean events;
     JTextField filterTextField = new JTextField(30);
 
 /**
@@ -61,32 +66,32 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 	scrollPane.setMaximumSize(new Dimension(350, 360));
 
         patternBox.add(scrollPane, "span");
-        JButton allPatternsButton = new JButton("All phrases");
-        JButton sententialPatternsButton = new JButton("Sentential phrases");
+        JButton relationsButton = new JButton("relations");
+        JButton eventsButton = new JButton("events");
 
-        patternBox.add(allPatternsButton);
-        patternBox.add(sententialPatternsButton, "wrap");
+        patternBox.add(relationsButton);
+        patternBox.add(eventsButton, "wrap");
 
 	JLabel filterLabel = new JLabel("containing");
 	filterTextField = new JTextField(25);
 	patternBox.add(filterLabel);
 	patternBox.add(filterTextField);
 
-        allPatternsButton.addActionListener(new ActionListener() {
+        relationsButton.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		ProgressMonitorI progressMonitor = 
 		new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
 		    "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
-		sententialOnly = false;
+		events = false;
                 checkForAndFindRelations(progressMonitor);
 		}});
 
-	sententialPatternsButton.addActionListener(new ActionListener() {
+	eventsButton.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		ProgressMonitorI progressMonitor = 
 		new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
 		    "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
-		sententialOnly = true;
+		events = true;
 		checkForAndFindRelations(progressMonitor);
 		}});
 
@@ -96,7 +101,8 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 		new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
 		    "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
 		PathExtractionThread thread = new PathExtractionThread(true,
-		    sententialOnly, filterTextField.getText(), patternList, progressMonitor);
+		    // sententialOnly, 
+		    events, filterTextField.getText(), patternList, progressMonitor);
 		thread.start();
 		}});
 	
@@ -116,8 +122,10 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 		    if (paths != null && paths.size() > 0) {
 		        String path = paths.get(0);
 		        String example = depPathMap.findExample(path);
-		        l.setToolTipText(example);
-			}
+			String toolTip = IceUtils.splitIntoLine(example, 80);
+			toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
+			l.setToolTipText(toolTip);
+		    }
 		}
 		} });
 	iceStatusPanel = new SwingIceStatusPanel(); 
@@ -133,15 +141,25 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
         iceStatusPanel.refresh();
     }
 
+    /** Select file 'file' to display.
+      */
+
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor) {
         String relationInstanceFileName = 
-        FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
-        String relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
-        File file = new File(relationTypeFileName);
-        boolean relationsFileExists = file.exists() && !file.isDirectory();
+	    FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);    //name + "Relations";
+	String relationTypesFileName = 
+	    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "RelationTypes";
+        String eventInstanceFileName = 
+	    FileNameSchema.getEventsFileName(Ice.selectedCorpusName);       //name + "Events";
+	String eventTypesFileName = 
+	    FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);   //name + "EventTypes";
+	String instanceFileName = events ? eventInstanceFileName : relationInstanceFileName;
+	String typesFileName = events ? eventTypesFileName : relationTypesFileName;
+        File file = new File(typesFileName);
+        boolean fileExists = file.exists() && !file.isDirectory();
         boolean shouldReuse = false;
         if (preprocessedTextsAvailable(Ice.selectedCorpusName)) {
-            if (relationsFileExists) {
+            if (fileExists) {
                 int n = JOptionPane.showConfirmDialog(
                         Ice.mainFrame,
                         "Extracted patterns already exist. Show existing patterns without recomputation?",
@@ -152,14 +170,15 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
                 }
             }
         } else {
-            if (relationsFileExists) {
+            if (fileExists) {
                 shouldReuse = true;
              } else {
                  JOptionPane.showMessageDialog(Ice.mainFrame, "Source text not available, cannot rebuild pattern set");
              }
         }
         PathExtractionThread thread = new PathExtractionThread(shouldReuse,
-                sententialOnly, filterTextField.getText(), patternList, progressMonitor);
+               // sententialOnly, 
+		events, filterTextField.getText(), patternList, progressMonitor);
         thread.start();
     }
 
@@ -174,20 +193,23 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 
 class PathExtractionThread extends Thread {
 
-    private boolean shouldReuse;
+    private boolean shouldReuse = true;
     private ProgressMonitorI progressMonitor;
     private String filter;
     private JList patternList;
-    private boolean   sententialOnly;
+    private boolean   sententialOnly = false;
+    private boolean   events;
     private static final int SIZE_LIMIT = 100;
 
     public PathExtractionThread(boolean shouldReuse,
-                                boolean sententialOnly,
+                                // boolean sententialOnly,
+				boolean events,
 				String filter,
                                 JList patternList,
                                 ProgressMonitorI progressMonitor) {
         this.shouldReuse = shouldReuse;
-        this.sententialOnly = sententialOnly;
+        // this.sententialOnly = sententialOnly;
+	this.events = events;
 	this.filter = filter;
         this.patternList    = patternList;
         this.progressMonitor = progressMonitor;
@@ -195,34 +217,53 @@ class PathExtractionThread extends Thread {
 
     @Override
     public void run() {
+
+	// recomputr files to display (using RelationFinder or EventFinder)  
+
         if (!shouldReuse) {
-            RelationFinder finder = new RelationFinder(
-                    Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
-                    Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),
-                    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
-                    Ice.selectedCorpus.numberOfDocs,
-                    progressMonitor);
-            finder.run();
-            Ice.selectedCorpus.relationTypeFileName =
-                    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
-            Ice.selectedCorpus.relationInstanceFileName =
-                    FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
-        }
+	    if (!events) {
+		RelationFinder finder = new RelationFinder(
+			Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
+			Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),
+			FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
+			Ice.selectedCorpus.numberOfDocs,
+			progressMonitor);
+		finder.run();
+		Ice.selectedCorpus.relationInstanceFileName =
+		    FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
+		Ice.selectedCorpus.relationTypesFileName =
+		    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
+	    } else /* events */ {
+		EventFinder finder = new EventFinder(
+			Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
+			Ice.selectedCorpus.filter, FileNameSchema.getEventsFileName(Ice.selectedCorpusName),
+			FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName), null,
+			Ice.selectedCorpus.numberOfDocs,
+			progressMonitor);
+		finder.run();
+		Ice.selectedCorpus. eventInstanceFileName = 
+		    FileNameSchema.getEventsFileName(Ice.selectedCorpusName);
+		Ice.selectedCorpus. eventTypesFileName = 
+		    FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
+	    }
+	}
         progressMonitor.setNote("Postprocessing...");
+
         // rank paths
-        Corpus.rankRelations(Ice.selectedCorpus.backgroundCorpus,
-                FileNameSchema.getPatternRatioFileName(Ice.selectedCorpusName,
-                        Ice.selectedCorpus.backgroundCorpus));
-        DepPathMap depPathMap = DepPathMap.getInstance();
-        depPathMap.load();
+	String fileWithRankings;
+	if (!events) {
+	    fileWithRankings = Ice.selectedCorpus.rankRelations();
+	} else /* events */ {
+	    fileWithRankings = Ice.selectedCorpus.rankEvents(); 
+	}
+	DepPathMap depPathMap = DepPathMap.getInstance();
+	depPathMap.load(false);
+
         // filter and show paths
+	//   
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(
-                    FileNameSchema.getSortedPatternRatioFileName(Ice.selectedCorpusName,
-                            Ice.selectedCorpus.backgroundCorpus)
-            ));
+            BufferedReader reader = new BufferedReader(new FileReader(fileWithRankings));
             int k = 0;
-            StringBuilder b = new StringBuilder();
 	    Vector<String> pathsToDisplay = new Vector<String>();
             while (k <= SIZE_LIMIT) {
                 String line = reader.readLine();
@@ -234,15 +275,18 @@ class PathExtractionThread extends Thread {
                 if (parts.length < 2) {
                     continue;
                 }
-                String repr = depPathMap.findRepr(parts[1]);
+		String repr = depPathMap.findRepr(parts[1]);
                 if (repr == null) {
-                    continue;
+		    IceTree it = IceTreeFactory.getIceTree(parts[1]);
+		    if (it.getTrigger().equals("?")) continue;
+		    repr = it.getRepr();
                 }
 		if (!filter.equals("") && repr.indexOf(filter) < 0)
 		    continue;
                 pathsToDisplay.add(parts[0].trim() + "\t" + repr);
                 k++;
             }
+	    reader.close();
             if (progressMonitor == null || !progressMonitor.isCanceled()) {
 		patternList.setListData(pathsToDisplay);
             }

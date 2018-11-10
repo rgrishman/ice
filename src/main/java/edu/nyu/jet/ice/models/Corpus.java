@@ -17,6 +17,7 @@ import edu.nyu.jet.ice.utils.Ratio;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
+import edu.nyu.jet.ice.events.EventFinder;
 
 //import java.nio.file.Files;
 //import java.nio.file.Paths;
@@ -51,12 +52,17 @@ public class Corpus {
     public String backgroundCorpus;
     public String termFileName;
     // for relation finder
-    public String relationTypeFileName;
+    public String relationTypesFileName;
     public String relationInstanceFileName;
     public RelationBuilder relationBuilder;
+    // for event finder
+    public String eventTypesFileName;
+    public String eventInstanceFileName;
+    // public EventBuilder eventBuilder;
 
     public Set<String> entitiesSuggested = new HashSet<String>();
     public Set<String> relationsSuggested = new HashSet<String>();
+    public Set<String> eventsSuggested = new HashSet<String>();
 
     public TermFilter termFilter = new TermFilter();
     static public RelationFilter relationFilter = new RelationFilter();
@@ -130,8 +136,8 @@ public class Corpus {
         termFileName = s;
     }
 
-    public String getRelationTypeFileName() {
-        return relationTypeFileName;
+    public String getRelationTypesFileName() {
+        return relationTypesFileName;
     }
 
     ProgressMonitorI wordProgressMonitor;
@@ -217,74 +223,78 @@ public class Corpus {
         }
     }
 
-    public void checkForAndFindRelations(ProgressMonitorI progressMonitor, RelationFilter relationFilter) {
-        relationInstanceFileName = FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);//name + "Relations";
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "Relationtypes";
-        File file = new File(relationTypeFileName);
-        if (file.exists() &&
-                !file.isDirectory()) {
-            int n = JOptionPane.showConfirmDialog(
-                    Ice.mainFrame,
-                    "Extracted patterns already exist. Show existing patterns without recomputation?",
-                    "Patterns exist",
-                    JOptionPane.YES_NO_OPTION);
-            if (n == 0) {
-                Corpus.displayTerms(relationTypeFileName,
-                        40,
-                        relationTextArea,
-                        relationFilter);
-                return;
-            }
-        }
-        relationFilter.sententialPatternCheckBox.setSelected(false);
-        relationFilter.onlySententialPatterns = false;
-        findRelations(progressMonitor, "", relationTextArea);
-    }
-
-    public void findRelations(ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
-        relationInstanceFileName = FileNameSchema.getRelationsFileName(name);
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
-        docListFileName = FileNameSchema.getDocListFileName(name);
+    public void findRelations (ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
 
         RelationFinder finder = new RelationFinder(
                 docListFileName, directory, filter, relationInstanceFileName,
-                relationTypeFileName, publishToTextArea, numberOfDocs,
+                relationTypesFileName, publishToTextArea, numberOfDocs,
                 progressMonitor);
         finder.start();
     }
 
-    public void rankRelations() {
-        String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
-        rankRelations(backgroundCorpus, ratioFileName);
-    }
+    /**
+      *  Computes the ratio of the frequencies of phrases in a corpus and its corresponding
+      *  backround corpus, and then sorts the phrases based on this ratio. 
+      *  The result (the ranked list of foeground phrases) is displayed as a list in
+      *  a scrolling window on the Paths panel and can also be accessed as two files 
+      *  in the cache.
+      */
 
-    public static void rankRelations(String bgCorpus, String fileName) {
+    public String rankRelations() { 
+	String sortedFileName = null;
         try {
-            String sortedRatioFileName = fileName + ".sorted";
-            Ratio.main(new String[]{
-                    Ice.selectedCorpus.relationTypeFileName,
-                    Ice.corpora.get(bgCorpus).relationTypeFileName,
-                    fileName
-            });
-            IceUtils.numsort(fileName, sortedRatioFileName);
-
-            // return getTerms(sortedRatioFileName, 40, relationFilter);
-        }
-        catch (Exception e) {
+	    String fg = FileNameSchema.getRelationTypesFileName(name);
+	    String bg = FileNameSchema.getRelationTypesFileName(Ice.corpora.get(backgroundCorpus).name);
+	    String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
+            Ratio.main(new String[]{fg, bg, ratioFileName});
+	    sortedFileName = ratioFileName + ".sorted";
+	    sort (ratioFileName, sortedFileName);
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(Ice.mainFrame,
-                    "Error ranking patterns. Please make sure both fore and background patterns are counted.",
-                    "Error ranking patterns",
+                    "Error ranking relations:  " + e 
+		    + " Please make sure both fore and background patterns are counted.",
+                    "Error ranking events",
                     JOptionPane.ERROR_MESSAGE);
             e.printStackTrace(System.err);
         }
-        //return new ArrayList<String>();
+	return sortedFileName;
     }
 
-    static void sort(String infile, String outfile) throws IOException{
-        //run("Sort", "./numsort " + infile + " " + outfile);
+    public String rankEvents() { 
+	String sortedFileName = null;
+        try {
+	    String fg = FileNameSchema.getEventTypesFileName(name);
+	    String bg = FileNameSchema.getEventTypesFileName(Ice.corpora.get(backgroundCorpus).name);
+	    String ratioFileName = FileNameSchema.getPatternRatioFileName(name, backgroundCorpus);
+            Ratio.main(new String[]{fg, bg, ratioFileName});
+	    sortedFileName = ratioFileName + ".sorted";
+	    sort (ratioFileName, sortedFileName);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(Ice.mainFrame,
+                    "Error ranking events:  " + e 
+		    + " Please make sure both fore and background patterns are counted.",
+                    "Error ranking events",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(System.err);
+        }
+	return sortedFileName;
+    }
+
+    public static void sort(String infile, String outfile) throws IOException{
         IceUtils.numsort(infile, outfile);
     }
 
+    public void findEvents (ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
+        eventInstanceFileName = FileNameSchema.getEventsFileName(name);
+        eventTypesFileName = FileNameSchema.getEventTypesFileName(name);
+        docListFileName = FileNameSchema.getDocListFileName(name);
+
+        EventFinder finder = new EventFinder(
+                docListFileName, directory, filter, eventInstanceFileName,
+                eventTypesFileName, publishToTextArea, numberOfDocs,
+                progressMonitor);
+        finder.start();
+    }
     /**
      *  returns an array containing the paths (relative to the root of
      *  the directory tree for this corpus) of all the documents in the corpus.
@@ -360,8 +370,8 @@ public class Corpus {
     }
 
     public List<String> getRelations(int limit) {
-        relationTypeFileName = FileNameSchema.getRelationTypesFileName(name);
-        return getTerms(relationTypeFileName, limit, Corpus.relationFilter);
+        relationTypesFileName = FileNameSchema.getRelationTypesFileName(name);
+        return getTerms(relationTypesFileName, limit, Corpus.relationFilter);
     }
 
     public static List<String> getTerms(String termFile, int limit, ListFilter tf) {

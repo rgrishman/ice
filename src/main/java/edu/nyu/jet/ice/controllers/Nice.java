@@ -8,6 +8,7 @@ import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
+import edu.nyu.jet.ice.events.SwingEventsPanel; // <<
 import edu.nyu.jet.ice.uicomps.Ice;
 import net.miginfocom.swing.MigLayout;
 import org.ho.yaml.YamlDecoder;
@@ -39,6 +40,7 @@ public class Nice {
     public SwingPathsPanel pathsPanel;
     public SwingEntitySetPanel entitySetPanel;
     public SwingRelationsPanel relationsPanel;
+    public SwingEventsPanel eventsPanel;
     public static Nice instance;
 
     public static void saveStatus(String branch) throws FileNotFoundException {
@@ -48,6 +50,7 @@ public class Nice {
         enc.writeObject(Ice.corpora);
         enc.writeObject(Ice.entitySets);
         enc.writeObject(Ice.relations);
+        enc.writeObject(Ice.events);
         enc.close();
     }
 
@@ -72,6 +75,11 @@ public class Nice {
         relationsPanel.setName("relations panel");
     }
 
+    public void setEventsPanel(SwingEventsPanel eventsPanel) {
+        this.eventsPanel = eventsPanel;
+        eventsPanel.setName("events panel");
+    }
+
     public void setEntitySetPanel(SwingEntitySetPanel entitySetPanel) {
         this.entitySetPanel = entitySetPanel;
 	entitySetPanel.setName("entity set panel");
@@ -85,6 +93,7 @@ public class Nice {
             enc.writeObject(Ice.corpora);
             enc.writeObject(Ice.entitySets);
             enc.writeObject(Ice.relations);
+            enc.writeObject(Ice.events);
             enc.close();
             if (entitiesPanel == null || pathsPanel == null) {
                 reassemble();
@@ -125,6 +134,7 @@ public class Nice {
             Ice.corpora = new TreeMap((Map) dec.readObject());
             Ice.entitySets = new TreeMap((Map) dec.readObject());
             Ice.relations = new TreeMap((Map) dec.readObject());
+            Ice.events = new TreeMap((Map) dec.readObject());
             dec.close();
         } catch (IOException e) {
             System.err.println("Did not load " + branch + ".yml.");
@@ -169,6 +179,19 @@ public class Nice {
         }
         return iceProperties;
     }
+
+    public static int iceIntegerProperty (String propertyName, int defaultValue) {
+	if (Ice.iceProperties.getProperty(propertyName) != null) {
+	    try {
+		return Integer.valueOf(Ice.iceProperties.getProperty(propertyName));
+	    } catch (NumberFormatException e) {
+		return defaultValue;
+	    }
+	}
+	else 
+	    return defaultValue;
+    }
+							        
 
     /**
       *  If file 'fname' exists either in the working diretory or in the iceHome directory,
@@ -222,18 +245,21 @@ public class Nice {
         SwingPathsPanel swingPathsPanel = null;
         SwingEntitySetPanel swingEntitySetPanel = null;
         SwingRelationsPanel swingRelationsPanel = null;
+        SwingEventsPanel swingEventsPanel = null;
         if (IceUtils.numOfWordCountedCorpora() > 1) {
             swingEntitiesPanel = new SwingEntitiesPanel();
             swingPathsPanel = new SwingPathsPanel();
             swingEntitySetPanel = new SwingEntitySetPanel();
             swingRelationsPanel = new SwingRelationsPanel();
+            swingEventsPanel = new SwingEventsPanel();
             nice.setEntitiesPanel(swingEntitiesPanel);
             nice.setPathsPanel(swingPathsPanel);
             nice.setEntitySetPanel(swingEntitySetPanel);
             nice.setRelationsPanel(swingRelationsPanel);
+            nice.setEventsPanel(swingEventsPanel);
         }
         assembleTabs(contentPane, swingCorpusPanel, swingEntitiesPanel, swingPathsPanel,
-                swingEntitySetPanel, swingRelationsPanel);
+                swingEntitySetPanel, swingRelationsPanel, swingEventsPanel);
 
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.addWindowListener(new SaveStatusWindowAdapter());
@@ -258,7 +284,8 @@ public class Nice {
                                     final SwingEntitiesPanel entitiesPanel,
                                     final SwingPathsPanel pathsPanel,
                                     final SwingEntitySetPanel entitySetPanel,
-                                    final SwingRelationsPanel relationsPanel) {
+                                    final SwingRelationsPanel relationsPanel,
+                                    final SwingEventsPanel eventsPanel) {
         // Nice niceAPI = new Nice();
         final JTabbedPane tabbedPane = new JTabbedPane();
 
@@ -292,6 +319,14 @@ public class Nice {
             panel5.setMinimumSize(new Dimension(600, 420));
             tabbedPane.setMinimumSize(new Dimension(620, 440));
             tabbedPane.setMnemonicAt(4, KeyEvent.VK_5);
+
+            JComponent panel6 = eventsPanel;
+            // "Panel #5 (has a preferred size of 410 x 50).");
+            tabbedPane.addTab("Events", null, panel6,
+                    "Add or edit events");
+            panel6.setMinimumSize(new Dimension(600, 420));
+            tabbedPane.setMinimumSize(new Dimension(620, 440));
+            tabbedPane.setMnemonicAt(5, KeyEvent.VK_6);
         }
 
         container.add(tabbedPane);

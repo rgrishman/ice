@@ -18,8 +18,9 @@ import javax.swing.*;
 
 /**
  * a simple bootstrapping learner for relations.  Given a set of seed
- * patterns, it ranks each candidate pattern (lexical dependency path) P by
- * the number of argument pairs shared by the seed and P.
+ * patterns, it ranks each candidate pattern (lexical dependency path) P either
+ * by its word-embedding-based distance from the seeds (if word embeddings have been
+ * loaded) or by the number of argument pairs shared by the seed and P.
  */
 
 public class Bootstrap {
