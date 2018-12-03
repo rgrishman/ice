@@ -11,72 +11,144 @@ import java.util.regex.*;
 public class IceTree implements Comparable <IceTree> {
 
     String trigger;
-    int triggerPosn;
-    List<String> argRole;
+    String[] argRole;
+    String [] argValue;
+    String[] entityType;
+
     List<Integer> argPosn;
-    List<String> argValue;
+    int triggerPosn;
     List<MentionType> mentionType;
-    List<String> entityType;
+
     String repr;
 
     String toolTip;
+
+    /**
+     *  The score assigned by event bootstrapping, used to rank the trees
+     *  presented to the user for review.
+     */
     double score;
     int count;
 
     public IceTree () {
-	System.out.println("?");
+	System.out.println("? constructing IceTree");
     }
 
-    public IceTree (String trigger, List<String> argRole, List<String> entityType, List<String> argValue) {
-	String s = IceTree.core(trigger, argRole, entityType, argValue);
-	IceTreeFactory.getIceTree(s);
+    public IceTree (String trigger, String[] argRole, String[] entityType, String[] argValue) {
+        String s = IceTree.core(trigger, argRole, entityType, argValue);
+        IceTreeFactory.getIceTree(s);
     }
 
-    static String pattern = "^([A-Za-z_]+)(:([A-Za-z0-9._]+))?(=([A-Za-z0-9._]+))?$";
+    static String pattern = "^([A-Za-z_]+)(:([A-Za-z0-9,.$_-]+))?(=([A-Za-z0-9,.$_-]+))?$";
     
     static Pattern r = Pattern.compile(pattern);
 
+    /**
+     *  The label assigned to the IceTree by the user during event bootstrapping.
+     */
+
     public enum IceTreeChoice {
-	NO, YES, UNDECIDED
+        NO, YES, UNDECIDED
     }
     
-    public IceTreeChoice getChoice() {
-	return choice;
-    }
-
     IceTreeChoice choice = IceTreeChoice.UNDECIDED;
 
-    public void setChoice(IceTreeChoice choice) {
-	this.choice = choice;
+    public IceTreeChoice getChoice() {
+        return choice;
     }
+
+    public void setChoice(IceTreeChoice choice) {
+        this.choice = choice;
+    }
+
+    /**
+     *  The syntactic type of an argument, as determined by the 'extract' method.
+     */
 
     public enum MentionType {
-	PRONOUN, NOMINAL, NAME, UNKNOWN
+        PRONOUN, NOMINAL, NAME, UNKNOWN
     }
     
-
     public MentionType getMentionType (int i) {
-	return mentionType.get(i);
+        return mentionType.get(i);
     }
+
+    //
+    //  ---- property methods for core properties
+    //       (these are required in order that the properties be recognized as Java
+    //       beans which will be read and written by yaml.
+    //
 
     public String getTrigger () {
-	return trigger;
+        return trigger;
     }
 
-    public String getArgValue (String role) {
-	for (int i = 0; i < argRole.size(); i++) {
-	    if (argRole.get(i).equals(role))
-		return argValue.get(i);
+    public void setTrigger(String s) {
+        trigger = s;
+    }
+
+    public String[] getArgRole () {
+        return argRole;
+    }
+
+    public String getArgRole (int i) {
+        return argRole[i];
+    }
+
+    public void setArgRole (String[] s) {
+        argRole = s;
+    }
+
+    public void setArgRole (int i, String s) {
+        argRole[i] = s;
+    }
+
+    public String[] getEntityType () {
+        return entityType;
+    }
+
+    public String getEntityType(int i) {
+        return entityType[i];
+    }
+
+    public void setEntityType (String[] s) {
+        entityType = s;
+    }
+
+    public void setEntityType(int i, String s) {
+        argRole[i] = s;
+    }
+
+    public String[] getArgValue () {
+        return argValue;
+    }
+
+    public String getArgValue (int i) {
+        return argValue[i];
+    }
+
+    public void setArgValue (String[] s) {
+        argValue = s;
+    }
+
+    public void setArgValue (int i, String s) {
+        argValue[i] = s;
+    }
+
+    public String getArgValueForRole (String role) {
+        for (int i = 0; i < argRole.length; i++) {
+	    if (argRole[i].equals(role))
+		return argValue[i];
 	}
 	return null;
     }
 
-    public static IceTree clearArgValues (IceTree it) {
-	List<String> newArgValue = new ArrayList<String>();
-	for (int i = 0; i < it.argRole.size(); i++) {
-	    newArgValue.add(null);
+    public IceTree clearArgValues () {
+	String[] nulls = new String[argRole.length];
+	for (int i = 0; i < argRole.length; i++) {
+	    nulls[i] = null;
 	}
-	return IceTreeFactory.getIceTree(it.trigger, it.argRole, it.entityType, newArgValue);
+	return IceTreeFactory.getIceTree(trigger, argRole, entityType, nulls);
     }
 
     public int getTriggerPosn () {
@@ -84,28 +156,29 @@ public class IceTree implements Comparable <IceTree> {
     }
 
     public String getRepr() {
-	if (repr == null)
-	    repr = linearize();
-	return repr;
+        if (repr == null)
+            repr = linearize();
+        return repr;
     }
 
     public void setRepr (String r) {
-	repr = r;
+        repr = r;
     }
 
     public String getToolTip () {
-	return toolTip;
+        return toolTip;
     }
 
     public void setToolTip (String t) {
-	toolTip = t;
+        toolTip = t;
     }
+
     public double getScore() {
-	return score;
+        return score;
     }
 
     public void setScore (double d) {
-	score = d;
+        score = d;
     }
 
     public IceTree (IceTree it) {
@@ -125,9 +198,9 @@ public class IceTree implements Comparable <IceTree> {
 	    // Thread.dumpStack();
 	} else {
 	    trigger = triggerAndArgs[0];
-	    argRole = new ArrayList<String>();
-	    argValue = new ArrayList<String>();
-	    entityType = new ArrayList<String>();
+	    List<String> argRoleList = new ArrayList<String>();
+	    List<String> argValueList = new ArrayList<String>();
+	    List<String> entityTypeList = new ArrayList<String>();
 	    mentionType = new ArrayList<MentionType>();
 	
 	    for (int i = 1; i < triggerAndArgs.length; i++) {
@@ -136,9 +209,9 @@ public class IceTree implements Comparable <IceTree> {
 		    String role = m.group(1);
 		    String type = m.group(3);
 		    String value = m.group(5);
-		    argRole.add(role);
-		    argValue.add(value);
-		    entityType.add(type);
+		    argRoleList.add(role);
+		    argValueList.add(value);
+		    entityTypeList.add(type);
 		    mentionType.add(MentionType.UNKNOWN);
 		} else {
 		    System.out.println("invalid event:  " + s);
@@ -146,6 +219,8 @@ public class IceTree implements Comparable <IceTree> {
 		    break;
 		}
 	    }
+	    argRole = argRoleList.toArray(new String[0]);
+	    argValue = argValueList.toArray(new String[0]);
 	}
     }
      
@@ -228,12 +303,13 @@ public class IceTree implements Comparable <IceTree> {
 		    }
 		}
 		if (localArgRole.contains("nsubj") && (localArgRole.contains("dobj"))) {
-		    String s = core(trigger, localArgRole, localEntityType, localArgValue);
+		    String s = core(trigger, localArgRole.toArray(new String[0]), 
+                                   localEntityType.toArray(new String[0]), 
+				   localArgValue.toArray(new String[0]));
 		    IceTree it = IceTreeFactory.getIceTree(s);
 		    result.add(it);
 		    it.triggerPosn = triggerPosn;
 		    it.argPosn = localArgPosn;
-		    it.entityType = localEntityType;
 		    it.mentionType = localMentionType;
 		}
 	    }
@@ -257,30 +333,30 @@ public class IceTree implements Comparable <IceTree> {
       */
 
     static private void addPrepLinks (SyntacticRelationSet relations, Map<Integer,List<SyntacticRelation>> index) {
-	List<SyntacticRelation> newrels = new ArrayList<SyntacticRelation>();
-	for (SyntacticRelation rel : relations) {
-	    if (rel.type.equals("prep")) {
-		int posn = rel.targetPosn;
-		if (index.get(posn) != null) {
-		    for (SyntacticRelation rel2 : index.get(posn)) {
-			if (rel2.type.equals("pobj")) {
-			    SyntacticRelation newrel =
-				new SyntacticRelation (rel.sourcePosn, rel.sourceWord, rel.sourcePos,
-					"prep_" + (rel.targetWord.toLowerCase()),
-					rel2.targetPosn, rel2.targetWord, rel2.targetPos);
-			    newrels.add(newrel);
-			    index.get(rel.sourcePosn).add(newrel);
-			    break;
-			}
-		    }
-		}
-	    }
-	}
-	relations.addAll(newrels);
+        List<SyntacticRelation> newrels = new ArrayList<SyntacticRelation>();
+        for (SyntacticRelation rel : relations) {
+            if (rel.type.equals("prep")) {
+                int posn = rel.targetPosn;
+                if (index.get(posn) != null) {
+                    for (SyntacticRelation rel2 : index.get(posn)) {
+                        if (rel2.type.equals("pobj")) {
+                            SyntacticRelation newrel =
+                                new SyntacticRelation (rel.sourcePosn, rel.sourceWord, rel.sourcePos,
+                                        "prep_" + (rel.targetWord.toLowerCase()),
+                                        rel2.targetPosn, rel2.targetWord, rel2.targetPos);
+                            newrels.add(newrel);
+                            index.get(rel.sourcePosn).add(newrel);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        relations.addAll(newrels);
     }
 
-    IceTree (String trigger, int triggerPosn, List<String> argRole, List<Integer> argPosn, List<String> argValue,
-	    List<MentionType> mentionType, List<String> entityType) {
+    IceTree (String trigger, int triggerPosn, String[] argRole, List<Integer> argPosn, String[] argValue,
+	    List<MentionType> mentionType, String[] entityType) {
 	this.trigger = trigger;
 	this.triggerPosn = triggerPosn;
 	this.argRole = argRole;
@@ -291,44 +367,44 @@ public class IceTree implements Comparable <IceTree> {
     }
 
     public String core () {
-       String s = trigger;
-       for (int i = 0; i < argRole.size(); i++) {
-	   s += " " + argRole.get(i);
-	   if (entityType.get(i) != null) 
-	       s += ":" + entityType.get(i);
-	   if (argValue.get(i) != null)
-	       s += "=" + argValue.get(i);
-       }
-       return s;
+        String s = trigger;
+        for (int i = 0; i < argRole.length; i++) {
+            s += " " + argRole[i];
+            if (entityType != null && entityType[i] != null) 
+                s += ":" + entityType[i];
+            if (argValue[i] != null)
+                s += "=" + argValue[i];
+        }
+        return s;
     }
 
-    public static String core (String trigger, List<String> argRole, 
-	    List<String> entityType, List<String> argValue) {
-       String s = trigger;
-       for (int i = 0; i < argRole.size(); i++) {
-	   s += " " + argRole.get(i);
-	   if (entityType.get(i) != null) 
-	       s += ":" + entityType.get(i);
-	   if (argValue.get(i) != null)
-	       s += "=" + argValue.get(i);
-       }
-       return s;
+    public static String core (String trigger, String[] argRole, 
+            String[] entityType, String[] argValue) {
+        String s = trigger;
+        for (int i = 0; i < argRole.length; i++) {
+            s += " " + argRole[i];
+            if (entityType[i] != null) 
+                s += ":" + entityType[i];
+            if (argValue[i] != null)
+                s += "=" + argValue[i];
+        }
+        return s;
     }
 
     public IceTree keySignature () {
-	List<String> type = new ArrayList<String>();
-	List<String> nulls = new ArrayList<String>();
-       for (int i = 0; i < argRole.size(); i++) {
-	   String v;
-	   if (entityType.get(i) == null || entityType.get(i).equals("OTHER"))  
-	      v = argValue.get(i);
-	   else
-	      v = entityType.get(i);
-	   type.add(v);
-	   nulls.add(null);
-       }
-	IceTree it = IceTreeFactory.getIceTree(trigger, argRole, type, nulls);
-	return it;
+        int numargs = argRole.length;
+        String[] newEntityType = new String[numargs];
+        String[] nulls = new String[numargs];
+        for (int i = 0; i < numargs; i++) {
+            if (entityType[i] == null || entityType[i].equals("OTHER")) {
+                newEntityType[i] = argValue[i]; 
+            } else {
+                newEntityType[i] = entityType[i];
+            }
+            nulls[i] = null;
+        }
+        IceTree it = IceTreeFactory.getIceTree(trigger, argRole, newEntityType, nulls);
+        return it;
     }
 
     @Override
@@ -344,18 +420,19 @@ public class IceTree implements Comparable <IceTree> {
       */
 
     public IceTree lemmatize () {
-	String triggerStem = stemmer.getStem(trigger, "V");
-	List<String> argStems = new ArrayList<String>();
-	for (String a : argValue)
-	    if (a != null)
-		argStems.add(stemmer.getStem(a, "NNS"));
-	    else
-		argStems.add(null);
-	IceTree it = IceTreeFactory.getIceTree(triggerStem, argRole, entityType, argStems);
-	it.triggerPosn = triggerPosn;
-	it.argPosn = argPosn;
-	it.mentionType = mentionType;
-	return it;
+        String triggerStem = stemmer.getStem(trigger, "V");
+        List<String> argStems = new ArrayList<String>();
+        for (String a : argValue)
+            if (a != null)
+                argStems.add(stemmer.getStem(a, "NNS"));
+            else
+                argStems.add(null);
+        String[] argValues = argStems.toArray(new String[0]);
+        IceTree it = IceTreeFactory.getIceTree(triggerStem, argRole, entityType, argValues);
+        it.triggerPosn = triggerPosn;
+        it.argPosn = argPosn;
+        it.mentionType = mentionType;
+        return it;
     }
 
     /**
@@ -363,57 +440,62 @@ public class IceTree implements Comparable <IceTree> {
       */
 
     public String linearize () {
-	StringBuffer sb = new StringBuffer();
-	addRole(sb, "nsubj", "");
-	sb.append(" ");
-	sb.append(trigger);
-	addRole(sb, "dobj", " ");
-	addRole(sb, "iobj", " ");
-	for (int i = 0; i < argRole.size(); i++) {
-	    if (argRole.get(i).startsWith("prep_")) {
-		sb.append(" ");
-		addRole(sb, argRole.get(i).substring(5).toLowerCase(), i);
-	    }
-	}
-	return sb.toString().trim();
+        StringBuffer sb = new StringBuffer();
+        addRole(sb, "nsubj", "");
+        sb.append(" ");
+        sb.append(trigger);
+        addRole(sb, "dobj", " ");
+        addRole(sb, "iobj", " ");
+        for (int i = 0; i < argRole.length; i++) {
+            if (argRole[i].startsWith("prep_")) {
+                sb.append(" ");
+                addRole(sb, argRole[i].substring(5).toLowerCase(), i);
+            }
+        }
+        return sb.toString().trim();
     }
 
     private void addRole (StringBuffer sb, String role, String separator) {
-	int index = argRole.indexOf(role);
-	if (index >= 0) {
-	    sb.append(separator);
-	    if (entityType == null || entityType.get(index) == null || entityType.get(index).equals("OTHER"))
-		sb.append(argValue.get(index));
-	    else
-		sb.append(entityType.get(index));
-	} 
+        for (int i = 0; i < argRole.length; i++)
+            if (argRole[i].equals(role)) {
+                sb.append(separator);
+                if (entityType == null || entityType[i] == null || entityType[i].equals("OTHER"))
+                    sb.append(argValue[i]);
+                else
+                    sb.append(entityType[i]);
+                return;
+            } 
     }
 
     private void addRole (StringBuffer sb, String role, int index) {
-	if (index >= 0) {
-	    sb.append(" ");
-	    sb.append(role);
-	    sb.append(" ");
-	    if (entityType == null || entityType.get(index) == null || entityType.get(index).equals("OTHER"))
-		sb.append(argValue.get(index));
-	    else
-		sb.append(entityType.get(index));
-	} 
+        if (index >= 0) {
+            sb.append(" ");
+            sb.append(role);
+            sb.append(" ");
+            if (entityType == null || entityType[index] == null || entityType[index].equals("OTHER"))
+                sb.append(argValue[index]);
+            else
+                sb.append(entityType[index]);
+        } 
     }
+
     public String getRole (String role) {
-	int index = argRole.indexOf(role);
-	if (index >= 0) {
-	    if (entityType.get(index) == null || entityType.get(index).equals("OTHER"))
-		return argValue.get(index);
-	    else
-		return entityType.get(index);
-	} else {
-	    return "";
-	}
+        for (int i = 0; i < argRole.length; i++)
+            if (argRole[i].equals(role)) {
+                if (entityType[i] == null || entityType[i].equals("OTHER"))
+                    return argValue[i];
+                else
+                    return entityType[i];
+            } 
+        return "";
+    }
+
+    public int numArgs () {
+        return argRole.length;
     }
 
     public String argPair () {
-	return getArgValue("nsubj") + ":" + getArgValue("dobj");
+	return getArgValueForRole("nsubj") + ":" + getArgValueForRole("dobj");
     }
 
     public EventBootstrap.BootstrapAnchoredPathType type;

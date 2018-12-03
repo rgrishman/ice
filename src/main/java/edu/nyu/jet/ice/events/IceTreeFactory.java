@@ -17,9 +17,9 @@ public class IceTreeFactory {
 	    return null;
 	} else {
 	    trigger = triggerAndArgs[0];
-	    List<String> argRole = new ArrayList<String>();
-	    List<String> argValue = new ArrayList<String>();
-	    List<String> entityType = new ArrayList<String>();
+	    List<String> argRoleList = new ArrayList<String>();
+	    List<String> argValueList = new ArrayList<String>();
+	    List<String> entityTypeList = new ArrayList<String>();
 	    List<IceTree.MentionType> mentionType = new ArrayList<IceTree.MentionType>();
 	
 	    for (int i = 1; i < triggerAndArgs.length; i++) {
@@ -51,17 +51,20 @@ public class IceTreeFactory {
 			break;
 		    }
 		}
-		argRole.add(role);
-		argValue.add(value);
-		entityType.add(type);
+		argRoleList.add(role);
+		argValueList.add(value);
+		entityTypeList.add(type);
 		mentionType.add(IceTree.MentionType.UNKNOWN);
 	    }
+	    String[] argRole = argRoleList.toArray(new String[0]);
+	    String[] argValue = argValueList.toArray(new String[0]);
+	    String[] entityType = entityTypeList.toArray(new String[0]);
 	    return IceTreeFactory.getIceTree (trigger, argRole, entityType, argValue);
 	}
     }
 
-     public static IceTree getIceTree (String trigger, List<String> argRole, 
-	    List<String> entityType, List<String> argValue) {
+     public static IceTree getIceTree (String trigger, String[] argRole, 
+	    String[] entityType, String[] argValue) {
 	String s = IceTree.core(trigger, argRole, entityType, argValue);
 	if (iceTrees.get(s) == null) {
 	    iceTrees.put(s, new IceTree(s));
