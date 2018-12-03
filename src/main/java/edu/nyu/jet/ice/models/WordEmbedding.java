@@ -90,6 +90,7 @@ public class WordEmbedding {
      */
 
     public static double similarity(String token1, String token2) {
+        if (token1 == null || token2 == null) return 0.;
         if (token1.equalsIgnoreCase(token2)) return 1.;
         return similarity(embed(token1), embed(token2));
     }
@@ -112,12 +113,29 @@ public class WordEmbedding {
     }
 
     /**
-     *  Returns the similarity of two trees.  As an initial answer we return the similarity of
-     *  the triggers.
+     *  Returns the similarity of two IceTree trees.  This is computed based on the
+     *  the similarity of the triggers and the arguments, equally weighted.
+     *  <p>
+     *  More preciswely, we use the word embeddings of the triggers and the values
+     *  of the arguments.  For arguments, we us all pairs of aeguments (one from
+     *  each tree) with the same role label.
      */
 
     public static double treeSimilarity (IceTree tree1, IceTree tree2) {
-	return similarity(tree1.getTrigger(), tree2.getTrigger());
+        int numargs1 = tree1.numArgs();
+        int numargs2 = tree2.numArgs();
+        int minNumArgs = Math.min(numargs1, numargs2);
+        double triggerSimilarity = similarity(tree1.getTrigger(), tree2.getTrigger());
+        double argSimilarity = 0;
+        for (int i = 0; i < numargs1; i++) {
+            for (int j = 0; j < numargs2; j++) {
+                if (tree1.getArgRole(i).equals(tree2.getArgRole(j))) {
+                    argSimilarity += similarity(tree1.getEntityType(i), tree2.getEntityType(j));
+                } 
+            }
+        }
+        argSimilarity /= minNumArgs;   
+        return (triggerSimilarity + argSimilarity) / 2;
     }
 
     /**
