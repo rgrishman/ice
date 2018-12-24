@@ -9,6 +9,7 @@ import edu.nyu.jet.ice.utils.SwingProgressMonitor;
 import edu.nyu.jet.ice.events.EventBootstrap;
 import edu.nyu.jet.ice.events.SwingEventsPanel;
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.uicomps.IceCellRenderer;;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -289,45 +290,5 @@ class BootstrapIterateThread extends Thread {
         frame.listPane.repaint();
     }
 
-}
 
-class IceCellRenderer extends JLabel implements ListCellRenderer {
-
-    public IceCellRenderer() {
-	setOpaque(true);
-    }
-
-    public Component getListCellRendererComponent(JList list,
-	    Object value,
-	    int index,
-	    boolean isSelected,
-	    boolean cellHasFocus) {
-
-	IceTree t = (IceTree) value;
-	String repr = t.getRepr();
-	IceTree.IceTreeChoice choice = t.getChoice();
-	if (choice  == IceTree.IceTreeChoice.YES)
-	    repr += " / YES";
-	else if (choice == IceTree.IceTreeChoice.NO)
-	    repr += " / NO";
-	setText(repr);
-
-	Color background;
-	Color foreground;
-
-	// check if this cell is selected
-	if (isSelected) {
-	    background = Color.BLUE;
-	    foreground = Color.WHITE;
-	} else {
-	    background = Color.WHITE;
-	    foreground = Color.BLACK;
-	};
-
-	setBackground(background);
-	setForeground(foreground);
-
-	// this.setToolTipText("hi" + t.getExample());
-	return this;
-    }
 }

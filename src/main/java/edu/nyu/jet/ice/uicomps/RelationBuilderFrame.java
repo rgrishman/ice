@@ -180,11 +180,11 @@ public class RelationBuilderFrame extends JFrame {
                 DepPathMap depPathMap = DepPathMap.getInstance();
                 StringBuilder text = new StringBuilder();
                 Set<String> usedRepr = new HashSet<String>();
-                for (String path : bootstrap.getSeedPaths()) {
+                for (IcePath path : bootstrap.getSeedPaths()) {
 		    if (iceRelation != null) {
 			iceRelation.addPath(path);
 		    }
-                    String repr = depPathMap.findRepr(path);
+                    String repr = path.getRepr();
                     if (repr != null && !usedRepr.contains(repr)) {
                         text.append(repr).append("\n");
                         usedRepr.add(repr);
@@ -193,20 +193,21 @@ public class RelationBuilderFrame extends JFrame {
                 if (relationBuilder != null) {
                     relationBuilder.textArea.setText(text.toString());
                 }
+                /*  XXX
                 if (swingRelationsPanel != null) {
                     String[] reprs = text.toString().trim().split("\n");
                     java.util.List<String> paths = Arrays.asList(reprs);
                     swingRelationsPanel.updateEntriesListModel(paths);
                 }
-                // swingRelationsPanel.negPaths.clear();
-                java.util.List<String> paths = new ArrayList<String>();
+                swingRelationsPanel.negPaths.clear();
+                java.util.List<IcePath> paths = new ArrayList<IcePath>();
                 for (String negPath : bootstrap.getRejects()) {
-                    // swingRelationsPanel.negPaths
-                    paths.add(bootstrap.getArg1Type() + " -- " +
+                    swingRelationsPanel.negPaths
+                        paths.add(bootstrap.getArg1Type() + " -- " +
                         negPath + " -- " + bootstrap.getArg2Type());
-                }
-                swingRelationsPanel.negPaths.put(bootstrap.getRelationName(),
-                        paths);
+                 }
+                swingRelationsPanel.negPaths.put(bootstrap.getRelationName(), paths);
+                */
                 RelationBuilderFrame.this.dispose();
             }
         });
@@ -296,6 +297,9 @@ public class RelationBuilderFrame extends JFrame {
         }
         rankedListModel = newListModel;
         rankedList.setModel(rankedListModel);
+        rankedList.setCellRenderer(new IceCellRenderer());
+        rankedList.setPrototypeCellValue(
+            new IcePath("cats -- nsubj-1:drink:dobj -- milk"));
     }
 
 }
