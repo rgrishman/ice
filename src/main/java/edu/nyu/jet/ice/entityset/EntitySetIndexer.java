@@ -403,6 +403,7 @@ public class EntitySetIndexer {
 				}
             }
         }
+        // System.out.println("found " + result.size() + " events");
         return result;
     }
 }

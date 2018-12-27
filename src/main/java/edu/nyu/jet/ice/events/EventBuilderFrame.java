@@ -206,7 +206,7 @@ public class EventBuilderFrame extends JFrame {
                 ListModel m = l.getModel();
                 int index = l.locationToIndex(e.getPoint());
                 if( index>-1 ) {
-		l.setToolTipText(((IceTree)m.getElementAt(index)).getToolTip());
+                l.setToolTipText(((IceTree)m.getElementAt(index)).getExample());
                 }
             }
         });

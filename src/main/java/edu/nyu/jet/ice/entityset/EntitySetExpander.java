@@ -57,6 +57,7 @@ public class EntitySetExpander {
      * @param type
      * @return   a list of suggested seeds
      */
+
     public static List<String> recommendSeeds(String indexFileName, String termFileName, String type) {
         Map<String, Vector> entityFeatureDict = new HashMap<String, Vector>();
         String line;

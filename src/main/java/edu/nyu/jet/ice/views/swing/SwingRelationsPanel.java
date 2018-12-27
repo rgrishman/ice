@@ -2,6 +2,7 @@ package edu.nyu.jet.ice.views.swing;
 
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IceRelation;
+import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.uicomps.RelationBuilderFrame;
 import edu.nyu.jet.ice.uicomps.RelationBuilderThread;
@@ -41,8 +42,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
     JTextField arg2TextField;
     IceRelation currentRelation;
     SwingIceStatusPanel iceStatusPanel;
-    // public List<String> negPaths = new ArrayList<String>();
-    public Map<String, List<String>> negPaths = new TreeMap<String, List<String>>();
+    // public List<IcePath> negPaths = new ArrayList<IcePath>();
+    public Map<String, List<IcePath>> negPaths = new TreeMap<String, List<IcePath>>();
     private static final int DELAY_MS = 250;
     static final Set<String> ACE_TYPES = new HashSet<String>();
     {
@@ -69,9 +70,11 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
             if (r == null) {
                 continue;
             }
-            List<String> paths = new ArrayList<String>();
+            List<IcePath> paths = new ArrayList<IcePath>();
             if (r.getNegPaths() != null) {
-                paths.addAll(r.getNegPaths());
+                for (IcePath ip : r.getNegPaths()) {
+                    paths.add(ip);
+                }
             }
             negPaths.put(relationName, paths);
         }
@@ -194,7 +197,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 if (relationInstance == null) {
                     return;
                 }
-                List<String> paths = findPathOrClosest (relationInstance);
+                List<IcePath> paths = findPathOrClosest (relationInstance);
                 if (paths != null) {
                     installSeedRelation(relationName, relationInstance, paths);
                 }
@@ -204,6 +207,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         suggestRelationButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 java.util.Timer timer = switchToBusyCursor(SwingRelationsPanel.this);
+                if (entriesListModel == null) return;
                 String relationInstance = null;
                 try {
                     relationInstance = suggestRelation();
@@ -233,7 +237,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                             }
                         }
                         DepPathMap depPathMap = DepPathMap.getInstance();
-                        List<String> paths = depPathMap.findPath(relationInstance);
+                        List<IcePath> paths = depPathMap.findPath(relationInstance);
                         if (paths == null) {
                             JOptionPane.showMessageDialog(SwingRelationsPanel.this,
                                     "The provided path does not appear in the corpus.",
@@ -249,6 +253,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
 
         expandEntriesButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                if (entriesListModel == null) return;
                 StringBuilder b = new StringBuilder();
                 for (int i = 0; i < entriesListModel.size(); i++) {
                     Object entry = entriesListModel.getElementAt(i);
@@ -269,7 +274,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 if (relationInstance == null) {
                     return;
                 }
-                List<String> paths = findPathOrClosest (relationInstance);
+                List<IcePath> paths = findPathOrClosest (relationInstance);
                 if (paths == null) {
                     return;
                 }
@@ -283,7 +288,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     }
                 }
                 entriesListModel.addElement(closestPhrase);
-		currentRelation.addRepr(closestPhrase);
+          //      currentRelation.addRepr(closestPhrase);
                 currentRelation.addPaths(paths);
             }
         });
@@ -295,8 +300,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 if (idx < 0) return;
                 String repr = (String) entriesListModel.elementAt(idx);
                 entriesListModel.remove(idx);
-		currentRelation.removeRepr(repr);
-		currentRelation.updatePaths();
+                currentRelation.deletePaths(repr);
+        //         currentRelation.updatePaths();
             }
         });
 
@@ -337,17 +342,20 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
      *  As a side effect, sets 'closestPhrase' to the corresponding English phrase.
      */
 
-    public List<String> findPathOrClosest (String relationInstance) {
+    public List<IcePath> findPathOrClosest (String relationInstance) {
+        System.out.println("findPathOrClosest");
         DepPathMap depPathMap = DepPathMap.getInstance();
         depPathMap.load(false);
-        List<String> paths = depPathMap.findPath(relationInstance);
+        List<IcePath> paths = depPathMap.findPath(relationInstance);
         if (paths != null) {
             closestPhrase = relationInstance;
+        System.out.println ("findPathOrClosest returns " + paths);
             return paths;
         }
+        
         closestPhrase = depPathMap.findClosestPath(relationInstance);
         if (closestPhrase == null) {
-            System.err.println("*** findPathOrClosest failed.");
+            System.out.println("*** findPathOrClosest failed.");
             return null;
         }
         int n = JOptionPane.showConfirmDialog(
@@ -360,9 +368,10 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
             return null;
         paths = depPathMap.findPath(closestPhrase);
         if (paths == null) {
-            System.err.println("*** findPathOrClosest failed.");
+            System.out.println("*** findPathOrClosest failed.");
             return null;
         }
+        System.out.println ("findPathOrClosest returns " + paths);
         return paths;
     }
 
@@ -371,13 +380,15 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
      *  the AddRelation and Suggest buttons.
      *
      *  @param  relationName        the name of the relation
-     *  @param  relationInstance    an ERnglish phrase representing the relatio
+     *  @param  relationInstance    an English phrase representing the relation
      *  @param  paths               a list of dependency paths for the relation
      */
 
-    private void installSeedRelation(String relationName, String relationInstance, List<String> paths) {
-        String path = paths.get(0);
-        String[] parts = path.split("--");
+    private void installSeedRelation(String relationName, String relationInstance, List<IcePath> paths) {
+        //  obtain args from first path
+        IcePath  path = paths.get(0);
+        String pathString = path.getPathString();
+        String[] parts = pathString.split("--");
         String arg1 = parts[0].trim();
         if (arg1.endsWith("(1)") || arg1.endsWith("(2)"))
             arg1 = arg1.substring(0, arg1.length() - 3);
@@ -385,13 +396,16 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         if (arg2.endsWith("(1)") || arg2.endsWith("(2)"))
             arg2 = arg2.substring(0, arg2.length() - 3);
 
+        // build relation
         IceRelation iceRelation = new IceRelation(relationName);
-	Ice.addRelation(iceRelation);
-	iceRelation.addRepr(relationInstance);
+        Ice.addRelation(iceRelation);
+        System.out.println("creating IcePath  with arg " + pathString);
+        // IcePath p = new IcePath(pathString);
+        // p.setRepr(DepPathMap.normalizeRepr(relationInstance));
         iceRelation.setArg1type(arg1);
         iceRelation.setArg2type(arg2);
 
-        iceRelation.setPaths(paths);
+        iceRelation.addPaths(paths);
         relationListModel.addElement(iceRelation);
         relationList.setSelectedValue(iceRelation, true);
         // selecting new element forces refresh
@@ -425,7 +439,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                         Ice.iceProperties.getProperty("Ice.Bootstrapper.name") : "Bootstrap";
         Bootstrap bootstrap = Bootstrap.makeBootstrap(bootstrapperName, progressMonitorI, name);
         RelationBuilderFrame frame = new RelationBuilderFrame("Bootstrap relations",
-                null,
+         //     null,
                 bootstrap,
                 SwingRelationsPanel.this);
 
@@ -436,7 +450,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 seed,
                 Ice.selectedCorpus.relationInstanceFileName,
                 pathListFileName,
-                null,
+                // null,
                 bootstrap,
                 frame,
                 SwingRelationsPanel.this);
@@ -464,8 +478,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         DefaultListModel newListModel = new DefaultListModel();
         DepPathMap depPathMap = DepPathMap.getInstance();
         depPathMap.load(false);
-        for (String path : relation.getPaths()) {
-            String repr = depPathMap.findRepr(path);
+        for (IcePath path : relation.getPaths()) {
+            String repr = path.getRepr();
             if (repr != null && ! newListModel.contains(repr)) {
                 newListModel.addElement(repr);
             }
@@ -478,10 +492,10 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         entriesList.setModel(entriesListModel);
     }
 
-    public void updateEntriesListModel(java.util.List<String> paths) {
+    public void updateEntriesListModel(IcePath[] paths) {
         DefaultListModel newListModel = new DefaultListModel();
-        for (String path : paths) {
-            newListModel.addElement(path);
+        for (IcePath path : paths) {
+            newListModel.addElement(path.getRepr());
         }
         entriesListModel = newListModel;
         entriesList.setModel(entriesListModel);
@@ -503,10 +517,11 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
             depPathMap.load(false);
       loop: for (String line : lines) {
                 String[] parts = line.split("\t");
-                String path = parts[1];
-                if (!path.matches(".*nsubj-1:.*:dobj.*")) 
+                String pathString = parts[1];
+                if (!pathString.matches(".*nsubj-1:.*:dobj.*")) 
                     continue;
-                String phrase = depPathMap.findRepr(path);
+                IcePath path = new IcePath(pathString);
+                String phrase = path.getRepr();
                 if (phrase == null)
                     continue;
                 // skip phrase if prevoously suggested
@@ -514,8 +529,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                     continue;
                 // skip phrase if it is part of an existing relation
                 for (IceRelation relation : Ice.relations.values()) {
-                    for (String relPath : relation.getPaths()) {
-                        String repr = depPathMap.findRepr(relPath);
+                    for (IcePath relPath : relation.getPaths()) {
+                        String repr = relPath.getRepr();
                         if (phrase.equals(repr)) {
                             continue loop;
                         }

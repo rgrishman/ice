@@ -127,7 +127,7 @@ public class DepTreeMap {
 	}
 	reprTreeMap.get(normalizedRepr).add(tree);
 	treeExampleMap.put(tree, example);
-	tree.setToolTip(example);
+	tree.setExample(example);
     }
 
     public boolean load () {
@@ -179,7 +179,7 @@ public class DepTreeMap {
                 }
                 reprTreeMap.get(normalizedRepr).add(it);
                 treeExampleMap.put(it, example);
-		it.setToolTip(example);
+		it.setExample(example);
             }
             r.close();
         }
@@ -197,10 +197,25 @@ public class DepTreeMap {
      */
 
     public static String normalizeRepr(String repr) {
-        return repr.toLowerCase().replaceAll("\\s+", " ").trim();
+        repr = PhraseLemmatizer.lemmatize(repr);
+        String[] tokens = repr.split("\\s+");
+        StringBuffer sb = new StringBuffer();
+        for (String token : tokens) {
+            if (entityTypesList.contains(token.toUpperCase())) {
+                sb.append(token.toUpperCase());
+            } else {
+                sb.append(token.toLowerCase());
+            }
+            sb.append(" ");
+        }
+        // return repr.toLowerCase().replaceAll("\\s+", " ").trim();
+        return sb.toString().trim();
     }
 
-    /**
+    static public List<String> entityTypesList = 
+        Arrays.asList(new String[]{"PERSON", "GPE", "ORGANIZATION", "WEA", "VEH"});
+
+    /** 
      *  Find the English phrase most similar to 'repr' (as measured by edit
      *  distance) which is the representation of a dependency tree.
      */

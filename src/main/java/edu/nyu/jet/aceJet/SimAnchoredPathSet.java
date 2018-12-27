@@ -2,6 +2,7 @@ package edu.nyu.jet.aceJet;
 
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.models.WordEmbedding;
+import edu.nyu.jet.ice.models.IcePath;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,22 +33,24 @@ public class SimAnchoredPathSet extends AnchoredPathSet {
         super(fileName);
     }
 
-    public List<AnchoredPath> similarPaths(String p) {
-	if (useWE) {
-	    String[] x = p.split("--");
-	    if (x.length > 1) p = x[1].trim();
-	}
+    public List<AnchoredPath> similarPaths(IcePath centroid) {
+        if (useWE) {
+            String[] x = centroid.getPathString().split("--");
+            if (x.length > 1) centroid = new IcePath(x[1].trim());
+        }
         List<AnchoredPath> result = new ArrayList<AnchoredPath>();
         for (AnchoredPath path : paths) {
-	    double score;
-	    if (useWE) {
-		score = WordEmbedding.pathSimilarity(p, path.path);
-	    } else {
-		score = 1 - (matcher.matchPaths("UNK -- " + path.path + " -- UNK",
-			    "UNK -- " + p + " -- UNK") / (p.split(":").length + 1));
-	    }
+            double score = 0.;
+            if (useWE) {
+                String string1 = centroid.getPathString();
+                String string2 = path.toString();
+                score = WordEmbedding.pathSimilarity(string1, string2);
+            } else {
+; //  XXX		score = 1 - (matcher.matchPaths("UNK -- " + path.path + " -- UNK",
+//  XXX      "UNK -- " + p + " -- UNK") / (p.getPath().split(":").length + 1));
+            }
             if (score > threshold) {
-                System.err.println(path.path + " : " + p + " = " + score);
+// XXX                System.err.println(path.path + " : " + p + " = " + score);
                 result.add(path);
             }
         }

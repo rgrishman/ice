@@ -21,7 +21,7 @@ public class IceTree implements Comparable <IceTree> {
 
     String repr;
 
-    String toolTip;
+    String example;
 
     /**
      *  The score assigned by event bootstrapping, used to rank the trees
@@ -39,7 +39,7 @@ public class IceTree implements Comparable <IceTree> {
         IceTreeFactory.getIceTree(s);
     }
 
-    static String pattern = "^([A-Za-z_]+)(:([A-Za-z0-9,.$_-]+))?(=([A-Za-z0-9,.$_-]+))?$";
+    static String pattern = "^([A-Za-z_]+)(:([A-Za-z0-9',.$%_-]+))?(=([A-Za-z0-9',.$%_-]+))?$";
     
     static Pattern r = Pattern.compile(pattern);
 
@@ -165,12 +165,12 @@ public class IceTree implements Comparable <IceTree> {
         repr = r;
     }
 
-    public String getToolTip () {
-        return toolTip;
+    public String getExample () {
+        return example;
     }
 
-    public void setToolTip (String t) {
-        toolTip = t;
+    public void setExample (String t) {
+        example = t;
     }
 
     public double getScore() {

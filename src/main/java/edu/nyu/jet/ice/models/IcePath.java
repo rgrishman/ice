@@ -1,5 +1,6 @@
 package edu.nyu.jet.ice.models;
 
+import edu.nyu.jet.aceJet.AnchoredPath;
 import edu.nyu.jet.Logger;
 import edu.nyu.jet.LoggerFactory;
 
@@ -30,6 +31,10 @@ public class IcePath implements Comparable<IcePath> {
     public  TObjectDoubleHashMap subScores;
     private IcePathChoice choice;
 
+    public IcePath (String path) {
+        this.path = path;
+    }
+
     public IcePath(String path, String repr, String example, double score, IcePathChoice choice) {
         this.path = path;
         this.repr = repr;
@@ -59,6 +64,10 @@ public class IcePath implements Comparable<IcePath> {
     }
 
     public String getPath() {
+        return path;
+    }
+
+    public String getPathString() {
         return path;
     }
 
@@ -104,20 +113,12 @@ public class IcePath implements Comparable<IcePath> {
         return 0;
     }
 
-    @Override
     public String toString() {
-        if (choice == IcePathChoice.UNDECIDED) {
-        return repr;
-        }
-        else {
-            if (choice == IcePathChoice.YES) {
-                return repr + " / YES";
-            }
-            else {
-                return repr + " / NO";
-            }
-        }
+        return path+"["+repr+"]";
     }
-}
 
+     public IcePath(AnchoredPath ap) {
+         path = ap.toString();
+     }
+}
 

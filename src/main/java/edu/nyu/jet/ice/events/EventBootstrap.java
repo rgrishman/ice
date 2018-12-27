@@ -293,11 +293,11 @@ public class EventBootstrap {
         }
                 
         //
-        //  if a RelationOracle is present, use it to classify examples
+        //  if an EventOracle is present, use it to classify examples
         //
-        // if (RelationOracle.exists()) {
-	// RelationOracle.label(foundPatterns);
-        // }
+        if (EventOracle.exists()) {
+            EventOracle.label(foundPatterns);
+         }
     }
 
     /**
@@ -353,7 +353,7 @@ public class EventBootstrap {
 	    logger.trace("    For seed instance = {}", seed);
             for (IceTree p : treeSet.getByArgs(seed.argPair())) {
 		logger.trace("        For event sharing arguments = {}", p);
-		p = IceTree.clearArgValues(p);
+		p = p.clearArgValues();
                 String pp = p.core();
                 if (seedTreeInstances.contains(p)) continue;
                 if (rejects.contains(p)) continue;
@@ -386,10 +386,13 @@ public class EventBootstrap {
             if (sharedCount.get(p) < MIN_RELATION_COUNT) continue;
             Set<String> argPairsForP = new HashSet<String>();
             for (IceTree ap : treeSet.getByPath(itx.getTrigger())) {
-                argPairsForP.add(ap.getArgValue("nsubj") + ":" + ap.getArgValue("dobj"));
+                argPairsForP.add(ap.getArgValueForRole("nsubj") + ":" + ap.getArgValueForRole("dobj"));
             }
             totalCount.put(p, argPairsForP.size());
-            double score = (double)sharedCount.get(p) / totalCount.get(p) * Math.log(sharedCount.get(p) + 1);
+            //double score = (double)sharedCount.get(p) / totalCount.get(p) * Math.log(sharedCount.get(p) + 1);
+            // weights frequency too heavily
+            double score = ((double)sharedCount.get(p)) / totalCount.get(p) * 
+                ((double)sharedCount.get(p)) / (sharedCount.get(p)  + 1);
             // double score = (double)sharedCount.get(p);
 	    itx.setScore(score);
 
@@ -398,13 +401,13 @@ public class EventBootstrap {
 		logger.error ("Null repr for {}", itx.core());
 		continue;
 	    }
-	    String example = itx.getToolTip();
+	    String example = itx.getExample();
 	    if (example == null) {
 		logger.warn ("Null tooltip for {}", itx);
 	    } else {
 		String toolTip = IceUtils.splitIntoLine(example, 80);
 		toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
-		itx.setToolTip(toolTip);
+		// XXX itx.setToolTip(toolTip);
 	    }
             scoreList.add(itx);
         }
@@ -429,15 +432,18 @@ public class EventBootstrap {
 		    logger.error ("Null repr for {}", a.core());
 		    continue;
 		}
-		String example = a.getToolTip();
+		String example = a.getExample();
 		if (example == null) {
 		    logger.warn ("Null tooltip for {}", a);
 		} else {
 		    String toolTip = IceUtils.splitIntoLine(example, 80);
 		    toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
-		    a.setToolTip(toolTip);
+		    // XXX  a.setToolTip(toolTip);
 		}
 		double score = WordEmbedding.treeSimilarity(a, s);
+        if (a.count > 0)
+            // score =  score * Math.log(a.count + 1);
+            score =  score * ((float) a.count) / (a.count + 1);
 		a.setScore(score);
 		scoreList.add(a);
 	    }
@@ -456,7 +462,7 @@ public class EventBootstrap {
         IceTree typedPath;
 
         public String argPair() {
-            return String.format("%s:%s", getArgValue("nsubj"), getArgValue("dobj"));
+            return String.format("%s:%s", getArgValueForRole("nsubj"), getArgValueForRole("dobj"));
         }
 
         public BootstrapAnchoredTree(IceTree path,

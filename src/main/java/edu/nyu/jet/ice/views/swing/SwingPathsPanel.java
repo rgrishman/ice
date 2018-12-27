@@ -4,6 +4,7 @@ import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.RelationFinder;
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.uicomps.RelationFilter;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
@@ -117,11 +118,10 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 		    int i = repr.indexOf("\t");
 		    if (i >= 0)
 		    	repr = repr.substring(i + 1);
-		    DepPathMap depPathMap = DepPathMap.getInstance();
-		    java.util.List<String> paths = depPathMap.findPath(repr);
+		    java.util.List<IcePath> paths = DepPathMap.findPath(repr);
 		    if (paths != null && paths.size() > 0) {
-		        String path = paths.get(0);
-		        String example = depPathMap.findExample(path);
+		        IcePath path = paths.get(0);
+		        String example = path.getExample();
 			String toolTip = IceUtils.splitIntoLine(example, 80);
 			toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
 			l.setToolTipText(toolTip);
@@ -275,11 +275,11 @@ class PathExtractionThread extends Thread {
                 if (parts.length < 2) {
                     continue;
                 }
-		String repr = depPathMap.findRepr(parts[1]);
+                String repr = DepPathMap.findRepr(parts[1]);
                 if (repr == null) {
-		    IceTree it = IceTreeFactory.getIceTree(parts[1]);
-		    if (it.getTrigger().equals("?")) continue;
-		    repr = it.getRepr();
+                    IceTree it = IceTreeFactory.getIceTree(parts[1]);
+                    if (it.getTrigger().equals("?")) continue;
+                    repr = it.getRepr();
                 }
 		if (!filter.equals("") && repr.indexOf(filter) < 0)
 		    continue;

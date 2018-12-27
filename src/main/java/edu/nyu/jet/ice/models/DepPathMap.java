@@ -22,9 +22,7 @@ public class DepPathMap {
 
     private static DepPathMap instance = null;
 
-    private HashMap<String, String> pathReprMap = new HashMap<String, String>();
-    private HashMap<String, List<String>> reprPathMap = new HashMap<String, List<String>>();
-    private HashMap<String, String> pathExampleMap = new HashMap<String, String>();
+    private static HashMap<String, List<IcePath>> reprPathMap = new HashMap<String, List<IcePath>>();
     private DepPathMap() { }
     private String previousFileName = null;
 
@@ -59,22 +57,34 @@ public class DepPathMap {
     /**
      *  Returns the set of dependency paths for the corpus.
      */
-
-    public Set<String> getPathSet () {
-        return pathReprMap.keySet();
+/* XXX
+    public Set<IcePath> getPathSet () {
+        Set<IcePath> result = new HashSet<IcePath>();
+        Set<Set<IcePath>> lip = reprPathMap.values(); 
+        for (Set<IcePath> sip : lip)
+            for (IcePath ip : sip)
+                result.add(ip);
+        return result;
     }
-
+*/
     /**
      *  Given a dependency path, returns its linearization as
      *  an English phrase, or <CODE>null</CODE> if this path does
      *  not occur in the current corpus.
      */
 
-    public String findRepr(String path) {
-        return pathReprMap.get(path);
+    public static String findRepr(IcePath path) {
+        return path.getRepr();
     }
-    public String findRepr(AnchoredPath  path) {
-        return pathReprMap.get(path.toString());
+    public static String findRepr(AnchoredPath  path) {
+        return findRepr (path.toString());
+    }
+
+    public static String findRepr (String s) {
+        List<IcePath> p = findPath (s);
+        if (p != null && ! p.isEmpty())
+            return p.get(0).getRepr();
+        return null;
     }
 
     /**
@@ -82,18 +92,18 @@ public class DepPathMap {
      *  dependency path in the selected corpus, returns the original path.
      */
 
-    public List<String> findPath(String repr) {
+    public static List<IcePath> findPath(String repr) {
         String norm = normalizeRepr(repr);
-        List<String> paths = reprPathMap.get(norm);
+        List<IcePath> paths = reprPathMap.get(norm);
         if (paths != null)
             return paths;
         String norm2 = swap12(norm);
         paths = reprPathMap.get(norm2);
         if (paths == null)
             return null;
-        List<String> q = new ArrayList<String>();
-        for (String p : paths)
-            q.add(swap12(p));
+        List<IcePath> q = new ArrayList<IcePath>();
+        for (IcePath p : paths)
+            q.add(new IcePath(swap12(p.getPathString())));
         return q;
     }
 
@@ -101,27 +111,16 @@ public class DepPathMap {
      *  Interchanges the subscripts (1) and (2) in a path.
      */
 
-    public String swap12 (String s) {
+    public static String swap12 (String s) {
         String temp1 = s.replaceAll("\\(2\\)", "#");
         String temp2 = temp1.replaceAll("\\(1\\)", "(2)");
         String temp3 = temp2.replaceAll("#", "(1)");
         return temp3;
     }
 
-    /**
-     *  Given a dependency path in the current corpus, returns an
-     *  example sentence containing tha path.
-     */
-
-    public String findExample(String path) {
-        return pathExampleMap.get(path);
-    }
-
     public void clear() {
-        pathReprMap.clear();
         reprPathMap.clear();
-        pathExampleMap.clear();
-	logger.info ("Clearing reprs and tooltips for paths");
+	logger.info ("Clearing reprs and examples for paths");
     }
 
     public void unpersist() {
@@ -145,16 +144,17 @@ public class DepPathMap {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(fileName));
-            for (String path : pathReprMap.keySet()) {
-                if (pathExampleMap.containsKey(path)) {
-                    pw.println(String.format("%s:::%s:::%s", path,
-                            pathReprMap.get(path),
-                            pathExampleMap.get(path)));
+            for (List<IcePath> paths: reprPathMap.values()) {
+                IcePath path = paths.get(0);
+                if (path.getExample() != null) {
+                    pw.println(String.format("%s:::%s:::%s", 
+                    path,
+                    path.getRepr(),
+                    path.getExample()));}
                 }
-            }
             pw.close();
-        }
-        catch (IOException e) {
+            }
+            catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -178,8 +178,6 @@ public class DepPathMap {
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName)) return true;
 	logger.info ("Loading reprs and tooltips from file {}", fileName);
-        pathExampleMap.clear();
-        pathReprMap.clear();
         reprPathMap.clear();
         try {
             BufferedReader r = new BufferedReader(new FileReader(f));
@@ -187,16 +185,17 @@ public class DepPathMap {
             while ((line = r.readLine()) != null) {
                 String[] parts = line.split(":::");
                 if (parts.length != 3) continue;
-                String path = parts[0];
+                String pathString = parts[0];
+                IcePath path = new IcePath(pathString);
                 String repr = parts[1];
                 String example = parts[2];
-                pathReprMap.put(path, repr);
+                path.setRepr(repr);
                 String normalizedRepr = normalizeRepr(repr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
                     reprPathMap.put(normalizedRepr, new ArrayList());
                 }
                 reprPathMap.get(normalizedRepr).add(path);
-                pathExampleMap.put(path, example);
+                path.setExample(example);
             }
             r.close();
         }
@@ -208,16 +207,13 @@ public class DepPathMap {
         return true;
     }
 
-    public void setMaps (String path, String repr, String example) {
-	pathReprMap.put(path, repr);
-	String normalizedRepr = normalizeRepr(repr);
-	if (!reprPathMap.containsKey(normalizedRepr)) {
-	    reprPathMap.put(normalizedRepr, new ArrayList());
-	}
-	reprPathMap.get(normalizedRepr).add(path);
-	pathExampleMap.put(path, example);
+    public void setMaps (IcePath path, String repr, String example) {
+        String normalizedRepr = normalizeRepr(repr);
+        if (!reprPathMap.containsKey(normalizedRepr)) {
+            reprPathMap.put(normalizedRepr, new ArrayList());
+        }
+        reprPathMap.get(normalizedRepr).add(path);
     }
-
 
     /**
      Normalize the internal copy of DepPath representation: all lowercase, single space, trimmed.

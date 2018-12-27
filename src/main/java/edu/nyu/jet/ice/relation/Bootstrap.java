@@ -68,13 +68,13 @@ public class Bootstrap {
      *  Initialized by 'initialize', augmented by 'iterate', used by 'bootstrap'.
      */
 
-    public Set<String> seedPaths = new HashSet<String>();
+    public Set<IcePath> seedPaths = new HashSet<IcePath>();
 
     /**
      *  Paths accepted by user (in the form of String representation of dependency path).
      */
 
-    public Set<String> getSeedPaths() {
+    public Set<IcePath> getSeedPaths() {
         return seedPaths;
     }
 
@@ -83,14 +83,14 @@ public class Bootstrap {
      *  (in the form of String representation of dependency paths).
      */
 
-    public Set<String> rejects = new HashSet<String>();
+    public Set<IcePath> rejects = new HashSet<IcePath>();
 
     /**
      *  Paths explicitly rejected by user 
      *  (in the form of String representation of dependency paths).
      */
 
-    public Set<String> getRejects() {
+    public Set<IcePath> getRejects() {
         return rejects; }
 
     /**
@@ -148,18 +148,18 @@ public class Bootstrap {
         try {
             DepPathMap depPathMap = DepPathMap.getInstance();
             String[] splitSeedString = bigSeedString.split(":::");
-            List<String> allPaths = new ArrayList<String>();
+            List<IcePath> allPaths = new ArrayList<IcePath>();
             // iterate over all seed English expressions,
             // finding for each expression the dependency paths (if any)
             // and putting these paths together in seedPaths
             for (String p : splitSeedString) {
 System.out.println("Processing seed " + p); // <<<<<<<<<<<<
                 // >>>>>>>>>>>>>> convert directly to AnchoredPath
-                List<String> currentPaths = depPathMap.findPath(p);
+                List<IcePath> currentPaths = depPathMap.findPath(p);
 System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size()) + " paths");  // <<<<<<<<<
                 if (currentPaths != null) {
-                    for (String currentPath : currentPaths) {
-                        String[] parts = currentPath.split("--");
+                    for (IcePath currentPath : currentPaths) {
+                        String[] parts = currentPath.getPath().split("--");
                         allPaths.add(currentPath);
                         arg1Type = parts[0].trim();
                         arg2Type = parts[2].trim();
@@ -202,9 +202,9 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
         return foundPatterns;
     }
 
-    public void addPathsToSeedSet(List<IcePath> approvedPaths, Set<String> pathSet) {
+    public void addPathsToSeedSet(List<IcePath> approvedPaths, Set<IcePath> pathSet) {
         for (IcePath approvedPath : approvedPaths) {
-            pathSet.add(approvedPath.getPath());
+            pathSet.add(approvedPath);
         }
     }
 
@@ -255,8 +255,8 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
 	//   a seed or a higher-ranked path
         //
         Set<String>   existingReprs = new HashSet<String>();
-	for (String s : seedPaths)
-	    existingReprs.add(depPathMap.findRepr(s));
+	for (IcePath s : seedPaths)
+	    existingReprs.add(s.getRepr());
         Set<String>   foundPatternStrings = new HashSet<String>();
         int count = 0;
         for (IcePath icePath : scoreList) {
@@ -284,9 +284,9 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
         //
         //  if a RelationOracle is present, use it to classify examples
         //
-        if (RelationOracle.exists()) {
-            RelationOracle.label(foundPatterns);
-        }
+        //  if (RelationOracle.exists()) {
+        //      RelationOracle.label(foundPatterns);
+        //  }
     }
 
     /**
@@ -298,8 +298,9 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
 
         List<BootstrapAnchoredPath> seedPathInstances = new ArrayList<BootstrapAnchoredPath>();
 
-        for (String sp : seedPaths) {
-            List<AnchoredPath> posPaths = pathSet.getByPath(new AnchoredPath(sp).path);
+        for (IcePath sp : seedPaths) {
+            String sps = sp.getPathString();
+            List<AnchoredPath> posPaths = pathSet.getByPath(new AnchoredPath(sps).path);
             if (posPaths != null) {
                 for (AnchoredPath p : posPaths) {
                     seedPathInstances.add(new BootstrapAnchoredPath(p,
@@ -359,15 +360,16 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             double score = (double)sharedCount.get(p);
 
             String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
-            String pRepr = depPathMap.findRepr(fullp);
+            IcePath ip = new IcePath(fullp);
+            String pRepr = ip.getRepr();
             if (pRepr == null) {
                 continue;
             }
-            String pExample = depPathMap.findExample(fullp);
+            String pExample = ip.getExample();
             if (pExample == null) {
                 continue;
             }
-            String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
+            String tooltip = IceUtils.splitIntoLine(pExample, 80);
             tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
             IcePath icePath = new IcePath(fullp, pRepr, tooltip, score);
             if (pRepr.equals(arg1Type + " " + arg2Type)) {
@@ -387,26 +389,27 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
 	PathMatcher matcher = new PathMatcher();
         List<IcePath> scoreList = new ArrayList<IcePath>();
         DepPathMap depPathMap = DepPathMap.getInstance();
-	for (String s : seedPaths) {
+	for (IcePath s : seedPaths) {
 	    if (DEBUG) System.out.println("Expanding seed " + s);
 	    for (AnchoredPath a : pathSet.similarPaths(s)) {
             String fullp = arg1Type + " -- " + a.path + " -- " + arg2Type;
-		String pRepr = depPathMap.findRepr(fullp);
+            IcePath ip = new IcePath(fullp);
+		String pRepr = ip.getRepr();
 		if (pRepr == null) {
 		    continue;
 		}
-		String pExample = depPathMap.findExample(fullp);
+		String pExample = ip.getExample();
 		if (pExample == null) {
 		    continue;
 		}
-		String tooltip = IceUtils.splitIntoLine(depPathMap.findExample(fullp), 80);
+		String tooltip = IceUtils.splitIntoLine(pExample, 80);
 		tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
 
 		// if (! arg1Type.equals(a.arg1)) continue;
 		// if (! arg2Type.equals(a.arg2)) continue;
 		//double score = matcher.matchPaths("UNK -- " + a.path + " -- UNK",
 			//"UNK -- " + s + " -- UNK") / (s.split(":").length + 1);
-		String[] x = s.split("--");
+		String[] x = s.getPath().split("--");
 		double score = WordEmbedding.pathSimilarity(a.path, x[1].trim());
 
 		IcePath icePath = new IcePath(fullp, pRepr, tooltip, score);
@@ -427,14 +430,14 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
 
         BootstrapAnchoredPathType type;
 
-        String typedPath;
+        IcePath typedPath;
 
         public String argPair() {
             return String.format("%s:%s", arg1, arg2);
         }
 
         public BootstrapAnchoredPath(AnchoredPath path,
-                                     String typedPath,
+                                     IcePath typedPath,
                                      BootstrapAnchoredPathType type) {
             super(path.arg1, path.path, path.arg2, path.source, -1, -1);
             this.type = type;

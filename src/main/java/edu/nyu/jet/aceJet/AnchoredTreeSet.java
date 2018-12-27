@@ -35,7 +35,7 @@ public class AnchoredTreeSet implements Iterable<IceTree> {
 	if (pathIndex.get(trigger) == null)
 	    pathIndex.put(trigger, new ArrayList<IceTree>());
 	pathIndex.get(trigger).add(p);
-	String args = p.getArgValue("nsubj") + ":" + p.getArgValue("dobj");
+	String args = p.getArgValueForRole("nsubj") + ":" + p.getArgValueForRole("dobj");
 	if (argIndex.get(args) == null)
 	    argIndex.put(args, new ArrayList<IceTree>());
 	argIndex.get(args).add(p);

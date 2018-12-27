@@ -6,7 +6,7 @@ package edu.nyu.jet.ice.models;// -*- tab-width: 4 -*-
 //Description:  A Java-based Information Extraction Tool -- Customization Environment
 
 import edu.nyu.jet.ice.uicomps.Ice;
-import edu.nyu.jet.ice.uicomps.RelationBuilder;
+// import edu.nyu.jet.ice.uicomps.RelationBuilder;
 import edu.nyu.jet.ice.uicomps.ListFilter;
 import edu.nyu.jet.ice.uicomps.TermFilter;
 import edu.nyu.jet.ice.uicomps.RelationFilter;
@@ -54,7 +54,7 @@ public class Corpus {
     // for relation finder
     public String relationTypesFileName;
     public String relationInstanceFileName;
-    public RelationBuilder relationBuilder;
+    // public RelationBuilder relationBuilder;
     // for event finder
     public String eventTypesFileName;
     public String eventInstanceFileName;
@@ -146,7 +146,7 @@ public class Corpus {
         this.name = name;
         directory = "?";
         filter = "?";
-        relationBuilder = new RelationBuilder();
+        // relationBuilder = new RelationBuilder();
 
         try {
             String corpusInfoDirectory = FileNameSchema.getCorpusInfoDirectory(name);

@@ -183,8 +183,8 @@ public class IceUtils {
         return relations;
     }
 
-    public static String splitIntoLine(String input, int maxCharInLine){
-
+    public static String splitIntoLine(String input, int maxCharInLine) {
+    try {
         StringTokenizer tok = new StringTokenizer(input, " ");
         StringBuilder output = new StringBuilder(input.length());
         int lineLen = 0;
@@ -208,8 +208,11 @@ public class IceUtils {
         // output.split();
         // return output.toString();
         return output.toString() + "\n";
+    } catch (IndexOutOfBoundsException e) {
+        System.out.println("Error in split into line.");
+        return "";
     }
-
+}
 
     public static double innerProduct(double[] v1, double[] v2) {
         double innerProduct = 0.00000001;

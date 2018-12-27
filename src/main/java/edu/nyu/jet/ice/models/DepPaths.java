@@ -411,8 +411,9 @@ public class DepPaths {
             depPathEvents.add(event);
         }
         String linearizedPath = path.linearize(doc, relations, type1, type2, false);
-	sources.add(fullPath + " ==> " + source);
-	linearizedPaths.add(fullPath + " --> " + linearizedPath);
+        linearizedPath = DepTreeMap.normalizeRepr(linearizedPath);
+        sources.add(fullPath + " ==> " + source);
+        linearizedPaths.add(fullPath + " --> " + linearizedPath);
     }
 
     /**
@@ -516,61 +517,8 @@ public class DepPaths {
 	linearizedTrees.clear();
     }
 
-    public static Span spanOfDependencyNode (Document doc, int posn, SyntacticRelationSet relations) {
-	int start = leftmostExtent(posn, relations); 
-	int end = rightmostExtent(posn, relations);
-	return new Span(start, end);
-    }
-
-    public static int leftmostExtent (int posn, SyntacticRelationSet relations) {
-	SyntacticRelationSet daughters = relations.getRelationsFrom(posn);
-	if (daughters == null || daughters.size() == 0)
-	    return posn;
-	int firstDaughter = -1;
-	for (SyntacticRelation d : daughters) {
-	    if (d.targetPosn < posn) {
-		firstDaughter = d.targetPosn;
-		posn = d.targetPosn;
-	    }
-	}
-	if (firstDaughter >= 0) {
-	    return leftmostExtent(firstDaughter, relations);
-	} else {
-	    return posn;
-	}
-    }
-
-    public static int rightmostExtent (int posn, SyntacticRelationSet relations) {
-	SyntacticRelationSet daughters = relations.getRelationsFrom(posn);
-	if (daughters == null || daughters.size() == 0)
-	    return posn;
-	int lastDaughter = -1;
-	for (SyntacticRelation d : daughters) {
-	    if (d.targetPosn > posn) {
-		lastDaughter = d.targetPosn;
-		posn = d.targetPosn;
-	    }
-	}
-	if (lastDaughter >= 0) {
-	    return rightmostExtent(lastDaughter, relations);
-	} else {
-	    return posn;
-	}
-    }
-
     public static String treeText (Document doc, Annotation sentence, int posn, SyntacticRelationSet relations) {
-	int sentenceStart = sentence.start();
-	int sentenceEnd = sentence.end();
-	Span span = spanOfDependencyNode (doc, posn, relations);
-	int start = span.start();
-	int end = span.end();
-	String text = "";
-	if (sentenceStart < start) text += doc.normalizedText(new Span(sentenceStart, start));
-	text +=  " [";
-	text += doc.normalizedText(new Span(start, end));
-	text += "] ";
-        if (end < sentenceEnd) text += doc.normalizedText(new Span(end, sentenceEnd));
-        return text.trim();
+        return doc.normalizedText(sentence);
     }
 
     public static void collectTreesInSentence (Document doc, Annotation sentence,
@@ -583,7 +531,9 @@ public class DepPaths {
 	    treesWithArguments.add(tree.core());
 	    String source = treeText (doc, sentence, tree.getTriggerPosn(), relations);
 	    sources.add(typeTree + " ==> " + source);
-	    linearizedTrees.add(typeTree + " --> " + tree.linearize());
+        String repr = tree.linearize();
+        repr = DepTreeMap.normalizeRepr(repr);
+	    linearizedTrees.add(typeTree + " --> " + repr);
 	}
     }
     public static void writePaths (String outputFile, String typeOutputFile, String corpusName) {

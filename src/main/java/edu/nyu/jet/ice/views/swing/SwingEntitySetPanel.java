@@ -157,23 +157,23 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
         });
 
         suggestEntitySetButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+                public void actionPerformed(ActionEvent actionEvent) {
                 Timer timer = switchToBusyCursor(SwingEntitySetPanel.this);
                 String seedString = null;
                 List<String> seeds = null;
                 if (Ice.selectedCorpus.termFileName == null ||
                         FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpusName, "nn") == null ||
                         !(new File(FileNameSchema.getEntitySetIndexFileName(Ice.selectedCorpusName, "nn"))).exists()) {
-                    JOptionPane.showMessageDialog(Ice.mainFrame,
-                            "Entity index file does not exist. Please run indexing first.",
-                            "Index entities first",
-                            JOptionPane.ERROR_MESSAGE);
-                    switchToNormalCursor(SwingEntitySetPanel.this, timer);
-                    return;
+                JOptionPane.showMessageDialog(Ice.mainFrame,
+                        "Entity index file does not exist. Please run indexing first.",
+                        "Index entities first",
+                        JOptionPane.ERROR_MESSAGE);
+                switchToNormalCursor(SwingEntitySetPanel.this, timer);
+                return;
                 }
                 try {
-                    seeds = suggestSeeds();
-                    seedString = "[" + seeds.get(0) + "] and [" + seeds.get(1) + "]";
+                seeds = suggestSeeds();
+                seedString = "[" + seeds.get(0) + "] and [" + seeds.get(1) + "]";
                 }
                 finally {
                     switchToNormalCursor(SwingEntitySetPanel.this, timer);
@@ -187,12 +187,12 @@ public class SwingEntitySetPanel extends JPanel implements Refreshable {
                     if (n == 0) {
                         String entitySetName = JOptionPane.showInputDialog("Input name of the entity type");
 			entitySetName = entitySetName.toUpperCase();
-                        IceEntitySet ies = new IceEntitySet(entitySetName);
-                        entityListModel.addElement(ies);
-                        entitySetList.setSelectedValue(ies, true);
-                        entriesListModel.addElement(seeds.get(0));
-                        entriesListModel.addElement(seeds.get(1));
-			ies.addNoun(seeds.get(0));
+            IceEntitySet ies = new IceEntitySet(entitySetName);
+            entityListModel.addElement(ies);
+            entitySetList.setSelectedValue(ies, true);
+            entriesListModel.addElement(seeds.get(0));
+            entriesListModel.addElement(seeds.get(1));
+            ies.addNoun(seeds.get(0));
 			ies.addNoun(seeds.get(1));
 			Ice.addEntitySet(ies);
                     }

@@ -146,7 +146,8 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                 if (eventInstance == null) {
                     return;
                 }
-                List<IceTree> trees = findTreeOrClosest (eventInstance);
+                eventInstance = DepTreeMap.normalizeRepr(eventInstance);
+                List<IceTree> trees = findTreeOrClosest(eventInstance);
                 if (trees != null) {
                     installSeedEvent(eventName, eventInstance, trees);
                 }
@@ -185,6 +186,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                             }
                         }
                         DepTreeMap depTreeMap = DepTreeMap.getInstance();
+                        eventInstance = DepTreeMap.normalizeRepr(eventInstance);
                         List<IceTree> trees = depTreeMap.findTree(eventInstance);
                         if (trees == null) {
                             JOptionPane.showMessageDialog(SwingEventsPanel.this,
@@ -221,6 +223,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                 if (eventInstance == null) {
                     return;
                 }
+                eventInstance = DepTreeMap.normalizeRepr(eventInstance);
                 List<IceTree> trees = findTreeOrClosest (eventInstance);
                 if (trees == null) {
                     return;
@@ -289,6 +292,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
     public List<IceTree> findTreeOrClosest (String eventInstance) {
         DepTreeMap depTreeMap = DepTreeMap.getInstance();
         depTreeMap.load();
+        eventInstance = DepTreeMap.normalizeRepr(eventInstance);
         List<IceTree> trees = depTreeMap.findTree(eventInstance);
         if (trees != null) {
             closestPhrase = eventInstance;

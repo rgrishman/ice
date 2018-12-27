@@ -14,16 +14,21 @@ import edu.nyu.jet.ice.views.swing.SwingRelationsPanel;
 public class RelationBuilderThread extends Thread {
 
     String[] args;
-    RelationBuilder builder;
+    // RelationBuilder builder;
     Bootstrap bootstrap;
     String arg1;
     String arg2;
     RelationBuilderFrame frame;
     SwingRelationsPanel swingRelationsPanel;
 
-    public RelationBuilderThread(String seed, String relationInstanceFileName,
-                          String pathListFileName, RelationBuilder builder, Bootstrap bootstrap,
-                          RelationBuilderFrame frame, SwingRelationsPanel swingRelationsPanel) {
+    public RelationBuilderThread(
+            String seed, 
+            String relationInstanceFileName,
+            String pathListFileName, 
+            // RelationBuilder builder, 
+            Bootstrap bootstrap,
+            RelationBuilderFrame frame, 
+            SwingRelationsPanel swingRelationsPanel) {
         args = new String[3];
         args[0] = seed;
         String[] parts = seed.trim().toLowerCase().split(" ");
@@ -33,7 +38,7 @@ public class RelationBuilderThread extends Thread {
         }
         args[1] = relationInstanceFileName;
         args[2] = pathListFileName;
-        this.builder = builder;
+        // this.builder = builder;
         this.bootstrap = bootstrap;
         this.frame = frame;
         this.swingRelationsPanel = swingRelationsPanel;

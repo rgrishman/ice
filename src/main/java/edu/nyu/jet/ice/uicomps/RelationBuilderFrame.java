@@ -36,14 +36,17 @@ public class RelationBuilderFrame extends JFrame {
     public JRadioButton yesButton;
     public JRadioButton noButton;
     public JRadioButton undecidedButton;
-    public RelationBuilder relationBuilder;
+    // public RelationBuilder relationBuilder;
     public SwingRelationsPanel swingRelationsPanel;
 
-    public RelationBuilderFrame(String title, final RelationBuilder relationBuilder, final Bootstrap bootstrap,
-                                final SwingRelationsPanel swingRelationsPanel) {
+    public RelationBuilderFrame(
+        String title, 
+        // final RelationBuilder relationBuilder, 
+        final Bootstrap bootstrap,
+        final SwingRelationsPanel swingRelationsPanel) {
         super(title);
         this.bootstrap = bootstrap;
-        this.relationBuilder = relationBuilder;
+        // this.relationBuilder = relationBuilder;
         this.swingRelationsPanel = swingRelationsPanel;
         JPanel entitySetPanel = new JPanel(new MigLayout());
         entitySetPanel.setSize(400, 700);
@@ -175,40 +178,30 @@ public class RelationBuilderFrame extends JFrame {
 		String relationName = bootstrap.relationName;
 		IceRelation iceRelation = Ice.getRelation(relationName);
 
-                bootstrap.addPathsToSeedSet(approvedPaths, bootstrap.seedPaths);
-                bootstrap.addPathsToSeedSet(rejectedPaths, bootstrap.rejects);
-                DepPathMap depPathMap = DepPathMap.getInstance();
-                StringBuilder text = new StringBuilder();
-                Set<String> usedRepr = new HashSet<String>();
-                for (IcePath path : bootstrap.getSeedPaths()) {
-		    if (iceRelation != null) {
-			iceRelation.addPath(path);
-		    }
-                    String repr = path.getRepr();
-                    if (repr != null && !usedRepr.contains(repr)) {
-                        text.append(repr).append("\n");
-                        usedRepr.add(repr);
-                    }
-                }
-                if (relationBuilder != null) {
-                    relationBuilder.textArea.setText(text.toString());
-                }
-                /*  XXX
-                if (swingRelationsPanel != null) {
-                    String[] reprs = text.toString().trim().split("\n");
-                    java.util.List<String> paths = Arrays.asList(reprs);
-                    swingRelationsPanel.updateEntriesListModel(paths);
-                }
-                swingRelationsPanel.negPaths.clear();
-                java.util.List<IcePath> paths = new ArrayList<IcePath>();
-                for (String negPath : bootstrap.getRejects()) {
-                    swingRelationsPanel.negPaths
-                        paths.add(bootstrap.getArg1Type() + " -- " +
-                        negPath + " -- " + bootstrap.getArg2Type());
-                 }
-                swingRelationsPanel.negPaths.put(bootstrap.getRelationName(), paths);
-                */
-                RelationBuilderFrame.this.dispose();
+        bootstrap.addPathsToSeedSet(approvedPaths, bootstrap.seedPaths);
+        bootstrap.addPathsToSeedSet(rejectedPaths, bootstrap.rejects);
+        IcePath[] paths = bootstrap.seedPaths.toArray(new IcePath[0]);
+        IcePath[] negPaths = bootstrap.rejects.toArray(new IcePath[0]);
+        Set<String> usedRepr = new HashSet<String>();
+        for (IcePath path : paths) {
+            if (iceRelation != null) {
+                iceRelation.addPath(path);
+            }
+            String repr = path.getRepr();
+            if (repr != null && !usedRepr.contains(repr)) {
+                usedRepr.add(repr);
+            }
+            swingRelationsPanel.updateEntriesListModel(paths);
+        }
+        /* -- not yet making use of rejects -- 
+        swingRelationsPanel.negPaths.clear();
+        for (IcePath negPath : bootstrap.getRejects()) {
+            negPaths.add(bootstrap.getArg1Type() + " -- " +
+                    negPath + " -- " + bootstrap.getArg2Type());
+        }
+        swingRelationsPanel.negPaths.put(bootstrap.getRelationName(), negPaths);
+        --- */
+        RelationBuilderFrame.this.dispose();
             }
         });
 
