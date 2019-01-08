@@ -2,6 +2,7 @@ package edu.nyu.jet.ice.models;
 
 import edu.nyu.jet.aceJet.AnchoredPath;
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.events.DepTreeMap;
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.Logger;
 import edu.nyu.jet.LoggerFactory;
@@ -186,11 +187,12 @@ public class DepPathMap {
                 String[] parts = line.split(":::");
                 if (parts.length != 3) continue;
                 String pathString = parts[0];
-                IcePath path = new IcePath(pathString);
+                IcePath path = IcePathFactory.getIcePath(pathString);
                 String repr = parts[1];
                 String example = parts[2];
                 path.setRepr(repr);
                 String normalizedRepr = normalizeRepr(repr);
+                path.setRepr(normalizedRepr);
                 if (!reprPathMap.containsKey(normalizedRepr)) {
                     reprPathMap.put(normalizedRepr, new ArrayList());
                 }
@@ -221,7 +223,8 @@ public class DepPathMap {
      */
 
     public static String normalizeRepr(String repr) {
-        return repr.toLowerCase().replaceAll("\\s+", " ").trim();
+        // return repr.toLowerCase().replaceAll("\\s+", " ").trim();
+        return DepTreeMap.normalizeRepr (repr);
     }
 
     /**

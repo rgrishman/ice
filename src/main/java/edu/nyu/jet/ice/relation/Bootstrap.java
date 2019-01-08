@@ -5,11 +5,13 @@ import edu.nyu.jet.aceJet.AnchoredPathSet;
 import edu.nyu.jet.aceJet.SimAnchoredPathSet;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
+import edu.nyu.jet.ice.models.IcePathFactory;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.models.WordEmbedding;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
+import edu.nyu.jet.ice.utils.FileNameSchema;;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 import java.util.*;
@@ -98,6 +100,7 @@ public class Bootstrap {
      */
 
     SimAnchoredPathSet pathSet;
+    SimAnchoredPathSet pathTypesSet;
 
     String arg1Type = "";
     String arg2Type = "";
@@ -176,6 +179,8 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             seedPaths.addAll(allPaths);
 
             pathSet = new SimAnchoredPathSet(patternFileName, new PathMatcher(), threshold);
+            String fileName = FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);
+            pathTypesSet = new SimAnchoredPathSet(fileName, new PathMatcher(), threshold);
             bootstrap(arg1Type, arg2Type);
         }
         catch (IOException e) {
@@ -268,6 +273,7 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             boolean isValid = !existingReprs.contains(icePath.getRepr());
             if (icePath.getScore() > MIN_BOOTSTRAP_SCORE && count < MAX_BOOTSTRAPPED_ITEMS  && isValid) {
                 foundPatterns.add(icePath);
+                System.out.println ("new found pattern " + icePath); 
                 foundPatternStrings.add(p);
                 existingReprs.add(icePath.getRepr());
                 count++;
@@ -360,7 +366,7 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             double score = (double)sharedCount.get(p);
 
             String fullp = arg1Type + " -- " + p + " -- " + arg2Type;
-            IcePath ip = new IcePath(fullp);
+            IcePath ip = IcePathFactory.getIcePath(fullp);
             String pRepr = ip.getRepr();
             if (pRepr == null) {
                 continue;
@@ -371,11 +377,10 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             }
             String tooltip = IceUtils.splitIntoLine(pExample, 80);
             tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
-            IcePath icePath = new IcePath(fullp, pRepr, tooltip, score);
             if (pRepr.equals(arg1Type + " " + arg2Type)) {
                 continue;
             }
-            scoreList.add(icePath);
+            scoreList.add(ip);
         }
         return scoreList;
     }
@@ -391,35 +396,34 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
         DepPathMap depPathMap = DepPathMap.getInstance();
 	for (IcePath s : seedPaths) {
 	    if (DEBUG) System.out.println("Expanding seed " + s);
-	    for (AnchoredPath a : pathSet.similarPaths(s)) {
+	    for (AnchoredPath a : pathTypesSet) {       // .similarPaths(s)) {
             String fullp = arg1Type + " -- " + a.path + " -- " + arg2Type;
-            IcePath ip = new IcePath(fullp);
-		String pRepr = ip.getRepr();
-		if (pRepr == null) {
-		    continue;
-		}
-		String pExample = ip.getExample();
-		if (pExample == null) {
-		    continue;
-		}
-		String tooltip = IceUtils.splitIntoLine(pExample, 80);
-		tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
+            IcePath ip = IcePathFactory.getIcePath(fullp);
+            String pRepr = ip.getRepr();
+            if (pRepr == null) {
+                continue;
+            }
+            String pExample = ip.getExample();
+            if (pExample == null) {
+                continue;
+            }
+            String tooltip = IceUtils.splitIntoLine(pExample, 80);
+            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
 
-		// if (! arg1Type.equals(a.arg1)) continue;
-		// if (! arg2Type.equals(a.arg2)) continue;
-		//double score = matcher.matchPaths("UNK -- " + a.path + " -- UNK",
-			//"UNK -- " + s + " -- UNK") / (s.split(":").length + 1);
-		String[] x = s.getPath().split("--");
-		double score = WordEmbedding.pathSimilarity(a.path, x[1].trim());
-
-		IcePath icePath = new IcePath(fullp, pRepr, tooltip, score);
-		if (pRepr.equals(arg1Type + " " + arg2Type)) {
-		    continue;
-		}
-		scoreList.add(icePath);
-	    }
-	}
-	return scoreList;
+            // if (! arg1Type.equals(a.arg1)) continue;
+            // if (! arg2Type.equals(a.arg2)) continue;
+            //double score = matcher.matchPaths("UNK -- " + a.path + " -- UNK",
+            //"UNK -- " + s + " -- UNK") / (s.split(":").length + 1);
+            String[] x = s.getPath().split("--");
+            double score = WordEmbedding.pathSimilarity(a.path, x[1].trim());
+            ip.setScore (score);
+            if (pRepr.equals(arg1Type + " " + arg2Type)) {
+                continue;
+            }
+            scoreList.add(ip);
+        }
+        }
+        return scoreList;
     }
 
     public enum BootstrapAnchoredPathType {

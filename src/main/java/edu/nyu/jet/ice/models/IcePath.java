@@ -31,6 +31,10 @@ public class IcePath implements Comparable<IcePath> {
     public  TObjectDoubleHashMap subScores;
     private IcePathChoice choice;
 
+    public IcePath() {
+        this.path = "?";
+    }
+
     public IcePath (String path) {
         this.path = path;
     }
@@ -76,6 +80,9 @@ public class IcePath implements Comparable<IcePath> {
     }
 
     public String getRepr() {
+        if (repr == null)
+            return "nullRepr";
+            else
         return repr;
     }
 
@@ -95,7 +102,7 @@ public class IcePath implements Comparable<IcePath> {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(double score) {
         this.score = score;
     }
 
@@ -113,6 +120,15 @@ public class IcePath implements Comparable<IcePath> {
         return 0;
     }
 
+   @Override
+   public boolean equals (Object other) {
+       boolean result = false;
+       if (other instanceof IcePath) {
+           IcePath icePath = (IcePath) other;
+           result = this.getPathString().equals(icePath.getPathString());
+       }
+       return result;
+   }
     public String toString() {
         return path+"["+repr+"]";
     }
