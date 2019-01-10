@@ -73,10 +73,10 @@ public class WordEmbedding {
         double[] v = new double[dim];
         for (int i = 0; i < phrase.length; i++) {
             double[] wordEmbedding = embed(phrase[i]);
-            if (wordEmbedding == null)
-                return null;
-            for (int k = 0; k < dim; k++) {
-                v[k] += wordEmbedding[k];
+            if (wordEmbedding != null) {
+                for (int k = 0; k < dim; k++) {
+                    v[k] += wordEmbedding[k];
+                }
             }
         }
         return v;
