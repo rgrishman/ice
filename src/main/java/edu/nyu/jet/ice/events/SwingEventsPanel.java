@@ -7,6 +7,7 @@ import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.models.WordEmbedding;
 import edu.nyu.jet.ice.events.EventBootstrap;
 import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.Refreshable;
@@ -24,6 +25,9 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+
+import org.apache.commons.math3.ml.clustering.*;
+import org.apache.commons.math3.ml.distance.*;
 
 /**
  * Panel to bootstrap event extractor
@@ -159,7 +163,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                 java.util.Timer timer = switchToBusyCursor(SwingEventsPanel.this);
                 String eventInstance = null;
                 try {
-                    eventInstance = suggestEvent();
+                    suggestEvent();
                 }
                 finally {
                     switchToNormalCursor(SwingEventsPanel.this, timer);
@@ -432,52 +436,69 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         entriesListModel = newListModel;
         entriesList.setModel(entriesListModel);
     }
-
+    
     /**
-     *  Suggests a path to use as a seed for building a new event.  It selects
-     *  a path which is a sentential (subject-verb-object) structure, has not
-     *  been suggested before (for this corpus), and is not a member of an
-     *  existing relation.
+     *  Suggests a pair of trees to use as a seed for building a new event.  It is
+     *  intended to select a pair which 
+     *  - have different triggers
+     *  - have not already been used in an event for this corpus [not yet implemented]
+     *  - have not been suggested before (for this corpus)
+     *
+     *  For efficiency on large corpora, the set of IceTrees is divided
+     *  using k-means clustering, and then only checking closeness within a cluster.
      */
 
-    public String suggestEvent() {
-        String result = "";
-        try {
-            String[] lines =
-                    IceUtils.readLines(FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName));
-            DepTreeMap depTreeMap = DepTreeMap.getInstance();
-            depTreeMap.load();
-	    /*
-      loop: for (String line : lines) {
-                String[] parts = line.split("\t");
-                String path = parts[1];
-                if (!path.matches(".*nsubj-1:.*:dobj.*")) 
-                    continue;
-                String phrase = depTreeMap.findRepr(path);
-                if (phrase == null)
-                    continue;
-                // skip phrase if prevoously suggested
-                if (Ice.selectedCorpus.eventsSuggested.contains(phrase))
-                    continue;
-                // skip phrase if it is part of an existing event
-                for (IceEvent event : Ice.events.values()) {
-                    for (String repr : event.getReprs()) {
-                        if (phrase.equals(repr)) {
-                            continue loop;
+    public void suggestEvent() {
+        String fileName = FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
+        IceTreeSet eventtypes = new IceTreeSet(fileName, 5);
+        List<IceTree> trees = eventtypes.list;
+        // among set of event trees,
+        // find closest pairs of trees with different triggers, 
+        IceTree besti = null;
+        IceTree bestj = null;
+        double bestSimilarity = -1;
+        int numClusters = trees.size() / 1000 + 1;
+        System.out.println("Generating " + numClusters + " clusters");
+        KMeansPlusPlusClusterer<IceTree> cl = 
+            new KMeansPlusPlusClusterer(numClusters, 10, new EuclideanDistance());
+        List<CentroidCluster<IceTree>> clusters = cl.cluster(trees);
+        for (CentroidCluster<IceTree> cc : clusters) {
+            List<IceTree> points  = cc.getPoints();
+            System.out.println("Processing a cluster of "+points.size()+" points");
+            for (int i = 0; i < points.size(); i++) {
+                for (int j = 0; j < i; j++) {
+                    if (points.get(i).trigger.equals(points.get(j).trigger)) continue;
+                    // skip phrase if prevoously suggested
+                    if (Ice.selectedCorpus.eventsSuggested.contains(points.get(i).getRepr()))
+                        continue;
+                    if (Ice.selectedCorpus.eventsSuggested.contains(points.get(j).getRepr()))
+                        continue;
+                    /*
+                    // skip if either tree is part of an existing event
+                    for (IceEvent event : Ice.events.values()) {
+                        for (String repr : event.getReprs()) {
+                            if (phrase.equals(repr)) {
+                                continue;
+                            }
                         }
                     }
+                    */
+                    double similarity = WordEmbedding.treeSimilarity(points.get(i), points.get(j));
+                    if (similarity > bestSimilarity) {
+                        besti = points.get(i);
+                        bestj = points.get(j);
+                        bestSimilarity  = similarity;
+                    }
                 }
-                Ice.selectedCorpus.eventsSuggested.add(phrase);
-                return phrase;
             }
-	    */
         }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result;
+        // select pair with max salience
+        String one = besti.getRepr();
+        String two = bestj.getRepr();
+        System.out.println("We suggest adding event " + one + " with alternate " + two);
+        Ice.selectedCorpus.eventsSuggested.add(one);
+        Ice.selectedCorpus.eventsSuggested.add(two);
     }
-
 
     public static java.util.Timer switchToBusyCursor(final javax.swing.JPanel frame) {
         java.util.TimerTask timerTask = new java.util.TimerTask() {
@@ -504,5 +525,25 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
     private static void stopWaitCursor(javax.swing.JPanel frame) {
         frame.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.DEFAULT_CURSOR));
     }
+/* -------------------------------
+To do for clustering and suggesions:
+    // 1. convert IceTrees to a set of Clusters
+    // 2. define distanc measure = WE distance or shared arg distance
+    // 3. cluster into sqrt(n) clusters
+    // 4. compare closest in entire corpus with closest in cluster
 
+    public void suggestEvent() {
+        String fileName = FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
+        IceTreeSet eventtypes = new IceTreeSet(fileName);
+        List<IceTree> trees = eventtypes.list;
+        KMeansPlusPlusClusterer<IceTree> cl = new KMeansPlusPlusClusterer(100, 10, new EuclideanDistance());
+        List<CentroidCluster<IceTree>> clusters = cl.cluster(trees);
+        for (CentroidCluster<IceTree>  cc : clusters) {
+            for (IceTree it : cc.getPoints())
+                System.out.println("  " + it.toString());
+        System.out.println("=========================");
+        }
+       
+    }
+*/
 }
