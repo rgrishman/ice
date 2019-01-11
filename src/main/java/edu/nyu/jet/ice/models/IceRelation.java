@@ -170,7 +170,7 @@ public class IceRelation {
             if (last.endsWith("(1)") || last.endsWith("(2)"))
                 last = last.substring(0, last.length() - 3);
             String barePathString = first + "--" + mid + "--" + last;
-            IcePath barePath = new IcePath(barePathString);
+            IcePath barePath = IcePathFactory.getIcePath(barePathString);
          // barePaths.add(barePath);
             int numPaths = barePaths.length;
             IcePath[] r = new IcePath[numPaths + 1];

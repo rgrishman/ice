@@ -3,6 +3,7 @@ package edu.nyu.jet.ice.views.swing;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IceRelation;
 import edu.nyu.jet.ice.models.IcePath;
+import edu.nyu.jet.ice.models.IcePathFactory;
 import edu.nyu.jet.ice.uicomps.Ice;
 import edu.nyu.jet.ice.uicomps.RelationBuilderFrame;
 import edu.nyu.jet.ice.uicomps.RelationBuilderThread;
@@ -408,6 +409,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         iceRelation.addPaths(paths);
         relationListModel.addElement(iceRelation);
         relationList.setSelectedValue(iceRelation, true);
+        refresh();
         // selecting new element forces refresh
         currentRelation = iceRelation;
     }
@@ -520,7 +522,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 String pathString = parts[1];
                 if (!pathString.matches(".*nsubj-1:.*:dobj.*")) 
                     continue;
-                IcePath path = new IcePath(pathString);
+                IcePath path = IcePathFactory.getIcePath(pathString);
                 String phrase = path.getRepr();
                 if (phrase == null)
                     continue;
