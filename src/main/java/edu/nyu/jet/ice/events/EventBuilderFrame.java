@@ -87,7 +87,7 @@ public class EventBuilderFrame extends JFrame {
         decisionPanel.add(yesButton);
         decisionPanel.add(noButton);
         decisionPanel.add(undecidedButton);
-        ActionListener decisionActionListener = new BootstrappingActionListener(this);
+        ActionListener decisionActionListener = new EventBootstrappingActionListener(this);
         yesButton.addActionListener(decisionActionListener);
         noButton.addActionListener(decisionActionListener);
         undecidedButton.addActionListener(decisionActionListener);
@@ -150,7 +150,7 @@ public class EventBuilderFrame extends JFrame {
                         5
                 ));
 
-                BootstrapIterateThread thread = new BootstrapIterateThread(bootstrap,
+               EventBootstrapIterateThread thread = new EventBootstrapIterateThread(bootstrap,
                         approvedPaths,
                         rejectedPaths,
                         EventBuilderFrame.this
@@ -250,10 +250,10 @@ public class EventBuilderFrame extends JFrame {
 
 }
 
-class BootstrappingActionListener implements ActionListener {
+class EventBootstrappingActionListener implements ActionListener {
     EventBuilderFrame frame;
 
-    BootstrappingActionListener(EventBuilderFrame frame) {
+    EventBootstrappingActionListener(EventBuilderFrame frame) {
         this.frame = frame;
     }
 
@@ -267,13 +267,13 @@ class BootstrappingActionListener implements ActionListener {
     }
 }
 
-class BootstrapIterateThread extends Thread {
+class EventBootstrapIterateThread extends Thread {
     EventBootstrap bootstrap;
     java.util.List<IceTree> approvedPaths;
     java.util.List<IceTree> rejectedPaths;
     EventBuilderFrame frame;
 
-    BootstrapIterateThread(EventBootstrap bootstrap,
+    EventBootstrapIterateThread(EventBootstrap bootstrap,
                            java.util.List<IceTree> approvedPaths,
                            java.util.List<IceTree> rejectedPaths,
                            EventBuilderFrame frame) {
