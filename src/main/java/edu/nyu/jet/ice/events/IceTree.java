@@ -5,10 +5,13 @@ import edu.nyu.jet.parser.SyntacticRelation;
 import edu.nyu.jet.parser.SyntacticRelationSet;
 import edu.nyu.jet.lex.Stemmer;
 import edu.nyu.jet.aceJet.EDTtype;
+import edu.nyu.jet.ice.models.WordEmbedding;
 import java.util.*;
 import java.util.regex.*;
 
-public class IceTree implements Comparable <IceTree> {
+import org.apache.commons.math3.ml.clustering.Clusterable;
+
+public class IceTree implements Comparable <IceTree>, Clusterable {
 
     String trigger;
     String[] argRole;
@@ -24,10 +27,29 @@ public class IceTree implements Comparable <IceTree> {
     String example;
 
     /**
+     *  'The coordinates' (embedding) of this IceTree, used to
+     *  compute the distance of this IceTree from other IceTreea
+     *  (for clustering, etc.).  (Currently the sum of the
+     *  word embeddings of the trigger and arguments.)
+     */
+
+    public double[] getPoint() {
+        String s = toString().replaceAll("="," ").replaceAll(":"," ");
+        double[] we = WordEmbedding.embed(s.split(" "));
+        // clustering requires non-null values;  I pick one arbitrarily.
+        if (we == null) we = WordEmbedding.embed("the");
+        return we;
+    }
+
+    /**
      *  The score assigned by event bootstrapping, used to rank the trees
      *  presented to the user for review.
      */
     double score;
+
+    /**
+     *  the number of instances of this tree in the corpus.
+     */
     int count;
 
     public IceTree () {

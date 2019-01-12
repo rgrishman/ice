@@ -295,9 +295,9 @@ public class EventBootstrap {
         //
         //  if an EventOracle is present, use it to classify examples
         //
-        if (EventOracle.exists()) {
-            EventOracle.label(foundPatterns);
-         }
+        //  if (EventOracle.exists()) {
+        //   EventOracle.label(foundPatterns);
+        //   }
     }
 
     /**
