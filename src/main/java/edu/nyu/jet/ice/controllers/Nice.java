@@ -10,6 +10,7 @@ import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
 import edu.nyu.jet.ice.events.SwingEventsPanel; // <<
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.LoggerFactory;
 import net.miginfocom.swing.MigLayout;
 import org.ho.yaml.YamlDecoder;
 import org.ho.yaml.YamlEncoder;
@@ -51,6 +52,7 @@ public class Nice {
         enc.writeObject(Ice.entitySets);
         enc.writeObject(Ice.relations);
         enc.writeObject(Ice.events);
+        enc.writeObject(Ice.selectedCorpusName);
         enc.close();
     }
 
@@ -94,6 +96,7 @@ public class Nice {
             enc.writeObject(Ice.entitySets);
             enc.writeObject(Ice.relations);
             enc.writeObject(Ice.events);
+            enc.writeObject(Ice.selectedCorpusName);
             enc.close();
             if (entitiesPanel == null || pathsPanel == null) {
                 reassemble();
@@ -107,8 +110,9 @@ public class Nice {
         JetEngineBuilder.build();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         printCover();
+        LoggerFactory.setLoggers();
         Properties iceProperties = loadIceProperties();
         ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
         toolTipManager.setDismissDelay(60000);
@@ -127,6 +131,7 @@ public class Nice {
     }
 
     public static void initIce(String branch) {
+        String selectedCorpusName = null;;
         try {
             File yamlFile = new File(branch + ".yml");
             InputStream yamlInputStream = new FileInputStream(yamlFile);
@@ -135,12 +140,17 @@ public class Nice {
             Ice.entitySets = new TreeMap((Map) dec.readObject());
             Ice.relations = new TreeMap((Map) dec.readObject());
             Ice.events = new TreeMap((Map) dec.readObject());
+            selectedCorpusName = (String) dec.readObject();
             dec.close();
         } catch (IOException e) {
             System.err.println("Did not load " + branch + ".yml.");
         }
         if (!Ice.corpora.isEmpty()) {
-            Ice.selectCorpus(Ice.corpora.firstKey());
+            if (selectedCorpusName != null &&
+                Ice.corpora.get(selectedCorpusName) != null)
+                Ice.selectCorpus(selectedCorpusName);
+            else
+                Ice.selectCorpus(Ice.corpora.firstKey());
         }
     }
 
@@ -200,19 +210,19 @@ public class Nice {
 
     public static File locateFile (String fname) {
         File f = new File(fname);
-	if (f.exists())
-	    return f;
-	String iceHome = System.getProperty("iceHome");
-	if (iceHome == null || iceHome.equals("")) {
-	    System.err.println("jetHome property not set, cannot proceed");
-	    System.exit(1);
-	}
-	f = new File(iceHome, fname);
-	if (f.exists())
-	    return f;
-	System.err.println("Cannot locate file " + fname + ", cannot proceed");
-	System.exit(1);
-	return null;   // required by the compiler
+        if (f.exists())
+            return f;
+        String iceHome = System.getProperty("iceHome");
+        if (iceHome == null || iceHome.equals("")) {
+            System.err.println("jetHome property not set, cannot proceed");
+            System.exit(1);
+        }
+        f = new File(iceHome, fname);
+        if (f.exists())
+            return f;
+        System.err.println("Cannot locate file " + fname + ", cannot proceed");
+        System.exit(1);
+        return null;   // required by the compiler
     }
 
     public static void printCover() {
