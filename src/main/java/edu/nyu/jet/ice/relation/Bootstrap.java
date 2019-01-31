@@ -13,6 +13,8 @@ import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.utils.ProgressMonitorI;
 import edu.nyu.jet.ice.utils.FileNameSchema;;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+import edu.nyu.jet.Logger;
+import edu.nyu.jet.LoggerFactory;
 
 import java.util.*;
 import java.io.*;
@@ -27,6 +29,8 @@ import javax.swing.*;
 
 public class Bootstrap {
     public static boolean DEBUG     = true;
+
+    static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
 
     public static PathMatcher pathMatcher = null;
 
@@ -156,10 +160,10 @@ public class Bootstrap {
             // finding for each expression the dependency paths (if any)
             // and putting these paths together in seedPaths
             for (String p : splitSeedString) {
-System.out.println("Processing seed " + p); // <<<<<<<<<<<<
+            logger.info("Processing seed {}", p);
                 // >>>>>>>>>>>>>> convert directly to AnchoredPath
                 List<IcePath> currentPaths = depPathMap.findPath(p);
-System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size()) + " paths");  // <<<<<<<<<
+                logger.trace("Found {} paths", (currentPaths == null) ? "no" : currentPaths.size());
                 if (currentPaths != null) {
                     for (IcePath currentPath : currentPaths) {
                         String[] parts = currentPath.getPath().split("--");
@@ -238,7 +242,7 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
 	    } catch (NumberFormatException e) {
 		threshold = 0.2;
 	    }
-	    System.out.println ("Bootstrap threshold = " + threshold);
+	    logger.info ("Bootstrap threshold = {}", threshold);
 	}
         foundPatterns.clear();
         DepPathMap depPathMap = DepPathMap.getInstance();
@@ -266,14 +270,11 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
         int count = 0;
         for (IcePath icePath : scoreList) {
             String p = icePath.getPath();
-            if (DEBUG) {
-                System.err.print("Score for " + icePath.toString() + " " + icePath.getScore());
-                System.err.println(" (shared = " + sharedCount.get(p) + " total = " + totalCount.get(p) + ")");
-            }
+            logger.trace("Score for {} = {}", icePath.toString(),  icePath.getScore());
+            logger.trace("     (shared = {}    total = {})", sharedCount.get(p), totalCount.get(p));
             boolean isValid = !existingReprs.contains(icePath.getRepr());
             if (icePath.getScore() > MIN_BOOTSTRAP_SCORE && count < MAX_BOOTSTRAPPED_ITEMS  && isValid) {
                 foundPatterns.add(icePath);
-                System.out.println ("new found pattern " + icePath); 
                 foundPatternStrings.add(p);
                 existingReprs.add(icePath.getRepr());
                 count++;
@@ -316,10 +317,10 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
             }
         }
         if (seedPathInstances == null) {
-            System.out.println("No examples of this path.");
+            logger.info ("No examples of this path.");
             return null;
         }
-        System.out.println(seedPathInstances.size() + " examples of this path.");
+        logger.info ("{} examples of this path.", seedPathInstances.size() );
 
         if (progressMonitor != null) {
             progressMonitor.setNote("Collecting argument pairs");
@@ -395,7 +396,7 @@ System.out.println("Found " + ((currentPaths == null) ? "no" : currentPaths.size
         List<IcePath> scoreList = new ArrayList<IcePath>();
         DepPathMap depPathMap = DepPathMap.getInstance();
 	for (IcePath s : seedPaths) {
-	    if (DEBUG) System.out.println("Expanding seed " + s);
+	    logger.info("Expanding seed {}", s);
 	    for (AnchoredPath a : pathTypesSet) {       // .similarPaths(s)) {
             String fullp = arg1Type + " -- " + a.path + " -- " + arg2Type;
             IcePath ip = IcePathFactory.getIcePath(fullp);

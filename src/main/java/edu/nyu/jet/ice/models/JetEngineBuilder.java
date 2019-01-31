@@ -200,18 +200,19 @@ public class JetEngineBuilder {
     public static void buildRelationPatternFile(Writer w, Writer negw, List<IceRelation> relations) throws IOException {
         PrintWriter pw = new PrintWriter(w);
         for (IceRelation rs : relations) {
-            IcePath[] paths = rs.getBarePaths();
+            IcePath[] paths = rs.getPaths();
             String type = rs.getName();
 	        String arg1type = rs.getArg1type();
 	        String arg2type = rs.getArg2type();
             for (IcePath path : paths) {
-                String pathString = path.getPathString();
-                boolean inv = rs.invertedPath(pathString);
-                String pattern = arg1type + "--" + pathString + "--" + arg2type;
+                boolean inv = rs.isInverted(path);
+                String bare  = path.getBarePath();
+                String pattern = arg1type + "--" + bare + "--" + arg2type;
                 pw.println(pattern + " = " + type + (inv ? "-1" : ""));
             }
         }
         pw.close();
+        /*
         pw = new PrintWriter(negw);
         for (IceRelation rs : relations) {
             IcePath[] paths = rs.getNegPaths();
@@ -219,13 +220,14 @@ public class JetEngineBuilder {
                 String type = rs.getName();
                 for (IcePath path : paths) {
                     String pathString = path.getPathString();
-                    boolean inv = rs.invertedPath(pathString);
+                    boolean inv = rs.isInverted(pathString);
                     String pattern = path.getPathString().replaceAll(" -- ", "--");
                     pw.println(pattern + " = " + type + (inv ? "-1" : ""));
                 }
             }
         }
         pw.close();
+        */
     }
 
     /**

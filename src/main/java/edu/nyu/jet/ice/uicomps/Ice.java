@@ -14,7 +14,9 @@ import java.awt.event.*;
 import edu.nyu.jet.ice.models.Corpus;
 import edu.nyu.jet.ice.models.IceEntitySet;
 import edu.nyu.jet.ice.models.IceRelation;
+import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.events.IceEvent;
+import edu.nyu.jet.ice.events.DepTreeMap;
 
 /**
  *  Top-level objects for ICE
@@ -36,6 +38,10 @@ public class Ice {
     public static void selectCorpus (String corpus) {
         selectedCorpusName = corpus;
         selectedCorpus = corpora.get(selectedCorpusName);
+        DepPathMap depPathMap = DepPathMap.getInstance();
+        depPathMap.load(false);
+        DepTreeMap depTreeMap = DepTreeMap.getInstance();
+        depTreeMap.load(false);
     }
 
     public static void addEntitySet (IceEntitySet entitySet) {

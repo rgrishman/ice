@@ -179,6 +179,11 @@ public class EntitySetExpander {
         return result;
     }
 
+    /**
+     *  Performs one step of agglomerative clustering, merging the closest
+     *  two clusters.
+     */
+
     private static void agglomerativeCluster(List<DataPointCluster> clusters) {
         int minI = 0;
         int minJ = 1;

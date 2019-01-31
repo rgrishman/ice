@@ -32,7 +32,7 @@ public class EventBootstrap {
 
     public static boolean DEBUG     = true;
 
-    Logger logger = LoggerFactory.getLogger(EventBootstrap.class);
+    static final Logger logger = LoggerFactory.getLogger(EventBootstrap.class);
 
     public static PathMatcher pathMatcher = null;
 
@@ -144,7 +144,7 @@ public class EventBootstrap {
      */
 
     public List<IceTree> initialize(String bigSeedString, String patternFileName) {
-	LoggerFactory.setLevel("edu.nyu.jet.ice", "TRACE");
+	// LoggerFactory.setLevel("edu.nyu.jet.ice", "TRACE");
 
         try {
 	    System.out.println("patternFileName == " + patternFileName);
@@ -272,10 +272,8 @@ public class EventBootstrap {
         int count = 0;
         for (IceTree iceTree : scoreList) {
 	    String p = iceTree.core();
-            if (DEBUG) {
-                System.err.print("Score for " + iceTree.toString() + " " + iceTree.getScore());
-                System.err.println(" (shared = " + sharedCount.get(p) + " total = " + totalCount.get(p) + ")");
-            }
+        logger.trace("Score for {} = {}", iceTree.toString(),  iceTree.getScore());
+        logger.trace("     (shared = {}    total = {})", sharedCount.get(p), totalCount.get(p));
 	    if (existingReprs.contains(iceTree.getRepr())) continue;
             if (iceTree.getScore() < MIN_BOOTSTRAP_SCORE) continue; 
 	    foundPatterns.add(iceTree);
@@ -348,7 +346,7 @@ public class EventBootstrap {
         Map<String, BootstrapAnchoredPathType> pathSourceMap =
                 new HashMap<String, BootstrapAnchoredPathType>();
         // for (BootstrapAnchoredTree seed : seedTreeInstances) {
-	logger.trace("collecting shared arguments");
+        logger.trace("collecting shared arguments");
         for (IceTree seed : seedTreeInstances) {
 	    logger.trace("    For seed instance = {}", seed);
             for (IceTree p : treeSet.getByArgs(seed.argPair())) {
@@ -361,7 +359,7 @@ public class EventBootstrap {
                     shared.put(pp, new HashSet<String>());
                 }
                 shared.get(pp).add(seed.argPair());
-		logger.trace("        recording shared {} with args {}", pp, seed.argPair());
+                logger.trace("        recording shared {} with args {}", pp, seed.argPair());
                 if (pathSourceMap.containsKey(pp) && pathSourceMap.get(pp) != seed.type) {
                     pathSourceMap.put(pp, BootstrapAnchoredPathType.BOTH);
                 }
@@ -377,7 +375,7 @@ public class EventBootstrap {
         // -- sharedCount = number of distinct argument pairs it shares
         // -- totalCount = total number of argument pairs for this path (not currently used)
         // -- score
-	logger.trace ("counting shared args");
+        logger.trace ("counting shared args");
         for (String p : shared.keySet()) {
 	    logger.trace ("    For p = {}", p);
 	    IceTree itx = IceTreeFactory.getIceTree(p);

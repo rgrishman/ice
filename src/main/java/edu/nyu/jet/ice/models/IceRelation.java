@@ -25,11 +25,7 @@ public class IceRelation {
 
     private IcePath[] icePaths = new IcePath[0];
 
-    private Map<String, Boolean> inverted = new HashMap<String, Boolean>();;
-
     private IcePath[] negPaths;
-
-    private IcePath[] barePaths;
 
     // ---- property methods -----
 
@@ -47,10 +43,6 @@ public class IceRelation {
 
     public void setPaths (IcePath[] ip, int i) {
         icePaths[i] = ip[i];
-    }
-
-    public IcePath[] getBarePaths () {
-        return barePaths;
     }
 
     /**
@@ -114,8 +106,11 @@ public class IceRelation {
     }
     
 	public String getArg1type() {return arg1type;}
+
 	public void setArg1type (String s) {arg1type = s;}
+
 	public String getArg2type() {return arg2type;}
+
 	public void setArg2type (String s) {arg2type = s;}
 
     public IcePath[] getNegPaths() {
@@ -136,61 +131,36 @@ public class IceRelation {
 		this ("?");
 	}
 
-        private static boolean validPath (String s) {
-            return (s.split("--").length == 3);
+    private static boolean validPath (String s) {
+        return (s.split("--").length == 3);
+    }
+
+    /**
+     *  Returns true if 'path' specifies an inverted relation:  if the
+     *  argument which comes first in text order is the second argument
+     *  to the relation. 
+     */
+
+    public boolean isInverted (IcePath path) {
+        String[] pp = path.getPathString().split("--");
+        if (pp.length != 3) {
+            logger.error ("Attempting to add invalid path {} to relation", path);
+            return false;
+        }
+        String first = pp[0].trim();
+        boolean inverted = first.endsWith("(2)") || first.equals(arg2type);
+        return inverted;
+    }
+
+    @Override
+        public String toString() {
+            return name;
         }
 
-        /**
-         *  Returns true if 'path' specifies an inverted relation:  if the
-         *  argument which comes first in text order is the second argument
-         *  to the relation.  'path' must be a bare path,without any subscripts.
-         */
-
-        public boolean invertedPath (String path) {
-            return inverted.get(path);
-        }
-
-        /**
-         *  Determines argument order (invertedPath or not) for each path
-         *  based on arrgument types and subscripts.
-         */
-
-        private void addBarePath (IcePath path) {
-            String[] pp = path.getPathString().split("--");
-            if (pp.length != 3) {
-                logger.error ("Attempting to add invalid path {} to relation", path);
-                return;
-            }
-            String first = pp[0].trim();
-            String mid = pp[1].trim();
-            String last = pp[2].trim();
-            boolean inv = first.endsWith("(2)") || first.equals(arg2type);
-            if (first.endsWith("(1)") || first.endsWith("(2)"))
-                first = first.substring(0, first.length() - 3);
-            if (last.endsWith("(1)") || last.endsWith("(2)"))
-                last = last.substring(0, last.length() - 3);
-            String barePathString = first + "--" + mid + "--" + last;
-            IcePath barePath = IcePathFactory.getIcePath(barePathString);
-         // barePaths.add(barePath);
-            int numPaths = barePaths.length;
-            IcePath[] r = new IcePath[numPaths + 1];
-            for (int i = 0; i < numPaths; i++){
-                r[i] = barePaths[i];
-            }
-            icePaths[numPaths + 1] = barePath;;
-            barePaths = r;
-            inverted.put(barePath.getPathString(), inv);
-	}
-
-        @Override
-            public String toString() {
-                return name;
-            }
-
-        public String report () {
-            String r = name + "(" + arg1type + ", " + arg2type + ")\n";
-            for (IcePath p : icePaths)
-                r += p.toString() + "\n";
-                return r;
-        }
+    public String report () {
+        String r = name + "(" + arg1type + ", " + arg2type + ")\n";
+        for (IcePath p : icePaths)
+            r += p.toString() + "\n";
+        return r;
+    }
 }

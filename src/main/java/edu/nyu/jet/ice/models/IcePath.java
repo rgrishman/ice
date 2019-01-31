@@ -19,7 +19,7 @@ import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 public class IcePath implements Comparable<IcePath> {
 
-    Logger logger = LoggerFactory.getLogger(IcePath.class);
+    static final Logger logger = LoggerFactory.getLogger(IcePath.class);
 
     public enum IcePathChoice {
         NO, YES, UNDECIDED
@@ -73,6 +73,15 @@ public class IcePath implements Comparable<IcePath> {
 
     public String getPathString() {
         return path;
+    }
+
+    public String getBarePath () {
+        String[] pp = getPathString().split("--");
+        if (pp.length != 3) {
+            logger.error ("Attempting to add invalid path {} to relation", path);
+            return null;
+        }
+        return pp[1].trim();
     }
 
     public void setPath(String path) {
