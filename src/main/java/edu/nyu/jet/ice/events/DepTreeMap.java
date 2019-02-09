@@ -18,7 +18,7 @@ import java.util.*;
 
 public class DepTreeMap {
 
-    Logger logger = LoggerFactory.getLogger(DepTreeMap.class);
+    static final Logger logger = LoggerFactory.getLogger(DepTreeMap.class);
 
     private static DepTreeMap instance = null;
 

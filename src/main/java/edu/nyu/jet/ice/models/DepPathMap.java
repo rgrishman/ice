@@ -19,7 +19,7 @@ import java.util.*;
 
 public class DepPathMap {
 
-    Logger logger = LoggerFactory.getLogger(DepPathMap.class);
+    static final Logger logger = LoggerFactory.getLogger(DepPathMap.class);
 
     private static DepPathMap instance = null;
 

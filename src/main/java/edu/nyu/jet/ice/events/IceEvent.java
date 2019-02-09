@@ -13,7 +13,7 @@ import java.util.*;
 
 public class IceEvent {
 
-       Logger logger = LoggerFactory.getLogger(IceEvent.class);
+       static final Logger logger = LoggerFactory.getLogger(IceEvent.class);
 
        private String name = "";
 
