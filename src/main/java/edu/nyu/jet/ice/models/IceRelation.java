@@ -98,9 +98,10 @@ public class IceRelation {
      */
 
     public void addNegPath (IcePath p) {
-System.out.println("negPaths = " + negPaths);
-if (negPaths == null) negPaths = new IcePath[0];
-System.out.println("negPaths = " + negPaths);
+        // System.out.println("negPaths = " + negPaths);
+        // checks for null as a precaution - shoud not occur
+        if (negPaths == null) negPaths = new IcePath[0];
+        // System.out.println("negPaths = " + negPaths);
         int numPaths = negPaths.length;
         IcePath[] enlarged = Arrays.copyOf(negPaths, numPaths + 1);
         enlarged[numPaths] = p;
