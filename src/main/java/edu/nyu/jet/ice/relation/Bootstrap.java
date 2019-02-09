@@ -6,6 +6,7 @@ import edu.nyu.jet.aceJet.SimAnchoredPathSet;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.IcePathFactory;
+import edu.nyu.jet.ice.models.IceRelation;
 import edu.nyu.jet.ice.models.PathMatcher;
 import edu.nyu.jet.ice.models.WordEmbedding;
 import edu.nyu.jet.ice.uicomps.Ice;
@@ -400,6 +401,8 @@ public class Bootstrap {
 	    for (AnchoredPath a : pathTypesSet) {       // .similarPaths(s)) {
             String fullp = arg1Type + " -- " + a.path + " -- " + arg2Type;
             IcePath ip = IcePathFactory.getIcePath(fullp);
+            IceRelation ir = Ice.relations.get(relationName);
+            if (ir.rejected(ip)) continue;
             String pRepr = ip.getRepr();
             if (pRepr == null) {
                 continue;

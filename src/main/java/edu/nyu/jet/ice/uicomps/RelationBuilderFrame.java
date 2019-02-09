@@ -180,27 +180,18 @@ public class RelationBuilderFrame extends JFrame {
 
         bootstrap.addPathsToSeedSet(approvedPaths, bootstrap.seedPaths);
         bootstrap.addPathsToSeedSet(rejectedPaths, bootstrap.rejects);
+        // update IceRelation with labeled IcePaths
+        for (IcePath path : approvedPaths) {
+            iceRelation.addPath(path);
+        }
+        for (IcePath negPath : rejectedPaths) {
+            iceRelation.addNegPath(negPath);
+            // may need
+            // negPaths.add(bootstrap.getArg1Type() + " -- " + negPath + " -- " + bootstrap.getArg2Type());
+        }
+        // update display on relational panel
         IcePath[] paths = bootstrap.seedPaths.toArray(new IcePath[0]);
-        IcePath[] negPaths = bootstrap.rejects.toArray(new IcePath[0]);
-        Set<String> usedRepr = new HashSet<String>();
-        for (IcePath path : paths) {
-            if (iceRelation != null) {
-                iceRelation.addPath(path);
-            }
-            String repr = path.getRepr();
-            if (repr != null && !usedRepr.contains(repr)) {
-                usedRepr.add(repr);
-            }
-            swingRelationsPanel.updateEntriesListModel(paths);
-        }
-        /* -- not yet making use of rejects -- 
-        swingRelationsPanel.negPaths.clear();
-        for (IcePath negPath : bootstrap.getRejects()) {
-            negPaths.add(bootstrap.getArg1Type() + " -- " +
-                    negPath + " -- " + bootstrap.getArg2Type());
-        }
-        swingRelationsPanel.negPaths.put(bootstrap.getRelationName(), negPaths);
-        --- */
+        swingRelationsPanel.updateEntriesListModel(paths);
         RelationBuilderFrame.this.dispose();
             }
         });

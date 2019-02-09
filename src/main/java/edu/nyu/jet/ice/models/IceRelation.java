@@ -15,7 +15,7 @@ import java.util.*;
 
 public class IceRelation {
 
-    Logger logger = LoggerFactory.getLogger(IceRelation.class);
+    static final Logger logger = LoggerFactory.getLogger(IceRelation.class);
 
     private String name = "";
 
@@ -25,7 +25,7 @@ public class IceRelation {
 
     private IcePath[] icePaths = new IcePath[0];
 
-    private IcePath[] negPaths;
+    private IcePath[] negPaths = new IcePath[0];
 
     // ---- property methods -----
 
@@ -93,6 +93,30 @@ public class IceRelation {
     }
 
     /**
+     *  Add <CODE>path</CODE> as one of the negative paths for this relation.
+     *  <CODE>path</CODE> must be a full path, including relation arguments.
+     */
+
+    public void addNegPath (IcePath p) {
+System.out.println("negPaths = " + negPaths);
+if (negPaths == null) negPaths = new IcePath[0];
+System.out.println("negPaths = " + negPaths);
+        int numPaths = negPaths.length;
+        IcePath[] enlarged = Arrays.copyOf(negPaths, numPaths + 1);
+        enlarged[numPaths] = p;
+        negPaths = enlarged;
+        logger.info ("Added negated path {} to relation {}", p, name);
+	}
+
+    public boolean rejected (IcePath ip) {
+        if (negPaths == null)
+            return false;
+        for (int i = 0; i < negPaths.length; i++)
+            if (ip == negPaths[i])
+                return true;
+        return false;
+    }
+    /**
      *  Deletes from the relation all paths with a given repr
      *  (i.e., which are rendered to the user using the same text.
      */
@@ -117,8 +141,8 @@ public class IceRelation {
         return negPaths;
     }
 
-    public void setNegPaths(IcePath[] negPaths) {
-        this.negPaths = negPaths;
+    public void setNegPaths(IcePath[] np) {
+        negPaths = np;
     }
 
     // ---- constructors -----
