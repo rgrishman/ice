@@ -53,13 +53,17 @@ public class IceTree implements Comparable <IceTree>, Clusterable {
     int count;
 
     public IceTree () {
-	System.out.println("? constructing IceTree");
+	System.out.println("Caution: empty IceTree");
     }
 
     public IceTree (String trigger, String[] argRole, String[] entityType, String[] argValue) {
         String s = IceTree.core(trigger, argRole, entityType, argValue);
         IceTreeFactory.getIceTree(s);
     }
+
+    static String tokenRegex  = "^[A-Za-z0-9',.$%_-]+$";
+
+    static Pattern tokenPattern = Pattern.compile(tokenRegex);
 
     static String pattern = "^([A-Za-z_]+)(:([A-Za-z0-9',.$%_-]+))?(=([A-Za-z0-9',.$%_-]+))?$";
     
@@ -204,63 +208,59 @@ public class IceTree implements Comparable <IceTree>, Clusterable {
     }
 
     public IceTree (IceTree it) {
-	trigger = it.trigger;
-	triggerPosn = it.triggerPosn;
-	argRole = it.argRole;
-	argPosn = it.argPosn;
-	argValue = it.argValue;
+        trigger = it.trigger;
+        triggerPosn = it.triggerPosn;
+        argRole = it.argRole;
+        argPosn = it.argPosn;
+        argValue = it.argValue;
     }
 
     public IceTree (String s) {
-	// analyze String into Tree
-	String[] triggerAndArgs = s.split(" ");
-	if (triggerAndArgs.length < 2) {
-	    trigger = "?";
-	    System.out.println("invalid event:  " + s);
-	    // Thread.dumpStack();
-	} else {
-	    trigger = triggerAndArgs[0];
-	    List<String> argRoleList = new ArrayList<String>();
-	    List<String> argValueList = new ArrayList<String>();
-	    List<String> entityTypeList = new ArrayList<String>();
-	    mentionType = new ArrayList<MentionType>();
-	
-	    for (int i = 1; i < triggerAndArgs.length; i++) {
-		Matcher m = r.matcher(triggerAndArgs[i]);
-		if (m.find()) {
-		    String role = m.group(1);
-		    String type = m.group(3);
-		    String value = m.group(5);
-		    argRoleList.add(role);
-		    argValueList.add(value);
-		    entityTypeList.add(type);
-		    mentionType.add(MentionType.UNKNOWN);
-		} else {
-		    System.out.println("invalid event:  " + s);
-	// 	    Thread.dumpStack();
-		    break;
-		}
-	    }
-	    argRole = argRoleList.toArray(new String[0]);
-	    argValue = argValueList.toArray(new String[0]);
-	}
+        // analyze String into Tree
+        String[] triggerAndArgs = s.split(" ");
+        if (triggerAndArgs.length < 2) {
+            trigger = "?";
+        } else {
+            trigger = triggerAndArgs[0];
+            List<String> argRoleList = new ArrayList<String>();
+            List<String> argValueList = new ArrayList<String>();
+            List<String> entityTypeList = new ArrayList<String>();
+            mentionType = new ArrayList<MentionType>();
+
+            for (int i = 1; i < triggerAndArgs.length; i++) {
+                Matcher m = r.matcher(triggerAndArgs[i]);
+                if (m.find()) {
+                    String role = m.group(1);
+                    String type = m.group(3);
+                    String value = m.group(5);
+                    argRoleList.add(role);
+                    argValueList.add(value);
+                    entityTypeList.add(type);
+                    mentionType.add(MentionType.UNKNOWN);
+                } else {
+                    break;
+                }
+            }
+            argRole = argRoleList.toArray(new String[0]);
+            argValue = argValueList.toArray(new String[0]);
+        }
     }
-     
+
     public int compareTo (IceTree iceTree) {
-	if (this.score < iceTree.score) return 1;
-	if (this.score > iceTree.score) return -1;
-	return 0;
+        if (this.score < iceTree.score) return 1;
+        if (this.score > iceTree.score) return -1;
+        return 0;
     }
 
     @Override
-   public boolean equals (Object other) {
-       boolean result = false;
-       if (other instanceof IceTree) {
-	   IceTree iceTree = (IceTree) other;
-	   result = this.core().equals(iceTree.core());
-       }
-       return result;
-   }
+        public boolean equals (Object other) {
+            boolean result = false;
+            if (other instanceof IceTree) {
+                IceTree iceTree = (IceTree) other;
+                result = this.core().equals(iceTree.core());
+            }
+            return result;
+        }
 
     @Override
    public int hashCode () {
@@ -272,71 +272,74 @@ public class IceTree implements Comparable <IceTree>, Clusterable {
       */
 
     public static List<IceTree>  extract (Document doc, Span span, SyntacticRelationSet relations) {
-	List<IceTree> result = new ArrayList<IceTree>();
-	// create index: map from source position in SyntacticRelationSet to a list of all
-	// syntactic relations sarting at that position
-	Map<Integer,List<SyntacticRelation>> index = new HashMap<Integer, List<SyntacticRelation>>();
-	SyntacticRelationSet localSRS = new SyntacticRelationSet();
-	for (SyntacticRelation rel : relations) {
-	    int p = rel.sourcePosn;
-	    if (p < span.start() || p >= span.end()) continue;
-	    localSRS.add(rel);
-	    if (index.get(p) == null) {
-		index.put(p, new ArrayList<SyntacticRelation>());
-	    }
-	    index.get(p).add(rel);
-	}
-	addPrepLinks(localSRS, index);
-      loop:
-	for (int triggerPosn : index.keySet()) {
-	    List<SyntacticRelation> rr = index.get(triggerPosn);
-	    if (rr.get(0).sourcePos.startsWith("V")) {
-		String trigger =  rr.get(0).sourceWord;
-		List<String> localArgRole = new ArrayList<String>();
-		List<Integer> localArgPosn = new ArrayList<Integer>();
-		List<String> localArgValue = new ArrayList<String>();
-		List<MentionType> localMentionType = new ArrayList<MentionType>();
-		List<String> localEntityType = new ArrayList<String>();
-		for (SyntacticRelation r : rr) {
-		    if (! roleOfInterest(r.type)) continue;
-		    localArgRole.add(r.type);
-		    localArgPosn.add(r.targetPosn);
-		    Vector<Annotation> v = doc.annotationsAt(r.targetPosn, "ENAMEX");
-		    if (v != null) {
-			Annotation name = v.get(0);
-			String type = (String) name.get("TYPE");
-			String text = doc.text(name).trim().replaceAll("\\s+", "_");
-			localMentionType.add(MentionType.NAME);
-			localArgValue.add(text);
-			localEntityType.add(type);
-		    } else if (r.targetPos.startsWith("PRP") ||
-			       r.targetPos.startsWith("W")) {
-			localArgValue.add(r.targetWord);
-			localMentionType.add(MentionType.PRONOUN);
-			localEntityType.add(null);
-			continue loop;
-		    } else {
-			localArgValue.add(r.targetWord);
-			localMentionType.add(MentionType.NOMINAL);
-			int start = r.targetPosn;
-			String eTypeSubtype = EDTtype.getTypeSubtypeFromHead(r.targetWord);
-			String eType = EDTtype.bareType(eTypeSubtype);
-			localEntityType.add(eType);
-		    }
-		}
-		if (localArgRole.contains("nsubj") && (localArgRole.contains("dobj"))) {
-		    String s = core(trigger, localArgRole.toArray(new String[0]), 
+        List<IceTree> result = new ArrayList<IceTree>();
+        // create index: map from source position in SyntacticRelationSet to a list of all
+        // syntactic relations sarting at that position
+        Map<Integer,List<SyntacticRelation>> index = new HashMap<Integer, List<SyntacticRelation>>();
+        SyntacticRelationSet localSRS = new SyntacticRelationSet();
+        for (SyntacticRelation rel : relations) {
+            int p = rel.sourcePosn;
+            if (p < span.start() || p >= span.end()) continue;
+            localSRS.add(rel);
+            if (index.get(p) == null) {
+                index.put(p, new ArrayList<SyntacticRelation>());
+            }
+            index.get(p).add(rel);
+        }
+        addPrepLinks(localSRS, index);
+loop:
+        for (int triggerPosn : index.keySet()) {
+            List<SyntacticRelation> rr = index.get(triggerPosn);
+            if (rr.get(0).sourcePos.startsWith("V")) {
+                String trigger =  rr.get(0).sourceWord;
+                List<String> localArgRole = new ArrayList<String>();
+                List<Integer> localArgPosn = new ArrayList<Integer>();
+                List<String> localArgValue = new ArrayList<String>();
+                List<MentionType> localMentionType = new ArrayList<MentionType>();
+                List<String> localEntityType = new ArrayList<String>();
+                for (SyntacticRelation r : rr) {
+                    if (! roleOfInterest(r.type)) continue;
+                    Matcher matcher = tokenPattern.matcher(r.targetWord);
+                    boolean isMatched = matcher.matches();
+                    if (!isMatched) continue;
+                    localArgRole.add(r.type);
+                    localArgPosn.add(r.targetPosn);
+                    Vector<Annotation> v = doc.annotationsAt(r.targetPosn, "ENAMEX");
+                    if (v != null) {
+                        Annotation name = v.get(0);
+                        String type = (String) name.get("TYPE");
+                        String text = doc.text(name).trim().replaceAll("\\s+", "_");
+                        localMentionType.add(MentionType.NAME);
+                        localArgValue.add(text);
+                        localEntityType.add(type);
+                    } else if (r.targetPos.startsWith("PRP") ||
+                            r.targetPos.startsWith("W")) {
+                        localArgValue.add(r.targetWord);
+                        localMentionType.add(MentionType.PRONOUN);
+                        localEntityType.add(null);
+                        continue loop;
+                    } else {
+                        localArgValue.add(r.targetWord);
+                        localMentionType.add(MentionType.NOMINAL);
+                        int start = r.targetPosn;
+                        String eTypeSubtype = EDTtype.getTypeSubtypeFromHead(r.targetWord);
+                        String eType = EDTtype.bareType(eTypeSubtype);
+                        localEntityType.add(eType);
+                    }
+                }
+                if (localArgRole.contains("nsubj") && (localArgRole.contains("dobj"))) {
+                    String s = core(trigger, localArgRole.toArray(new String[0]), 
                                    localEntityType.toArray(new String[0]), 
-				   localArgValue.toArray(new String[0]));
-		    IceTree it = IceTreeFactory.getIceTree(s);
-		    result.add(it);
-		    it.triggerPosn = triggerPosn;
-		    it.argPosn = localArgPosn;
-		    it.mentionType = localMentionType;
-		}
-	    }
-	}
-	return result;
+                                   localArgValue.toArray(new String[0]));
+                    IceTree it = IceTreeFactory.getIceTree(s);
+                    result.add(it);
+                    it.triggerPosn = triggerPosn;
+                    it.argPosn = localArgPosn;
+                    it.mentionType = localMentionType;
+                }
+            }
+        }
+        return result;
     }
 
     static private boolean roleOfInterest (String role) {
