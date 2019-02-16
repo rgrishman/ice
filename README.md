@@ -2,86 +2,88 @@
 
 Licensed under the Apache 2.0 license.
 
+# Information Extraction
+
+Information extraction is the process of identifying in text all the instances of
+specified types of entities, relations, and events.  Building an extraction
+system for a new domain involves a substantial effort in text analysis and design.
+ICE, the Integrated Customization Environment for Information Extraction,
+is designed to ease this task by providing an integrated set of analysis tools. 
+ICE is built on top of JET, NYU's Java Extraction Toolkit.
+
 # Running Ice Using Binary Release
+ 
+JET and ICE are avaiable as github repositories (rgrishman/jet and rgrishman/ice) 
+and as binary distribution tar files.  To use the binary distributions, simply 
+download JET and ICE to separate directories and untar them.  Set the environment variables
+ICE_HOME and JET_HOME to point to the root directories of the distributions and put the
+bin directory for ICE on the path.
 
-Alternatively, download the binary distribution and unzip it. In *runice.sh*, point both $ICE\_HOME
-and $ICE\_LIB\_HOME to directory of the binary distribution. Both variables are set to . by default.
+Then ICE can be invoked with
 
-Then, from the working directory, run
+    runice.sh
+   
+Note that ICE requires that you add two corpora to ICE before it will
+let you do anything else.
 
-    ./runice.sh
-    
+ICE requires quite a few files, listed in [Files](docs/Files.txt), all accessed
+through the ICE_HOME and JET_HOME shell variables.  These files should all be set
+up by the binary distibution.  
+
 # Running the Ice Tagger
 
-Ice bundles a relation tagger based on Jet, which tags mentions of relations in text files, using
-the models that you build with Ice. Note that before the Ice tagger can find the relations,
-you have to use *Export* in Ice to export them to the underlying Jet tagger.
+Using ICE you can build up a set of patterns to capture the information you
+want to extract from the text.  For example, if you want to extract data
+on the employment of corporate executives, you might have patterns such
+as *person* joins *company*  and *company* promoted *person*. After you
+have accumulated an initial set of patterns, you can *export* them to JET.
+You can then use the JET tagger to extract comparable information from new,
+previously unseen text.
 
-To run the tagger, from the working directory, run
+To run the tagger, use the command
 
-    ./runtagger.sh propertyFile txtFileList apfFileList
+    runtagger.sh props txtFileList keyFileList apfFileList
     
-where propertyFile is the Jet properties file, usually it is parseprops; txtFileList are
-the list of text input files, and apfFileList is the list of output files in Ace apf
-format.
+where *props* is a JET properties file provided as part of the ICE dstribution; 
+*txtFileList* is the list of text input files (one per line)
+*keyFileList* is the corresponding list of keys,
+and *apfFileList* is the list of output files in Ace apf format.
 
-#Building and Running Ice from Source
+The tagger uses 'perfect entities', which are obtained from the key files, and
+extracts relations based on the patterns exported from ICE.
 
-We assume that you have git and maven installed on your system.
+# Building Ice from Source Using ant
 
-## Build
+We assume that you have git and ant installed on your system.
 
-Please run:
+ICE uses JET to do much of the low-level linguistic processing, and so a copy of JET
+is compiled into ICE.  This necessitates a 2-step process whenever JET is updated:
+first rebuild JET, then build ICE.
+
+## Building JET
+
+Create an empty directory called *export* under the JET_HOME directory.
+Get a copy of *jet-release-script* from the JET git repository and run it.  It will
+produce a JET binary distribution (a tar file named jet-all.jar).
+
+## Building ICE`
+
+Create another empty directory called *export* under the ICE_HOME directory.
+Get a copy pf ice-release-script from the ICE  git repository and run it.  It will
+produce an ICE binary distribution (a tar file named ice-all.jar).
+
+# Running maven
+
+Fo those who prefer *maven*, we also provide the necessary *pom.xml* files.  These
+build and install JET in the local repository and then build ICE.  
+Maven can be invoked with
 
 	mvn package
 
 If everything works, you should find
-ICE-0.2.0-jar-with-dependencies.jar (the fatjar), and ICE-0.2.0.jar in
-target/
-
-## Preparing models
-
-Ice relies on Jet and its models. We provide the Jet binary and necessary models in the
-binary distribution. However, if you are building from source, you might also want to
-obtain Jet from: <http://cs.nyu.edu/grishman/jet/jet.html>
-
-The current version of Ice assumes that it is run from a "working directory", where three 
-Jet property files are located: *props*, *parseprops*, and *onomaprops*. These three files 
-tell Ice where models for Jet are located. These files are released together with the 
-Java source code in the `src/props` directory.
-
-In theory, Jet model files can sit anywhere. However, to use the property files directly, 
-you can copy `data/` and `acedata/` directories from Jet into the working directory.
-
-In addition, Ice itself uses two configuration files: *ice.yml* and *iceprops*, which should be 
-put in the working directory as well. 
-
-After these steps, the working directory we have prepared will look like this:
-
-    working_dir/
-        props - Jet property file 1
-        parseprops - Jet property file 2
-        onomaprops - Jet property file 3
-        ice.yml - Ice configuration file 1
-        iceprops - Ice configuration file 2
-        data/ - model files, including parseModel.gz
-        acedata/ - model files
-
-With these files, we should be ready to go. 
-
-## Starting the GUI
-
-The easiest way to run Ice is to run from the working directory we prepared in the previous section.
-
-Copy *src/scripts/runice.sh* to the working directory. In *runice.sh*, point $ICE\_HOME to 
-the directory containing ICE-0.2.0-jar-with-dependencies.jar (target/), and
-$ICE\_LIB\_HOME to the directory containing Jet-1.8.0.11-ICE-jar-with-dependencies.jar (lib/).
-
-Then, from the working directory, run
-
-    ./runice.sh
+ICE-0.2.0-jar-with-dependencies.jar (the fatjar) in target/  This
+should be renamed ice-all.jar and moved to the ICE_HOME directory.
 
 # User Manual
 
-Please refer to [Iceman](docs/iceman.md) for usage.
-
+Please refer to [Iceman](docs/iceman.md) for usage of ICE..
