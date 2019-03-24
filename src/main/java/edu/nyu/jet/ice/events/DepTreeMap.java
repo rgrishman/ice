@@ -155,21 +155,22 @@ public class DepTreeMap {
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName) && treeExampleMap.size() > 0) return true; 
-	logger.info ("Loading reprs and tooltips from file {}", fileName);
+        logger.info ("Loading reprs and tooltips from file {}", fileName);
         treeExampleMap.clear();
         treeReprMap.clear();
         reprTreeMap.clear();
+        int count = 0;
         try {
             BufferedReader r = new BufferedReader(new FileReader(f));
             String line = null;
             while ((line = r.readLine()) != null) {
                 String[] parts = line.split(":::");
                 if (parts.length != 3) {
-		    logger.warn ("Invalid input to DepTreeMap: {}", line);
-		    continue;
-		}
+                    logger.warn ("Invalid input to DepTreeMap: {}", line);
+                    continue;
+                }
                 String tree = parts[0];
-		IceTree it = IceTreeFactory.getIceTree(tree);
+                IceTree it = IceTreeFactory.getIceTree(tree);
                 String repr = parts[1];
                 String example = parts[2];
                 treeReprMap.put(it, repr);
@@ -179,8 +180,13 @@ public class DepTreeMap {
                 }
                 reprTreeMap.get(normalizedRepr).add(it);
                 treeExampleMap.put(it, example);
-		it.setExample(example);
+                it.setExample(example);
+                count++;
+                if (count % 100000 == 0) {
+                    System.out.print(count + "...");
+                }
             }
+            System.out.println();
             r.close();
         }
         catch (Exception e) {

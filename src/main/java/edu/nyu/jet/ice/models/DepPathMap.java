@@ -178,8 +178,9 @@ public class DepPathMap {
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName)) return true;
-	logger.info ("Loading reprs and tooltips from file {}", fileName);
+        logger.info ("Loading reprs and tooltips from file {}", fileName);
         reprPathMap.clear();
+        int count = 0;
         try {
             BufferedReader r = new BufferedReader(new FileReader(f));
             String line = null;
@@ -198,7 +199,12 @@ public class DepPathMap {
                 }
                 reprPathMap.get(normalizedRepr).add(path);
                 path.setExample(example);
+                count++;
+                if (count % 100000 == 0) {
+                    System.out.print(count + "...");
+                }
             }
+            System.out.println();
             r.close();
         }
         catch (Exception e) {
