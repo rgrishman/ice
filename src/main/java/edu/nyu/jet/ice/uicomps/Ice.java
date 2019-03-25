@@ -75,4 +75,9 @@ public class Ice {
     public static IceEvent getEvent (String type) {
 	return events.get(type);
     }
-}
+    
+    public static void removeEvent (String type) {
+	events.remove(type);
+    }
+    }
+
