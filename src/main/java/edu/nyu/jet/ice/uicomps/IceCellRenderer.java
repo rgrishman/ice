@@ -15,8 +15,11 @@ import java.awt.*;
 
 public class IceCellRenderer extends JLabel implements ListCellRenderer {
 
-    public IceCellRenderer() {
+    boolean showYesNo;
+
+    public IceCellRenderer (boolean showYesNo) {
 	setOpaque(true);
+    this.showYesNo = showYesNo;
     }
 
     public Component getListCellRendererComponent(JList list,
@@ -32,9 +35,9 @@ public class IceCellRenderer extends JLabel implements ListCellRenderer {
         String repr = t.getRepr();
         if (repr == null) System.out.println ("CellRenderer getting trees with null repr");
         IceTree.IceTreeChoice choice = t.getChoice();
-        if (choice  == IceTree.IceTreeChoice.YES)
+        if (showYesNo && choice  == IceTree.IceTreeChoice.YES)
             repr += " / YES";
-        else if (choice == IceTree.IceTreeChoice.NO)
+        else if (showYesNo && choice == IceTree.IceTreeChoice.NO)
             repr += " / NO";
         setText(repr);
     } else if (value instanceof IcePath) {
@@ -42,9 +45,9 @@ public class IceCellRenderer extends JLabel implements ListCellRenderer {
         String repr = t.getRepr();
         if (repr == null) System.out.println ("CellRenderer getting paths with null repr");
         IcePath.IcePathChoice choice = t.getChoice();
-        if (choice  == IcePath.IcePathChoice.YES)
+        if (showYesNo && choice  == IcePath.IcePathChoice.YES)
             repr += " / YES";
-        else if (choice == IcePath.IcePathChoice.NO)
+        else if (showYesNo && choice == IcePath.IcePathChoice.NO)
             repr += " / NO";
         setText(repr);
     } else System.out.println ("Cell renderer got " + value);
