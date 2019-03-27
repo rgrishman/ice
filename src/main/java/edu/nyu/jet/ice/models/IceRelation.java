@@ -23,27 +23,11 @@ public class IceRelation {
 
     private String arg2type = "";
 
-    private IcePath[] icePaths = new IcePath[0];
+    private List<IcePath> icePaths = new ArrayList<IcePath>();
 
-    private IcePath[] negPaths = new IcePath[0];
+    private List<IcePath> negPaths = new ArrayList<IcePath>();
 
     // ---- property methods -----
-
-    public IcePath[] getPaths () {
-        return icePaths;
-    }
-
-    public IcePath getPaths (int i) {
-        return icePaths[i];
-    }
-
-    public void setPaths (IcePath[] ip) {
-        icePaths = ip;
-    }
-
-    public void setPaths (IcePath[] ip, int i) {
-        icePaths[i] = ip[i];
-    }
 
     /**
      *  Returns the name of the relation.
@@ -56,6 +40,14 @@ public class IceRelation {
      */
 
     public void setName (String s) {name = s;}
+
+    public List<IcePath> getPaths () {
+        return icePaths;
+    }
+
+    public void setPaths (List<IcePath> ip) {
+        icePaths = ip;
+    }
 
     /* previously called by SwingRelationsPanel
 
@@ -74,17 +66,9 @@ public class IceRelation {
      *  <CODE>path</CODE> must be a full path, including relation arguments.
      */
 
-    public void addPath (IcePath p) {
-        int numPaths = icePaths.length;
-        for (int i = 0; i < numPaths; i++) {
-            if (icePaths[i].equals(p)) {
-                return;
-            }
-        }
-        IcePath[] enlarged = Arrays.copyOf(icePaths, numPaths + 1);
-        enlarged[numPaths] = p;
-        icePaths = enlarged;
-        logger.info ("Added path {} to relation {}", p, name);
+    public void addPath (IcePath ip) {
+        icePaths.add(ip);
+        logger.info ("Added path {} to relation {}", ip, name);
 	}
 
     public void addPaths (List<IcePath> sip) {
@@ -98,25 +82,16 @@ public class IceRelation {
      */
 
     public void addNegPath (IcePath p) {
-        // System.out.println("negPaths = " + negPaths);
         // checks for null as a precaution - shoud not occur
-        if (negPaths == null) negPaths = new IcePath[0];
-        // System.out.println("negPaths = " + negPaths);
-        int numPaths = negPaths.length;
-        IcePath[] enlarged = Arrays.copyOf(negPaths, numPaths + 1);
-        enlarged[numPaths] = p;
-        negPaths = enlarged;
+        if (negPaths == null) negPaths = new ArrayList<IcePath>();
+        negPaths.add(p);
         logger.info ("Added negated path {} to relation {}", p, name);
 	}
 
     public boolean rejected (IcePath ip) {
-        if (negPaths == null)
-            return false;
-        for (int i = 0; i < negPaths.length; i++)
-            if (ip == negPaths[i])
-                return true;
-        return false;
+        return negPaths.contains(ip);
     }
+
     /**
      *  Deletes from the relation all paths with a given repr
      *  (i.e., which are rendered to the user using the same text.
@@ -127,7 +102,7 @@ public class IceRelation {
         for (IcePath ip : icePaths)
             if (!ip.getRepr().equals(repr))
                 remaining.add(ip);
-        icePaths = remaining.toArray(new IcePath[0]);
+        icePaths = remaining;
     }
     
 	public String getArg1type() {return arg1type;}
@@ -138,11 +113,11 @@ public class IceRelation {
 
 	public void setArg2type (String s) {arg2type = s;}
 
-    public IcePath[] getNegPaths() {
+    public List<IcePath> getNegPaths() {
         return negPaths;
     }
 
-    public void setNegPaths(IcePath[] np) {
+    public void setNegPaths(List<IcePath> np) {
         negPaths = np;
     }
 

@@ -84,6 +84,17 @@ public class IcePath implements Comparable<IcePath> {
         return pp[1].trim();
     }
 
+/*
+    public IcePath getFullPath (String arg1, String arg2) {
+        if (path.indexOf(" -- ") >= 0) {
+            return this;
+        } else {
+            String fullPath = arg1 + " -- " + path + " -- " + arg2;
+            IcePath fullIp = IcePathFactory.getIcePath(fullPath);
+            return fullIp;
+        }
+    }
+*/
     public void setPath(String path) {
         this.path = path;
     }
@@ -139,7 +150,7 @@ public class IcePath implements Comparable<IcePath> {
        return result;
    }
     public String toString() {
-        return path+"["+repr+"]";
+        return path + " ["+repr+"] ";
     }
 
      public IcePath(AnchoredPath ap) {

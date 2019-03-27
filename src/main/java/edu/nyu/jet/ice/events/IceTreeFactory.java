@@ -6,6 +6,14 @@ public class IceTreeFactory {
 
     public static Map<String, IceTree> iceTrees = new HashMap< String, IceTree>();
 
+    /**
+     *  performs 4 functions:
+     *  - parses the String 's' into a role-based strucure
+     *  - standardizes rhe argument order with 'sortArgs'
+     *  - generates string repr with normalized role order and spacing
+     *  - creates unique copy with this normalized string
+     */
+
     public static IceTree getIceTree (String s)  {
 	// analyze String into Tree
 	String[] triggerAndArgs = s.split(" ");
@@ -59,23 +67,41 @@ public class IceTreeFactory {
 	    String[] argRole = argRoleList.toArray(new String[0]);
 	    String[] argValue = argValueList.toArray(new String[0]);
 	    String[] entityType = entityTypeList.toArray(new String[0]);
+        sortArgs (argRole, entityType, argValue);
 	    return IceTreeFactory.getIceTree (trigger, argRole, entityType, argValue);
 	}
     }
 
-     public static IceTree getIceTree (String trigger, String[] argRole, 
+    public static IceTree getIceTree (String trigger, String[] argRole, 
 	    String[] entityType, String[] argValue) {
-	String s = IceTree.core(trigger, argRole, entityType, argValue);
-	if (iceTrees.get(s) == null) {
-	    iceTrees.put(s, new IceTree(s));
-	    // System.out.println("creating IceTree " + s);
-	}
-	IceTree it = iceTrees.get(s);
-	it.trigger = trigger;
-	it.argRole = argRole;
-	it.entityType = entityType;
-	it.argValue = argValue;
-	return it;
+        sortArgs (argRole, entityType, argValue);
+        String s = IceTree.core(trigger, argRole, entityType, argValue);
+        IceTree it = iceTrees.get(s);
+        if (it == null) {
+            it = new IceTree(trigger, argRole, entityType, argValue);
+            iceTrees.put(s, it);;
+        }
+        return it;
+    }
+
+    /**
+     *  Creates a normal form for IceTrees in which the roles are
+     *  stored in lexicographic order.
+     */
+    public static void  sortArgs (String[] argRole, String[] argValue, String[] argType) {
+        TreeMap<String, String> valueMap = new TreeMap<String, String>();
+        TreeMap<String, String> typeMap = new TreeMap<String, String>();
+        for (int i = 0; i < argRole.length; i++) {
+            valueMap.put(argRole[i], argValue[i]);
+            typeMap.put(argRole[i], argType[i]);
+        }
+        int j = 0;
+        for (String role : valueMap.keySet() ) {
+            argRole[j] = role;
+            argValue[j] = valueMap.get(role);
+            argType[j] = typeMap.get(role);
+            j++;
+        }
     }
 
 }

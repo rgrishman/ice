@@ -11,8 +11,13 @@ import java.util.regex.*;
 
 import org.apache.commons.math3.ml.clustering.Clusterable;
 
+/**
+ *  A subtree of a sentence dependency tree, headed by a verb.
+ */
+
 public class IceTree implements Comparable <IceTree>, Clusterable {
 
+    private String coreString;
     String trigger;
     String[] argRole;
     String [] argValue;
@@ -53,13 +58,17 @@ public class IceTree implements Comparable <IceTree>, Clusterable {
     int count;
 
     public IceTree () {
-	System.out.println("Caution: empty IceTree");
+        System.out.println("Caution: empty IceTree");
     }
 
     public IceTree (String trigger, String[] argRole, String[] entityType, String[] argValue) {
-        String s = IceTree.core(trigger, argRole, entityType, argValue);
-        IceTreeFactory.getIceTree(s);
+        this.trigger = trigger;
+        this.argRole = argRole;
+        this.entityType = entityType;
+        this.argValue = argValue;
+        this.coreString = core(trigger, argRole, entityType, argValue);
     }
+
 
     static String tokenRegex  = "^[A-Za-z0-9',.$%_-]+$";
 
@@ -408,7 +417,7 @@ loop:
         String s = trigger;
         for (int i = 0; i < argRole.length; i++) {
             s += " " + argRole[i];
-            if (entityType[i] != null) 
+            if (entityType != null && entityType[i] != null) 
                 s += ":" + entityType[i];
             if (argValue[i] != null)
                 s += "=" + argValue[i];

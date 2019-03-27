@@ -2,6 +2,11 @@ package edu.nyu.jet.ice.models;
 
 import java.util.*;
 
+/**
+ *  Generates instances of IcePath so that there is a unique instance for each
+ *  value of the path string.
+ */
+
 public class IcePathFactory {
 
     public static Map<String, IcePath> icePaths = new HashMap< String, IcePath>();
