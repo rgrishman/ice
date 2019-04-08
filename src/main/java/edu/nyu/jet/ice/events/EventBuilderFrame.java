@@ -43,7 +43,7 @@ public class EventBuilderFrame extends JFrame {
     public SwingEventsPanel swingEventsPanel;
 
     public EventBuilderFrame(String title, /* final RelationBuilder relationBuilder,*/  final EventBootstrap bootstrap,
-                                final SwingEventsPanel swingEventsPanel) {
+            final SwingEventsPanel swingEventsPanel) {
         super(title);
         this.bootstrap = bootstrap;
         // this.relationBuilder = relationBuilder;
@@ -168,14 +168,13 @@ public class EventBuilderFrame extends JFrame {
 		for (Object o : rankedListModel.toArray()) {
 		    IceTree e = (IceTree) o;
 		    if (e.getChoice() == IceTree.IceTreeChoice.YES) {
-			iceEvent.addTree(e);
-                    }
-                    if (e.getChoice() == IceTree.IceTreeChoice.NO) {
-			iceEvent.addNegTree(e);
-		    }
-		}
-	    // iceEvent.updateTrees();
-	    swingEventsPanel.updateEntriesListModel(iceEvent.getTrees());
+                iceEvent.addTree(e);
+            }
+            if (e.getChoice() == IceTree.IceTreeChoice.NO) {
+                iceEvent.addNegTree(e);
+            }
+        }
+	    swingEventsPanel.updateEntriesListModel();
 	    EventBuilderFrame.this.dispose();
             }
         });
@@ -244,7 +243,7 @@ public class EventBuilderFrame extends JFrame {
         }
         rankedListModel = newListModel;
         rankedList.setModel(rankedListModel);
-	rankedList.setCellRenderer(new IceCellRenderer());
+	rankedList.setCellRenderer(new IceCellRenderer(true));
 	rankedList.setPrototypeCellValue(new IceTree("verb nsubj:subject dobj:object"));
     }
 

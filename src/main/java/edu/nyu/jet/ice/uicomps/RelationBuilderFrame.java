@@ -41,7 +41,6 @@ public class RelationBuilderFrame extends JFrame {
 
     public RelationBuilderFrame(
         String title, 
-        // final RelationBuilder relationBuilder, 
         final Bootstrap bootstrap,
         final SwingRelationsPanel swingRelationsPanel) {
         super(title);
@@ -55,7 +54,6 @@ public class RelationBuilderFrame extends JFrame {
         entitySetPanel.add(rankedListLabel, "wrap");
 
         rankedList = new JList(rankedListModel){
-            @Override
             public int getNextMatch(String prefix, int startIndex, Position.Bias bias) {
                 return -1;
             }
@@ -135,14 +133,10 @@ public class RelationBuilderFrame extends JFrame {
                     IcePath e = (IcePath) o;
                     if (e.getChoice() == IcePath.IcePathChoice.YES) {
                         approvedPaths.add(e);
-                    }
-                    else {
-                        if (e.getChoice() == IcePath.IcePathChoice.NO) {
-                            rejectedPaths.add(e);
-                        }
-                    }
+                    } else if (e.getChoice() == IcePath.IcePathChoice.NO) {
+                        rejectedPaths.add(e);
+                    } 
                 }
-
                 bootstrap.setProgressMonitor(new SwingProgressMonitor(
                         RelationBuilderFrame.this, "Bootstrapping",
                         "Collecting seeds...",
@@ -187,10 +181,9 @@ public class RelationBuilderFrame extends JFrame {
         for (IcePath negPath : rejectedPaths) {
             iceRelation.addNegPath(negPath);
             // may need
-            // negPaths.add(bootstrap.getArg1Type() + " -- " + negPath + " -- " + bootstrap.getArg2Type());
         }
         // update display on relational panel
-        IcePath[] paths = bootstrap.seedPaths.toArray(new IcePath[0]);
+        Set<IcePath> paths = bootstrap.seedPaths;
         swingRelationsPanel.updateEntriesListModel(paths);
         RelationBuilderFrame.this.dispose();
             }
@@ -281,7 +274,7 @@ public class RelationBuilderFrame extends JFrame {
         }
         rankedListModel = newListModel;
         rankedList.setModel(rankedListModel);
-        rankedList.setCellRenderer(new IceCellRenderer());
+        rankedList.setCellRenderer(new IceCellRenderer(true));
         rankedList.setPrototypeCellValue(
             new IcePath("cats -- nsubj-1:drink:dobj -- milk"));
     }
