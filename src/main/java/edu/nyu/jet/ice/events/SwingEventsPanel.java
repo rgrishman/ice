@@ -1,6 +1,7 @@
 package edu.nyu.jet.ice.events;
 
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.ice.uicomps.IceCellRenderer;
 import edu.nyu.jet.ice.events.EventBuilderFrame;
 import edu.nyu.jet.ice.events.EventBuilderThread;
 import edu.nyu.jet.ice.utils.FileNameSchema;
@@ -30,16 +31,32 @@ import org.apache.commons.math3.ml.clustering.*;
 import org.apache.commons.math3.ml.distance.*;
 
 /**
- * Panel to bootstrap event extractor
+ * Panel to bootstrap event extractor.
  *
- * @author yhe
+ * The event extractor maintains a list of event types and, for each
+ * event type, a list of trees expressing that event type.  This 
+ * information is maintained in two versions:  a persistent version
+ * (maintained across ICE sesssions) and a transient version
+ * (used to drive the GUI and interpret seletion actions).
+ *
+ * The persistent version is stored as a set of IceEvents within
+ * class Ice and a set of IceTrees within each instance of
+ * IceEvent.
+ *
+ * The transient version is stored in two DefaultListModels,
+ * eventListModel (a list of IceEvents) and entriesListModel,
+ * a list of the Trees in the currently selected IceEvent.
+ *
  */
+
 public class SwingEventsPanel extends JPanel implements Refreshable {
+
     JList eventList;
     JList entriesList;
-    DefaultListModel eventListModel;
-    DefaultListModel entriesListModel;
+    DefaultListModel<IceEvent> eventListModel;
+    DefaultListModel<IceTree> entriesListModel;
     IceEvent currentEvent;
+
     SwingIceStatusPanel iceStatusPanel;
     // public List<String> negTrees = new ArrayList<String>();
     public Map<String, List<String>> negTrees = new TreeMap<String, List<String>>();
@@ -61,6 +78,18 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         this.setLayout(new MigLayout());
         this.setOpaque(false);
 
+        eventList = new JList();
+        entriesList = new JList();
+        eventListModel = new DefaultListModel<IceEvent>();
+        eventList.setModel(eventListModel);
+        entriesListModel = new DefaultListModel<IceTree>();
+        entriesList.setModel(entriesListModel);
+        for (String k : Ice.events.keySet()) {
+            eventListModel.addElement(Ice.events.get(k));
+        }
+        entriesList.setCellRenderer(new IceCellRenderer(false));
+        updateEntriesListModel();
+
         JPanel leftPanel = new JPanel(new MigLayout());
         leftPanel.setOpaque(false);
         leftPanel.setMinimumSize(new Dimension(210, 366));
@@ -68,7 +97,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         Border lowerEtched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
         Border leftTitleBorder = BorderFactory.createTitledBorder(lowerEtched, "Events");
         leftPanel.setBorder(leftTitleBorder);
-        JLabel entitySetLabel = new JLabel("Events");
+        JLabel eventLabel = new JLabel("Events");
 
         this.add(leftPanel);
 
@@ -79,11 +108,6 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         Border rightTitleBorder = BorderFactory.createTitledBorder(lowerEtched, "Members");
         rightPanel.setBorder(rightTitleBorder);
         this.add(rightPanel);
-        eventListModel = new DefaultListModel();
-        for (String k : Ice.events.keySet()) {
-            eventListModel.addElement(Ice.events.get(k));
-        }
-        eventList = new JList();
 
         JScrollPane entitySetPane = new JScrollPane(eventList);
         entitySetPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -92,7 +116,6 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         eventList.setMinimumSize(new Dimension(170, 228));
         entitySetPane.setPreferredSize(new Dimension(170, 228));
         leftPanel.add(entitySetPane, "span");
-        eventList.setModel(eventListModel);
 
         JButton addEventButton = new JButton("Add");
         addEventButton.setName("addEventButton");
@@ -101,8 +124,6 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         leftPanel.add(suggestEventButton, "wrap");
         JButton deleteEventButton = new JButton("Delete");
         leftPanel.add(deleteEventButton);
-
-        entriesList   = new JList();
 
         entriesList.setSize(235, 228);
         entriesList.setMinimumSize(new Dimension(235, 228));
@@ -125,7 +146,11 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
 
         eventList.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent listSelectionEvent) {
-                refresh();
+            iceStatusPanel.refresh();
+            int idx = eventList.getSelectedIndex();
+            if (idx < 0) return;
+            currentEvent = eventListModel.get(idx);
+            updateEntriesListModel();
             }
         });
 
@@ -135,7 +160,6 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                 if (eventName == null) {
                     return;
                 }
-                eventName = eventName.toUpperCase();
                 for (Object existingEvent : eventListModel.toArray()) {
                     if (existingEvent.toString().equals(eventName)) {
                         JOptionPane.showMessageDialog(SwingEventsPanel.this,
@@ -209,11 +233,13 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
             public void actionPerformed(ActionEvent actionEvent) {
                 StringBuilder b = new StringBuilder();
                 for (int i = 0; i < entriesListModel.size(); i++) {
-                    Object entry = entriesListModel.getElementAt(i);
+                    IceTree entry = entriesListModel.getElementAt(i);
+                    String repr = entry.getRepr();
+                    if (repr == null) continue;
                     if (i > 0) {
                         b.append(":::");
                     }
-                    b.append(entry);
+                    b.append(repr);
                 }
                 buildEvent(currentEvent.getName(), b.toString());
             }
@@ -222,8 +248,17 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         addEntryButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 if (entriesListModel == null) return;
+                int idx = eventList.getSelectedIndex();
+                if (idx < 0) {
+                    JOptionPane.showMessageDialog(SwingEventsPanel.this,
+                        "No event type selected.",
+                        "Dependency Tree Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                IceEvent iceEvent = eventListModel.get(idx);
                 String eventInstance = JOptionPane.showInputDialog(
-                        "Please provide an example of the event");
+                        "Please provide an additional example of the event");
                 if (eventInstance == null) {
                     return;
                 }
@@ -241,21 +276,23 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                         return;
                     }
                 }
-                entriesListModel.addElement(closestPhrase);
-		currentEvent.addRepr(closestPhrase);
+                // for persistent recprd
                 currentEvent.addTrees(trees);
+                // for GUI
+                entriesListModel.addElement(trees.get(0));
+                updateEntriesListModel();
             }
         });
 
         deleteEntryButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                if (entriesListModel == null) return;
                 int idx = entriesList.getSelectedIndex();
                 if (idx < 0) return;
-                String repr = (String) entriesListModel.elementAt(idx);
+                IceTree tree = entriesListModel.elementAt(idx);
+                // for persistent record
+                currentEvent.removeTree(tree);
+                // for GUI
                 entriesListModel.remove(idx);
-		currentEvent.removeRepr(repr);
-		currentEvent.updateTrees();
             }
         });
 
@@ -271,15 +308,33 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                         "Confirm event deletion",
                         JOptionPane.YES_NO_OPTION);
                 if (n == 0) {
+                    // for persistent record
+                    Ice.removeEvent(e.getName());
+                    // for GUI
                     eventListModel.remove(idx);
-                    entriesListModel.clear();
-                    entriesListModel = null;
-                    currentEvent = null;
+                    updateEntriesListModel();
                 }
             }
         });
 
     }
+
+    public void updateEntriesListModel () {
+        entriesListModel.clear();
+        int idx = eventList.getSelectedIndex();
+        if (idx < 0) return;
+        IceEvent iceEvent = (IceEvent) eventListModel.get(idx);
+        List<String> reprs = new ArrayList<String>();
+        for (IceTree it : iceEvent.getTrees()) {
+            String repr = it.getRepr();
+            if (! reprs.contains(repr)) {
+                entriesListModel.addElement(it);
+                reprs.add(repr);
+            }
+
+        }
+    }
+
 
     public String closestPhrase;
 
@@ -334,14 +389,14 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
      */
 
     private void installSeedEvent(String eventName, String eventInstance, List<IceTree> trees) {
+        //  for persistent store
         IceEvent iceEvent = new IceEvent(eventName);
-	Ice.addEvent(iceEvent);
-	iceEvent.addRepr(eventInstance);
-
+        Ice.addEvent(iceEvent);
         iceEvent.setTrees(trees);
+        // for GUI
         eventListModel.addElement(iceEvent);
         eventList.setSelectedValue(iceEvent, true);
-        // selecting new element forces refresh
+        updateEntriesListModel();
         currentEvent = iceEvent;
     }
 
@@ -420,22 +475,8 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
                 newListModel.addElement(repr);
             }
         }
-
-        entriesListModel = newListModel;
-        entriesList.setModel(entriesListModel);
     }
 
-    public void updateEntriesListModel(java.util.List<IceTree> trees) {
-        DefaultListModel newListModel = new DefaultListModel();
-        for (IceTree tree : trees) {
-	    String repr = tree.getRepr();
-	    if (! newListModel.contains(repr)) {
-                newListModel.addElement(repr);
-	    }
-        }
-        entriesListModel = newListModel;
-        entriesList.setModel(entriesListModel);
-    }
     
     /**
      *  Suggests a pair of trees to use as a seed for building a new event.  It is
