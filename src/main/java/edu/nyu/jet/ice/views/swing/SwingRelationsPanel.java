@@ -183,7 +183,6 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                 if (relationName == null) {
                     return;
                 }
-                relationName = relationName.toUpperCase();
                 for (Object existingRelation : relationListModel.toArray()) {
                     if (existingRelation.toString().equals(relationName)) {
                         JOptionPane.showMessageDialog(SwingRelationsPanel.this,
@@ -494,7 +493,7 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
         entriesList.setModel(entriesListModel);
     }
 
-    public void updateEntriesListModel(IcePath[] paths) {
+    public void updateEntriesListModel(Set<IcePath> paths) {
         DefaultListModel newListModel = new DefaultListModel();
         for (IcePath path : paths) {
             newListModel.addElement(path.getRepr());
