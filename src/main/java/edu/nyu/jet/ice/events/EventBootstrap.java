@@ -418,35 +418,45 @@ public class EventBootstrap {
      */
 
     List<IceTree> scoreUsingWordEmbeddings () {
-	PathMatcher matcher = new PathMatcher();
-	String fileName = FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
-	IceTreeSet eventtypes = new IceTreeSet(fileName);
+        progressMonitor.setMaximum(seedTrees.size());
+        progressMonitor.setProgress(1);
+        progressMonitor.setNote("expanding Seeds");
+        int progress = 1;
+        PathMatcher matcher = new PathMatcher();
+        String fileName = FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
+        IceTreeSet eventtypes = new IceTreeSet(fileName);
         List<IceTree> scoreList = new ArrayList<IceTree>();
-	for (IceTree s : seedTrees) {
-	    logger.info ("Expanding seed {}", s.core());
-	    for (IceTree a : eventtypes.list) {
-		String repr = a.getRepr();
-		if (repr == null) {
-		    logger.error ("Null repr for {}", a.core());
-		    continue;
-		}
-		String example = a.getExample();
-		if (example == null) {
-		    logger.warn ("Null tooltip for {}", a);
-		} else {
-		    String toolTip = IceUtils.splitIntoLine(example, 80);
-		    toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
-		    // XXX  a.setToolTip(toolTip);
-		}
-		double score = WordEmbedding.treeSimilarity(a, s);
-        if (a.count > 0)
-            // score =  score * Math.log(a.count + 1);
-            score =  score * ((float) a.count) / (a.count + 1);
-		a.setScore(score);
-		scoreList.add(a);
-	    }
-	}
-	return scoreList;
+        for (IceTree s : seedTrees) {
+            logger.info ("Expanding seed {}", s.core());
+            for (IceTree a : eventtypes.list) {
+                // skip trees which already have been classified
+                IceEvent iceEvent = Ice.events.get(eventName);
+                if (iceEvent.getTrees().contains(a)) continue;
+                if (iceEvent.getNegTrees().contains(a)) continue;
+                String repr = a.getRepr();
+                if (repr == null) {
+                    logger.error ("Null repr for {}", a);
+                    continue;
+                }
+                String example = a.getExample();
+                if (example == null) {
+                    logger.warn ("Null tooltip for {}", a);
+                } else {
+                    String toolTip = IceUtils.splitIntoLine(example, 80);
+                    toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
+                    // XXX  a.setToolTip(toolTip);
+                }
+                double score = WordEmbedding.treeSimilarity(a, s);
+                if (a.count > 0)
+                    // score =  score * Math.log(a.count + 1);
+                    score =  score * ((float) a.count) / (a.count + 1);
+                a.setScore(score);
+                scoreList.add(a);
+            }
+            progressMonitor.setProgress(progress++);
+        }
+
+        return scoreList;
     }
 
     public enum BootstrapAnchoredPathType {
