@@ -5,6 +5,7 @@ import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.models.IcePath;
 import edu.nyu.jet.ice.models.IceRelation;
 import edu.nyu.jet.ice.utils.SwingProgressMonitor;
+import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.ice.relation.Bootstrap;
 import edu.nyu.jet.ice.views.swing.SwingRelationsPanel;
 import net.miginfocom.swing.MigLayout;
@@ -215,7 +216,10 @@ public class RelationBuilderFrame extends JFrame {
                 ListModel m = l.getModel();
                 int index = l.locationToIndex(e.getPoint());
                 if( index>-1 ) {
-                    l.setToolTipText(((IcePath)m.getElementAt(index)).getExample());
+                    String example = ((IcePath)m.getElementAt(index)).getExample();
+                    example = IceUtils.splitIntoLine(example, 80);
+                    example = "<html>" + example.replaceAll("\\n", "<\\br>");
+                    l.setToolTipText(example);
                 }
             }
         });
