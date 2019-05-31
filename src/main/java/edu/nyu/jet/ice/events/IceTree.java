@@ -19,7 +19,7 @@ public class IceTree implements Comparable <IceTree>, Clusterable {
 
     private String coreString;
     String trigger;
-    String[] argRole;
+    public String[] argRole;
     String [] argValue;
     String[] entityType;
 
@@ -469,6 +469,25 @@ loop:
         return it;
     }
 
+    public double[] embed () {
+        return WordEmbedding.embed(getRepr().split(" "));
+    }
+
+    static public double[] embed (List<IceTree> paths) {
+        int dim = WordEmbedding.getDim();
+        for (IceTree ip : paths)
+            ip.embed();
+        double[] result = new double[dim];
+        for (int j=0; j < dim; j++) {
+            result[j] = paths.get(0).embed()[j];
+        }
+        for (int i=1; i < paths.size(); i++) {
+            for (int j=0; j < dim; j++) {
+                result[j] += paths.get(i).embed()[j];
+            }
+        }
+        return result;
+}
     /**
       * Returns the linearized (near-English) form of a tree. 
       */
@@ -532,5 +551,5 @@ loop:
 	return getArgValueForRole("nsubj") + ":" + getArgValueForRole("dobj");
     }
 
-    public EventBootstrap.BootstrapAnchoredPathType type;
+    public EventBootstrap.BootstrapAnchoredTreeType type;
  }

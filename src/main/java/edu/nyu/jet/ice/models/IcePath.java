@@ -3,6 +3,7 @@ package edu.nyu.jet.ice.models;
 import edu.nyu.jet.aceJet.AnchoredPath;
 import edu.nyu.jet.Logger;
 import edu.nyu.jet.LoggerFactory;
+import java.util.*;
 
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
@@ -156,5 +157,36 @@ public class IcePath implements Comparable<IcePath> {
      public IcePath(AnchoredPath ap) {
          path = ap.toString();
      }
-}
 
+     /**
+      *  Returns the embedding of the IcePath, which is the
+      *  embedding of its English-like phrase (repr).
+      */
+
+    public double[] embed () {
+        return WordEmbedding.embed(getRepr().split(" "));
+    }
+
+    /**
+     *  Returns the embedding of a list of IcePaths,
+     *  which is the component-by-component sum of 
+     *  the embeddings of the constituent IcePaths.
+     */
+
+    static public double[] embed (List<IcePath> paths) {
+        int dim = WordEmbedding.getDim();
+        for (IcePath ip : paths)
+            ip.embed();
+        double[] result = new double[dim];
+        for (int j=0; j < dim; j++) {
+            result[j] = paths.get(0).embed()[j];
+        }
+        for (int i=1; i < paths.size(); i++) {
+            for (int j=0; j < dim; j++) {
+                result[j] += paths.get(i).embed()[j];
+            }
+        }
+        return result;
+    }
+
+}

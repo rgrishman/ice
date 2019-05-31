@@ -16,6 +16,7 @@ public class WordEmbedding {
 
     private static Map<String, double[]> embeddings = null;
     private static int dim = 0;
+    public static String unknown = ",";
 
     /**
      *  Load word embeddings from <CODE>embeddingFile</CODE>.
@@ -55,18 +56,30 @@ public class WordEmbedding {
     }
 
     /**
-     *  Returns the word embedding of <CODE>word</CODE>, or <CODE>null</CODE>
-     *  if the embedding is undefined.
+     *  Returns dimension of embeddings.
+     */
+
+    public static int getDim () {
+        return dim;
+    }
+
+    /**
+     *  Returns the word embedding of <CODE>word</CODE> if defined (non-null),
+     *  else the embedding of <CODE>unknown</CODE> if defined (non-null),
+     *  else <CODE>null</CODE>.
      */
 
     public static double[] embed (String word) {
-        return embeddings.get(word.toLowerCase());
+        double[] we = embeddings.get(word.toLowerCase());
+        if (we == null && unknown != null)
+            we = embeddings.get(unknown);
+        return we;
     }
 
     /**
      *  Returns the word embedding of <CODE>phrase</CODE>, computed as the
-     *  sum of the embeddings of the constituent words.  Returns <CODE>null</CODE>
-     *  if any words has an undefined embedding.
+     *  sum of the embeddings of the constituent words (OOV words
+     *  not included).
      */
 
     public static double[] embed (String[] phrase) {

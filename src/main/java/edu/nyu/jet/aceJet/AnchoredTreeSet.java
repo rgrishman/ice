@@ -2,6 +2,7 @@ package edu.nyu.jet.aceJet;
 
 import edu.nyu.jet.ice.events.IceTree;
 import edu.nyu.jet.ice.events.IceTreeFactory;
+import edu.nyu.jet.ice.models.WordEmbedding;
 import java.util.*;
 import java.io.*;
 
@@ -42,7 +43,7 @@ public class AnchoredTreeSet implements Iterable<IceTree> {
 	count++;
     }
 
-    public List<IceTree> getByPath (String path) {
+    public List<IceTree> getByTree (String path) {
 	return pathIndex.get(path);
     }
 
@@ -52,7 +53,21 @@ public class AnchoredTreeSet implements Iterable<IceTree> {
 
 	public List<IceTree> getByArgs (String args) {
 		return argIndex.get(args);
-	}
+	}static public double[] embed (List<IceTree> paths) {
+        int dim = WordEmbedding.getDim();
+        for (IceTree ip : paths)
+            ip.embed();
+        double[] result = new double[dim];
+        for (int j=0; j < dim; j++) {
+            result[j] = paths.get(0).embed()[j];
+        }
+        for (int i=1; i < paths.size(); i++) {
+            for (int j=0; j < dim; j++) {
+                result[i] += paths.get(i).embed()[j];
+            }
+        }
+        return result;
+    }
 	
         /**
          *      returns an Iterator over the paths in the AnchoredTreeSet.
