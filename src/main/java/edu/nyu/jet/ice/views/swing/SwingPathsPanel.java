@@ -68,9 +68,13 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 	scrollPane.setMaximumSize(new Dimension(350, 360));
 
         patternBox.add(scrollPane, "span");
-        JButton relationsButton = new JButton("relations");
-        JButton eventsButton = new JButton("events");
+        JRadioButton relationsButton = new JRadioButton("relations");
+        JRadioButton eventsButton = new JRadioButton("events");
 
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(relationsButton);
+        buttonGroup.add(eventsButton);
+        
         patternBox.add(relationsButton);
         patternBox.add(eventsButton, "wrap");
 
