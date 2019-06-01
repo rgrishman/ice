@@ -305,28 +305,28 @@ public class EventBootstrap {
 
     List<IceTree> scoreUsingSharedArguments (String argTypes) {
 
-	// given seedTrees, with no arguments, collect seed tree instances
-	// with the same trigger and argument types
+        // given seedTrees, with no arguments, collect seed tree instances
+        // with the same trigger and argument types
 
         // List<BootstrapAnchoredTree> seedTreeInstances = new ArrayList<BootstrapAnchoredTree>();
         List<IceTree> seedTreeInstances = new ArrayList<IceTree>();
 
-	logger.trace ("Building seedTreeInstances");
+        logger.trace ("Building seedTreeInstances");
         for (IceTree sp : seedTrees) {
-	    logger.trace ("    For seed tree = {}", sp);
-            List<IceTree> posTrees = treeSet.getByPath(sp.getTrigger());
+            logger.trace ("    For seed tree = {}", sp);
+            List<IceTree> posTrees = treeSet.getByTree(sp.getTrigger());
             if (posTrees != null) {
                 for (IceTree p : posTrees) {
-		    if (entityTypes(p).equals(argTypes)) {
-			    logger.trace ("        Adding seed instance tree = {}", p);
-			    seedTreeInstances.add(p);
-		    }
-		    /*
-			    new BootstrapAnchoredTree
-			    (p,
-			     sp,
-			     BootstrapAnchoredPathType.POSITIVE));
-			     */
+                    if (entityTypes(p).equals(argTypes)) {
+                        logger.trace ("        Adding seed instance tree = {}", p);
+                        seedTreeInstances.add(p);
+                    }
+                    /*
+                       new BootstrapAnchoredTree
+                       (p,
+                       sp,
+                       BootstrapAnchoredTreeType.POSITIVE));
+                     */
                 }
             }
         }
@@ -343,15 +343,15 @@ public class EventBootstrap {
         // collect other paths connecting the same argument pairs connected by seeds
         //   shared = set of arg pairs this pattern shares with seeds
         Map<String, Set<String>> shared = new HashMap<String, Set<String>>();
-        Map<String, BootstrapAnchoredPathType> pathSourceMap =
-                new HashMap<String, BootstrapAnchoredPathType>();
+        Map<String, BootstrapAnchoredTreeType> pathSourceMap =
+            new HashMap<String, BootstrapAnchoredTreeType>();
         // for (BootstrapAnchoredTree seed : seedTreeInstances) {
         logger.trace("collecting shared arguments");
         for (IceTree seed : seedTreeInstances) {
-	    logger.trace("    For seed instance = {}", seed);
+            logger.trace("    For seed instance = {}", seed);
             for (IceTree p : treeSet.getByArgs(seed.argPair())) {
-		logger.trace("        For event sharing arguments = {}", p);
-		p = p.clearArgValues();
+                logger.trace("        For event sharing arguments = {}", p);
+                p = p.clearArgValues();
                 String pp = p.core();
                 if (seedTreeInstances.contains(p)) continue;
                 if (rejects.contains(p)) continue;
@@ -361,7 +361,7 @@ public class EventBootstrap {
                 shared.get(pp).add(seed.argPair());
                 logger.trace("        recording shared {} with args {}", pp, seed.argPair());
                 if (pathSourceMap.containsKey(pp) && pathSourceMap.get(pp) != seed.type) {
-                    pathSourceMap.put(pp, BootstrapAnchoredPathType.BOTH);
+                    pathSourceMap.put(pp, BootstrapAnchoredTreeType.BOTH);
                 }
                 else {
                     pathSourceMap.put(pp, seed.type);
@@ -377,13 +377,13 @@ public class EventBootstrap {
         // -- score
         logger.trace ("counting shared args");
         for (String p : shared.keySet()) {
-	    logger.trace ("    For p = {}", p);
-	    IceTree itx = IceTreeFactory.getIceTree(p);
-	    // itx = IceTree.clearArgValues(itx);
+            logger.trace ("    For p = {}", p);
+            IceTree itx = IceTreeFactory.getIceTree(p);
+            // itx = IceTree.clearArgValues(itx);
             sharedCount.put(p, shared.get(p).size());
             if (sharedCount.get(p) < MIN_RELATION_COUNT) continue;
             Set<String> argPairsForP = new HashSet<String>();
-            for (IceTree ap : treeSet.getByPath(itx.getTrigger())) {
+            for (IceTree ap : treeSet.getByTree(itx.getTrigger())) {
                 argPairsForP.add(ap.getArgValueForRole("nsubj") + ":" + ap.getArgValueForRole("dobj"));
             }
             totalCount.put(p, argPairsForP.size());
@@ -392,25 +392,25 @@ public class EventBootstrap {
             double score = ((double)sharedCount.get(p)) / totalCount.get(p) * 
                 ((double)sharedCount.get(p)) / (sharedCount.get(p)  + 1);
             // double score = (double)sharedCount.get(p);
-	    itx.setScore(score);
+            itx.setScore(score);
 
-	    String repr = itx.getRepr();
-	    if (repr == null) {
-		logger.error ("Null repr for {}", itx.core());
-		continue;
-	    }
-	    String example = itx.getExample();
-	    if (example == null) {
-		logger.warn ("Null tooltip for {}", itx);
-	    } else {
-		String toolTip = IceUtils.splitIntoLine(example, 80);
-		toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
-		// XXX itx.setToolTip(toolTip);
-	    }
+            String repr = itx.getRepr();
+            if (repr == null) {
+                logger.error ("Null repr for {}", itx.core());
+                continue;
+            }
+            String example = itx.getExample();
+            if (example == null) {
+                logger.warn ("Null tooltip for {}", itx);
+            }
             scoreList.add(itx);
         }
         return scoreList;
     }
+
+    private static boolean useCentroid = true;
+
+    IceTreeSet eventtypes = null;
  
     /**
      *  Construct a list of candidate relation patterns with scores based on
@@ -418,67 +418,66 @@ public class EventBootstrap {
      */
 
     List<IceTree> scoreUsingWordEmbeddings () {
-        progressMonitor.setMaximum(seedTrees.size());
-        progressMonitor.setProgress(1);
-        progressMonitor.setNote("expanding Seeds");
-        int progress = 1;
-        PathMatcher matcher = new PathMatcher();
         String fileName = FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
-        IceTreeSet eventtypes = new IceTreeSet(fileName);
+        eventtypes = new IceTreeSet(fileName);
         List<IceTree> scoreList = new ArrayList<IceTree>();
-        for (IceTree s : seedTrees) {
-            logger.info ("Expanding seed {}", s.core());
-            for (IceTree a : eventtypes.list) {
-                // skip trees which already have been classified
-                IceEvent iceEvent = Ice.events.get(eventName);
-                if (iceEvent.getTrees().contains(a)) continue;
-                if (iceEvent.getNegTrees().contains(a)) continue;
-                String repr = a.getRepr();
-                if (repr == null) {
-                    logger.error ("Null repr for {}", a);
-                    continue;
-                }
-                String example = a.getExample();
-                if (example == null) {
-                    logger.warn ("Null tooltip for {}", a);
-                } else {
-                    String toolTip = IceUtils.splitIntoLine(example, 80);
-                    toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
-                    // XXX  a.setToolTip(toolTip);
-                }
-                double score = WordEmbedding.treeSimilarity(a, s);
-                if (a.count > 0)
-                    // score =  score * Math.log(a.count + 1);
-                    score =  score * ((float) a.count) / (a.count + 1);
-                a.setScore(score);
-                scoreList.add(a);
+        if (useCentroid) {
+            double[] centroid = IceTree.embed(new ArrayList<IceTree>(seedTrees));
+            scoreCandidate (null, centroid, scoreList);
+        } else {
+            for (IceTree s : seedTrees) {
+                logger.info("Expanding seed {}", s);
+                scoreCandidate(s, s.embed(), scoreList);
             }
-            progressMonitor.setProgress(progress++);
         }
-
         return scoreList;
     }
 
-    public enum BootstrapAnchoredPathType {
+    void scoreCandidate (IceTree s, double[] we, List<IceTree> scoreList) {
+        for (IceTree a : eventtypes.list) {
+            // skip trees which already have been classified
+            IceEvent iceEvent = Ice.events.get(eventName);
+            if (iceEvent.getTrees().contains(a)) continue;
+            if (iceEvent.getNegTrees().contains(a)) continue;
+            String repr = a.getRepr();
+            if (repr == null) {
+                logger.error ("Null repr for {}", a);
+                continue;
+            }
+            String example = a.getExample();
+            if (example == null) {
+                logger.warn ("Null tooltip for {}", a);
+            } 
+            // double score = WordEmbedding.treeSimilarity(a, s);
+            double score = WordEmbedding.similarity(we, a.embed());
+            if (a.count > 0)
+                // score =  score * Math.log(a.count + 1);
+                score =  score * ((float) a.count) / (a.count + 1);
+            a.setScore(score);
+            scoreList.add(a);
+        }
+    }
+
+    public enum BootstrapAnchoredTreeType {
         POSITIVE, NEGATIVE, BOTH
     }
 
     public class BootstrapAnchoredTree extends IceTree {
 
-        BootstrapAnchoredPathType type;
+        BootstrapAnchoredTreeType type;
 
-        IceTree typedPath;
+        IceTree typedTree;
 
         public String argPair() {
             return String.format("%s:%s", getArgValueForRole("nsubj"), getArgValueForRole("dobj"));
         }
 
         public BootstrapAnchoredTree(IceTree path,
-                                     IceTree typedPath,
-                                     BootstrapAnchoredPathType type) {
+                                     IceTree typedTree,
+                                     BootstrapAnchoredTreeType type) {
             // super(path.arg1, path.path, path.arg2, path.source, -1, -1); 
             this.type = type;
-            this.typedPath = typedPath;
+            this.typedTree = typedTree;
         }
     }
 

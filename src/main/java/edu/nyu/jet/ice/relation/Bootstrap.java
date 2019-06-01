@@ -29,6 +29,9 @@ import javax.swing.*;
  */
 
 public class Bootstrap {
+
+    public static boolean useCentroid = true;
+
     public static boolean DEBUG     = true;
 
     static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
@@ -335,8 +338,8 @@ public class Bootstrap {
         for (BootstrapAnchoredPath seed : seedPathInstances) {
             for (AnchoredPath p : pathSet.getByArgs(seed.argPair())) {
                 String pp = p.path;
-                if (seedPaths.contains(pp)) continue;
-                if (rejects.contains(pp)) continue;
+                if (seedPaths.contains(p)) continue;
+                if (rejects.contains(p)) continue;
                 if (shared.get(pp) == null) {
                     shared.put(pp, new HashSet<String>());
                 }
@@ -393,41 +396,59 @@ public class Bootstrap {
      */
 
     List<IcePath> scoreUsingWordEmbeddings () {
-	PathMatcher matcher = new PathMatcher();
+        // PathMatcher matcher = new PathMatcher();
         List<IcePath> scoreList = new ArrayList<IcePath>();
-        DepPathMap depPathMap = DepPathMap.getInstance();
-	for (IcePath s : seedPaths) {
-	    logger.info("Expanding seed {}", s);
-	    for (AnchoredPath a : pathTypesSet) {       // .similarPaths(s)) {
+        if (useCentroid) {
+            double[] centroid = IcePath.embed(new ArrayList<IcePath>(seedPaths));
+            scoreCandidate (null, centroid, scoreList);
+        } else {
+            for (IcePath s : seedPaths) {
+                logger.info("Expanding seed {}", s);
+                scoreCandidate(s, s.embed(), scoreList);
+            }
+        }
+        return scoreList;
+    }
+
+    /**
+     *  Determines acceptability of IcePath s with embedding we, to be
+     *  an acceptable candidate for the result of bootstrapping.  An
+     *  acceptable candidate cannot have been previously labeled by
+     *  the user, must have an English representation and an example.
+     */
+
+    void scoreCandidate (IcePath s, double[] we, List<IcePath> scoreList) {
+        for (AnchoredPath a : pathTypesSet) {       // .similarPaths(s)) 
             String fullp = arg1Type + " -- " + a.path + " -- " + arg2Type;
             IcePath ip = IcePathFactory.getIcePath(fullp);
             IceRelation ir = Ice.relations.get(relationName);
-            if (ir.rejected(ip)) continue;
-            String pRepr = ip.getRepr();
-            if (pRepr == null) {
+            // skip if previously labeled
+            if (ir.getPaths().contains(ip)) continue;
+            if (ir.getNegPaths().contains(ip)) continue;
+            // skip if it lacks repr or example
+            String repr = ip.getRepr();
+            if (repr == null) {
+                logger.error("Null repr for {}", a);
                 continue;
             }
             String pExample = ip.getExample();
             if (pExample == null) {
                 continue;
             }
-            String tooltip = IceUtils.splitIntoLine(pExample, 80);
-            tooltip = "<html>" + tooltip.replaceAll("\\n", "<\\br>");
-
             // if (! arg1Type.equals(a.arg1)) continue;
             // if (! arg2Type.equals(a.arg2)) continue;
+            // deleted code for soft match
             //double score = matcher.matchPaths("UNK -- " + a.path + " -- UNK",
             //"UNK -- " + s + " -- UNK") / (s.split(":").length + 1);
-            String[] x = s.getPath().split("--");
-            double score = WordEmbedding.pathSimilarity(a.path, x[1].trim());
+            //String[] x = s.getPath().split("--");
+            //double score = WordEmbedding.pathSimilarity(a.path, x[1].trim());
+            double score = WordEmbedding.similarity(we, ip.embed());
             ip.setScore (score);
-            if (pRepr.equals(arg1Type + " " + arg2Type)) {
-                continue;
-            }
+            // if (repr.equals(arg1Type + " " + arg2Type)) {
+            //     continue;
+            // }
             scoreList.add(ip);
         }
-        }
-        return scoreList;
     }
 
     public enum BootstrapAnchoredPathType {
@@ -452,5 +473,4 @@ public class Bootstrap {
             this.typedPath = typedPath;
         }
     }
-
 }
