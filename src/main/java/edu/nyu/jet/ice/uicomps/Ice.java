@@ -18,11 +18,16 @@ import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.events.IceEvent;
 import edu.nyu.jet.ice.events.DepTreeMap;
 
+import edu.nyu.jet.Logger;
+import edu.nyu.jet.LoggerFactory;
+
 /**
  *  Top-level objects for ICE
  */
 
 public class Ice {
+
+    static final Logger logger = LoggerFactory.getLogger(Ice.class);
 
     public static SortedMap<String, Corpus> corpora = new TreeMap<String, Corpus> ();
     public static SortedMap<String, IceEntitySet> entitySets = new TreeMap<String, IceEntitySet>();
@@ -65,7 +70,9 @@ public class Ice {
     }
 
     public static void removeRelation (String type) {
-	relations.remove(type);
+        if (relations.get(type) == null)
+            logger.warn("Relation to be deleted does not exist.");
+        else relations.remove(type);
     }
 
     public static void addEvent (IceEvent event) {

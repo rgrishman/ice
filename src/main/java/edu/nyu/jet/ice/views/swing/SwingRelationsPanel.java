@@ -316,7 +316,8 @@ public class SwingRelationsPanel extends JPanel implements Refreshable {
                         String.format("Are you sure you want to remove the relation [%s]?", e.getName()),
                         "Confirm relation deletion",
                         JOptionPane.YES_NO_OPTION);
-                if (n == 0) {
+                if (n == JOptionPane.YES_OPTION) {
+                    Ice.removeRelation (e.getName());
                     relationListModel.remove(idx);
                     entriesListModel.clear();
                     entriesListModel = null;
