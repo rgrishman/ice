@@ -119,20 +119,30 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 		JList l = (JList)e.getSource();
 		ListModel m = l.getModel();
 		int index = l.locationToIndex(e.getPoint());
-		if( index>-1 ) {
+        if( index > -1 ) {
 		    String repr = (String) m.getElementAt(index);
-		    int i = repr.indexOf("\t");
-		    if (i >= 0)
-		    	repr = repr.substring(i + 1);
-		    java.util.List<IcePath> paths = DepPathMap.findPath(repr);
-		    if (paths != null && paths.size() > 0) {
-		        IcePath path = paths.get(0);
-		        String example = path.getExample();
+            int i = repr.indexOf("\t");
+            if (i >= 0) {
+                repr = repr.substring(i + 1);
+            }
+            String example = "";;
+            if (events) {
+                java.util.List<IceTree> trees = DepTreeMap.findTree(repr);
+                if (trees != null && trees.size() > 0) {
+                    IceTree tree = trees.get(0);
+                    example = tree.getExample();
+                }
+            } else {
+                java.util.List<IcePath> paths = DepPathMap.findPath(repr);
+                if (paths != null && paths.size() > 0) {
+                    IcePath path = paths.get(0);
+                    example = path.getExample();
+                }
+            }
 			String toolTip = IceUtils.splitIntoLine(example, 80);
 			toolTip = "<html>" + toolTip.replaceAll("\\n", "<\\br>");
 			l.setToolTipText(toolTip);
 		    }
-		}
 		} });
 	iceStatusPanel = new SwingIceStatusPanel(); 
 	this.add(iceStatusPanel);
