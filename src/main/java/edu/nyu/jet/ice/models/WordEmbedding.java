@@ -70,6 +70,8 @@ public class WordEmbedding {
      */
 
     public static double[] embed (String word) {
+        if (!isLoaded())
+            return null;
         double[] we = embeddings.get(word.toLowerCase());
         if (we == null && unknown != null)
             we = embeddings.get(unknown);
