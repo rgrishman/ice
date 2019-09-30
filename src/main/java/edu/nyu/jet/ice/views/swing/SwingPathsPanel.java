@@ -95,7 +95,7 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 	eventsButton.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		ProgressMonitorI progressMonitor = 
-		new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
+		new SwingProgressMonitor(Ice.mainFrame, "Extracting events phrases",
 		    "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
 		events = true;
 		checkForAndFindRelations(progressMonitor);
@@ -104,7 +104,7 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 	filterTextField.addActionListener (new ActionListener () {
 		public void actionPerformed(ActionEvent e) {
 		ProgressMonitorI progressMonitor = 
-		new SwingProgressMonitor(Ice.mainFrame, "Extracting relation phrases",
+		new SwingProgressMonitor(Ice.mainFrame, "Extracting event phrases",
 		    "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
 		checkForAndFindRelations(progressMonitor);
 		// PathExtractionThread thread = new PathExtractionThread(true,
@@ -269,11 +269,13 @@ class PathExtractionThread extends Thread {
         String fileWithRankings;
         if (!events) {
             fileWithRankings = Ice.selectedCorpus.rankRelations();
+            DepTreeMap depTreeMap = DepTreeMap.getInstance();
+            depTreeMap.load(false);
         } else /* events */ {
             fileWithRankings = Ice.selectedCorpus.rankEvents(); 
+            DepPathMap depPathMap = DepPathMap.getInstance();
+            depPathMap.load(false);
         }
-        DepPathMap depPathMap = DepPathMap.getInstance();
-        depPathMap.load(false);
 
     // filter and show paths
 	//   
