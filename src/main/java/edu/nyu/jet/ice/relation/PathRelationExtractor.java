@@ -28,19 +28,20 @@ public class PathRelationExtractor {
 
     private PathMatcher pathMatcher = new PathMatcher();
 
-    private List<MatcherPath> ruleTable = new ArrayList<MatcherPath>();
+    private static List<MatcherPath> ruleTable = new ArrayList<MatcherPath>();
 
-    private List<MatcherPath> negTable  = new ArrayList<MatcherPath>();
+    private static List<MatcherPath> negTable  = new ArrayList<MatcherPath>();
 
     public void updateCost(double replace, double insert, double delete) {
         pathMatcher.updateCost(replace, insert, delete);
     }
 
-    public void loadRules(String rulesFile) throws IOException {
+    public static void loadModelForSoftMatch (String rulesFile) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(rulesFile));
         String line = null;
         while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
+            System.out.println("Loading rule " + line);
+            String[] parts = line.split(" = ");
             MatcherPath path = new MatcherPath(parts[0]);
             if (parts[0].contains("EMPTY")) {
                 continue;
@@ -56,7 +57,7 @@ public class PathRelationExtractor {
         BufferedReader br = new BufferedReader(new FileReader(negRulesFile));
         String line = null;
         while ((line = br.readLine()) != null) {
-            String[] parts = line.split("\\t");
+            String[] parts = line.split(" = ");
             MatcherPath path = new MatcherPath(parts[0]);
             if (parts[0].contains("EMPTY")) {
                 continue;
