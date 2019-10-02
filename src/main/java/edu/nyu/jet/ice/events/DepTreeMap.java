@@ -23,7 +23,7 @@ public class DepTreeMap {
     private static DepTreeMap instance = null;
 
     private HashMap<IceTree, String> treeReprMap = new HashMap<IceTree, String>();
-    private HashMap<String, List<IceTree>> reprTreeMap = new HashMap<String, List<IceTree>>();
+    static private HashMap<String, List<IceTree>> reprTreeMap = new HashMap<String, List<IceTree>>();
     private HashMap<IceTree, String> treeExampleMap = new HashMap<IceTree, String>();
     private DepTreeMap() { }
     private String previousFileName = null;
@@ -61,7 +61,7 @@ public class DepTreeMap {
      *  dependency tree in the selected corpus, returns the original tree.
      */
 
-    public List<IceTree> findTree(String repr) {
+    public static List<IceTree> findTree(String repr) {
         String norm = normalizeRepr(repr);
         List<IceTree> trees = reprTreeMap.get(norm);
 	return trees;
