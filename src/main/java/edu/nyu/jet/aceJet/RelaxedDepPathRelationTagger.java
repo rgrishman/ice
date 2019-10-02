@@ -1,28 +1,32 @@
 package edu.nyu.jet.aceJet;
 
-import edu.nyu.jet.ice.models.DepPathRegularizer;
-import edu.nyu.jet.ice.utils.IceUtils;
 import edu.nyu.jet.JetTest;
 import edu.nyu.jet.parser.SyntacticRelationSet;
 import edu.nyu.jet.refres.Resolve;
-import edu.nyu.jet.ice.relation.PathRelationExtractor;
 import edu.nyu.jet.tipster.Document;
 import edu.nyu.jet.tipster.ExternalDocument;
 import edu.nyu.jet.zoner.SentenceSet;
-import edu.nyu.jet.aceJet.AnchoredPath;
+import edu.nyu.jet.ice.models.DepPathRegularizer;
+import edu.nyu.jet.ice.relation.PathRelationExtractor;
+import edu.nyu.jet.ice.utils.IceUtils;
 import opennlp.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *  a relaxed relation tagger based on dependency paths and argument types,
- *  as produced by Jet ICE.
+ *  as produced by Jet ICE.  The tagger can perform 3 functions:
+ *  <br>
+ *     Find the beat soft-match parameters
+ *  <br>
+ *     Identify the relatiom instances in a corpu using exact match.
+ *  <br>
+ *     Identify the relation instqnces in a corpus using soft match.
  */
+
 
 public class RelaxedDepPathRelationTagger {
 
@@ -32,7 +36,8 @@ public class RelaxedDepPathRelationTagger {
     static AceDocument aceDoc;
     static String currentDoc;
     static PathRelationExtractor pathRelationExtractor;
-    static boolean searchMode = false;
+    static boolean searchMode = false;;
+    static boolean softMatch = true;
     private static DepPathRegularizer pathRegularizer = new DepPathRegularizer();
 
 
@@ -45,7 +50,7 @@ public class RelaxedDepPathRelationTagger {
      * as AceRelations to AceDocument 'aceDoc'.
      */
 
-    public static void findRelations(String currentDoc, Document d, AceDocument ad) {
+    public static void findRelations(String currentDoc, Document d, AceDocument ad, AceDocument keyDoc) {
         doc = d;
         RelationTagger.doc = d;
         doc.relations.addInverses();
@@ -53,7 +58,8 @@ public class RelaxedDepPathRelationTagger {
         RelationTagger.docName = currentDoc;
         RelationTagger.sentences = new SentenceSet(doc);
         RelationTagger.relationList = new ArrayList<AceRelation>();
-        RelationTagger.findEntityMentions(aceDoc);
+        ad.entities = keyDoc.entities;
+        RelationTagger.findEntityMentions(keyDoc);
         // collect all pairs of nearby mentions
         List<AceEntityMention[]> pairs = RelationTagger.findMentionPairs();
         // iterate over pairs of adjacent mentions, using model to determine which are ACE relations
@@ -63,20 +69,6 @@ public class RelaxedDepPathRelationTagger {
         RelationTagger.relationCoref(aceDoc);
         RelationTagger.removeRedundantMentions(aceDoc);
     }
-
-    /**
-     * load the model used by the relation tagger.  Each line consists of an
-     * AnchoredPath [a lexicalized dependency path with information on the
-     * endpoint types], a tab, and a relation type.
-     */
-
-    static void loadModel(String modelFile, String embeddingFile) throws IOException {
-        pathRelationExtractor = new PathRelationExtractor();
-        pathRelationExtractor.loadRules(modelFile);
-        pathRelationExtractor.loadNeg(modelFile + ".neg");
-//        pathRelationExtractor.loadEmbeddings(embeddingFile);
-    }
-
 
     /**
      * use dependency paths to determine whether the pair of mentions bears some
@@ -100,10 +92,16 @@ public class RelaxedDepPathRelationTagger {
         // build pattern = path + arg types
         String pattern = m1.entity.type + "--" + path + "--" + m2.entity.type;
         // look up path in model
-        Event event = new Event("UNK", new String[]{
+        String outcome;
+        if (softMatch) {
+            Event event = new Event("UNK", new String[]{
                 pathRegularizer.regularize(path), m1.entity.type, m2.entity.type});
-        String outcome = pathRelationExtractor.predict(event);
+            outcome = pathRelationExtractor.predict(event);
+        } else {
+            outcome = predict(pattern);
+        }
         if (outcome == null) return;
+        logger.info("Matched pattern {}, predicting {}", pattern, outcome);
         // if (!RelationTagger.blockingTest(m1, m2)) return;
         // if (!RelationTagger.blockingTest(m2, m1)) return;
         String[] typeSubtype = outcome.split(":", 2);
@@ -117,6 +115,7 @@ public class RelaxedDepPathRelationTagger {
         if (subtype.endsWith("-1")) {
             subtype = subtype.replace("-1", "");
             AceRelationMention mention = new AceRelationMention("", m2, m1, doc);
+            System.out.println("Found " + outcome + " relation " + mention.text);  //<<<
             AceRelation relation = new AceRelation("", type, subtype, "", m2.entity, m1.entity);
             relation.addMention(mention);
             RelationTagger.relationList.add(relation);
@@ -131,55 +130,106 @@ public class RelaxedDepPathRelationTagger {
 
     public static void main(String[] args) throws IOException {
 
-        if (args.length != 6) {
+        if (args.length != 9) {
             System.err.println(RelaxedDepPathRelationTagger.class.getName() +
-                    "propsFile rulesFile embeddingsFile txtFileList outputFileList answerFileList");
+                    " propsFile txtFileList keyFileList outputFileList");
             System.exit(-1);
         }
-
-        String propsFile   = args[0];
-        String rulesFile   = args[1];
-        String embeddingsFile = args[2];
-        String txtFileList = args[3];
-        String outputFileList = args[4];
-        String answerFileList = args[5];
-
-        String[] txtFiles = IceUtils.readLines(txtFileList);
-        String[] outputFiles = IceUtils.readLines(outputFileList);
-        String[] answerFiles = IceUtils.readLines(answerFileList);
-
-        if (txtFiles.length != outputFiles.length ||
-                txtFiles.length != answerFiles.length) {
-            System.err.println("Length of txt, output, and answer files should equal");
-            System.exit(-1);
-        }
+        String function = args[0];
+        String propsFile = args[1];
+        String docListFile = args[2];
+        String sourceDir = args[3];
+        String sourceExt = args[4];
+        String responseDir = args[5];
+        String responseExt = args[6];
+        String keyDir = args[7];
+        String keyExt = args[8];
 
         JetTest.initializeFromConfig(propsFile);
-        loadModel(rulesFile, embeddingsFile);
+        BufferedReader reader = new BufferedReader (new FileReader (docListFile));
+        String line;
+        List<String> docList = new ArrayList<String>();
+        while ((line = reader.readLine()) != null) {
+            docList.add(line);
+        }
+        tagCollection (function, docList, docListFile,
+                         sourceDir, sourceExt,
+                         responseDir, responseExt,
+                         keyDir, keyExt);
+    }
+
+    /**
+     * Tag a set of text files with relations based on patterns created by ICE.
+     * Reads an APF file with entities (keyFile) and writes an APF file
+     * cotaining entties and relations (response files).
+     *
+     * @param function  either 'exact' (exact match), 'soft' (soft matcch), or 'train'
+     *                  (find optimal soft-match weights)
+     * @param propsfile Jet properties file for preprocessing text
+     * @param docList   list of document names
+     * @param docListFile file containing docList, one entry per line
+     * @param sourceDir directory containing source files
+     * @param sourceExt file extention for source files
+     * @param responseDir directory containing source files
+     * @param responseExt file extention for response files
+     * @param keyDir directory containing key files
+     * @param keyExt file extention for key files
+     */
+
+    public static void tagCollection (String function, List<String> docList, String docListFile,
+                         String sourceDir, String sourceExt,
+                         String responseDir, String responseExt,
+                         String keyDir, String keyExt) throws IOException {
+
+        if (function.equals("exact")) {
+            softMatch = false;
+        } else if (function.equals("soft")) {
+            softMatch = true;
+        } else if (function.equals("train")) {
+            searchMode = true;
+        } else {
+            System.err.println ("Invalid function (require exact, soft, or train)");
+            System.exit(-1);
+        }
+        
+        // loadModel(JetTest.getConfig("Jet.dataPath")
+        // + File.separator
+        // + JetTest.getConfig("Ace.RelationModel.fileName"), "null");
+
+        String jetHome = System.getProperty("jetHome");
+        loadModel(jetHome + "/data/ldpRelationModel");
+        // loadModel("rules");
+
         if (searchMode) {
             double bestScore = 0.0;
             String bestParameterString = "NONE";
-            for (int replace = 1; replace < 11; replace++) {
-                for (int insert = 1; insert < 11; insert++) {
-                    for (int delete = 1; delete < 11; delete++) {
+            int limit = 7;
+            for (int replace = 1; replace < limit; replace++) {
+                for (int insert = 1; insert < limit; insert++) {
+                    for (int delete = 1; delete < limit; delete++) {
                         pathRelationExtractor.updateCost(replace / 5.0, insert / 5.0, delete / 5.0);
                         String parameterString = String.format("replace:%.2f\tinsert:%.2f\tdelete:%.2f",
                                 replace / 5.0, insert / 5.0, delete / 5.0);
-                        clearRelationScorer();
-                        for (int i = 0; i < txtFiles.length; i++) {
+                        int docCount = 0;
+                        for (String docName : docList) {
+                            docCount++;
+                            System.out.println ("\nTagging document " + docCount + ": " + docName);
+                            String sourceFile = sourceDir + "/" + docName + "." + sourceExt;
+                            String responseFile = responseDir + "/" + docName + "." + responseExt;
+                            String keyFile = keyDir + "/" + docName + "." + keyExt;
                             Resolve.ACE = true;
-                            String fileName = txtFiles[i];
-                            ExternalDocument doc = new ExternalDocument("sgml", fileName);
+                            ExternalDocument doc = new ExternalDocument("sgml", sourceFile);
+                            doc.setAllTags(true);
                             doc.open();
-                            AceDocument aceDocument = Ace.processDocument(doc, "doc", fileName, ".");
-                            findRelations(fileName, doc, aceDocument);
-                            PrintWriter pw = new PrintWriter(new FileWriter(outputFiles[i]));
+                            AceDocument aceDocument = Ace.processDocument(doc, "doc", sourceFile, ".");
+                            AceDocument keyDoc = new AceDocument(sourceFile, keyFile);
+                            findRelations(sourceFile, doc, aceDocument, keyDoc);
+                            PrintWriter pw = new PrintWriter(new FileWriter(responseFile));
                             aceDocument.write(pw, doc);
                             pw.close();
-                            RelationScorer.scoreDocument(fileName, outputFiles[i], answerFiles[i]);
                         }
-                        RelationScorer.reportScores();
-                        double score = fscore();
+                        double score = edu.nyu.jet.aceJet.RelationScorer.scoreCollection(docListFile,
+                           sourceDir, sourceExt, responseDir, responseExt, keyDir, keyExt);
                         if (bestScore < score) {
                             bestScore = score;
                             bestParameterString = parameterString;
@@ -189,68 +239,50 @@ public class RelaxedDepPathRelationTagger {
                 }
             }
             System.err.println("[BEST]\t" + bestParameterString + "\t" + bestScore);
-        }
-        else {
-////            // pathRelationExtractor.updateCost(0.8, 0.4, 1.2);
-            pathRelationExtractor.updateCost(100, 100, 100);
-//            pathRelationExtractor.updateCost(0.8, 0.3, 1.2);
-//            pathRelationExtractor.setNegDiscount(1);
-            pathRelationExtractor.setNegDiscount(100);
-
-            clearRelationScorer();
-            TypedRelationExtractorScorer sellScorer = new TypedRelationExtractorScorer("RESIDENT-OF");
-            for (int i = 0; i < txtFiles.length; i++) {
+        } else {
+//            pathRelationExtractor.updateCost(100, 100, 100);
+             pathRelationExtractor.updateCost(0.8, 0.3, 1.2);
+            // pathRelationExtractor.setNegDiscount(1);
+             for (String docName : docList) {
                 Resolve.ACE = true;
-                String fileName = txtFiles[i];
-                ExternalDocument doc = new ExternalDocument("sgml", fileName);
+                String sourceFile = sourceDir + "/" + docName + "." + sourceExt;
+                String responseFile = responseDir + "/" + docName + "." + responseExt;
+                String keyFile = keyDir + "/" + docName + "." + keyExt;
+                ExternalDocument doc = new ExternalDocument("sgml", sourceFile);
+                doc.setAllTags(true);
                 doc.open();
-                AceDocument aceDocument = Ace.processDocument(doc, "doc", fileName, ".");
-                findRelations(fileName, doc, aceDocument);
-                PrintWriter pw = new PrintWriter(new FileWriter(outputFiles[i]));
+                AceDocument aceDocument = Ace.processDocument(doc, "doc", sourceFile, "docs");
+                AceDocument keyDoc = new AceDocument(sourceFile, keyFile);
+                findRelations(sourceFile, doc, aceDocument, keyDoc);
+                PrintWriter pw = new PrintWriter(new FileWriter(responseFile));
                 aceDocument.write(pw, doc);
                 pw.close();
-                sellScorer.scoreDocument(fileName, outputFiles[i], answerFiles[i]);
+                // sellScorer.scoreDocument(fileName, outputFiles[i], responceFile);
             }
-            sellScorer.reportScores();
-            //RelationScorer.reportScores();
+
         }
     }
 
-    public static void clearRelationScorer() {
-        RelationScorer.correctEntityMentions = 0;
-        RelationScorer.missingEntityMentions = 0;
-        RelationScorer.spuriousEntityMentions = 0;
-        RelationScorer.correctRelationMentions = 0;
-        RelationScorer.missingRelationMentions = 0;
-        RelationScorer.spuriousRelationMentions = 0;
-        RelationScorer.relationMentionTypeErrors = 0;
+    static void loadModel (String fileName) throws IOException {
+        loadModelForExactMatch (fileName);
+        //pathRelationExtractor.loadNeg(modelFile + ".neg");
+        PathRelationExtractor.loadModelForSoftMatch (fileName);
     }
 
-    static double precision() {
-        int responseCount = RelationScorer.correctRelationMentions +
-                RelationScorer.relationMentionTypeErrors +
-                RelationScorer.spuriousRelationMentions;
-        int keyCount = RelationScorer.correctRelationMentions +
-                RelationScorer.relationMentionTypeErrors +
-                RelationScorer.missingRelationMentions;
-        return (double)RelationScorer.correctRelationMentions/responseCount;
+    static void loadModelForExactMatch (String fileName) throws IOException {
+        pathRelationExtractor = new PathRelationExtractor();
+        model = new HashMap<String, String>();
+        BufferedReader reader = new BufferedReader (new FileReader (fileName));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] fields = line.split("=");
+            model.put(fields[0].trim(), fields[1].trim());
+        }
+        System.out.println("Loaded " + model.size() + " rules");
     }
 
-    static double recall() {
-        int responseCount = RelationScorer.correctRelationMentions +
-                RelationScorer.relationMentionTypeErrors +
-                RelationScorer.spuriousRelationMentions;
-        int keyCount = RelationScorer.correctRelationMentions +
-                RelationScorer.relationMentionTypeErrors +
-                RelationScorer.missingRelationMentions;
-        return (double)RelationScorer.correctRelationMentions/keyCount;
+    static String predict (String candidate) {
+        System.out.println("candidate = " + candidate);
+        return model.get(candidate);
     }
-
-    static double fscore() {
-        double precision = precision();
-        double recall    = recall();
-        return 2*precision*recall/(precision + recall);
-    }
-
-
 }
