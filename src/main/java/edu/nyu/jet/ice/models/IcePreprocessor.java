@@ -95,6 +95,7 @@ public class IcePreprocessor extends Thread {
     String docList;
     String inputSuffix;
     String cacheDir;
+    static AceDocument aceDoc;
 
     private static final int MAX_MENTIONS_IN_SENTENCE = 50;
 
@@ -225,7 +226,7 @@ public class IcePreprocessor extends Thread {
                         docId = docName;
                     // create empty Ace document
                     String sourceType = "text";
-                    AceDocument aceDoc =
+                    aceDoc =
                             new AceDocument(inputFile, sourceType, docId, doc.text());
                     // build entities
                     Ace.buildAceEntities(doc, docId, aceDoc);
@@ -488,8 +489,8 @@ public class IcePreprocessor extends Thread {
      * along with its extent.  Format:  one mention per line, mention id + start + end.
      */
 
-    public static void saveJetExtents(AceDocument aceDocument, PrintWriter pw) throws IOException {
-        List<AceEntity> entities = aceDocument.entities;
+    public static void saveJetExtents(AceDocument aceDoc, PrintWriter pw) throws IOException {
+        List<AceEntity> entities = aceDoc.entities;
         if (entities != null) {
             for (AceEntity entity : entities) {
                 for (AceEntityMention mention : entity.mentions) {
@@ -569,9 +570,9 @@ public class IcePreprocessor extends Thread {
 
         // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
         Map<String, Span> jetExtentsMap = loadJetExtents();
-        AceDocument aceDocument = new AceDocument(txtFileName, aceFileName);
-        if (aceDocument.entities != null) {
-            for (AceEntity aceEntity : aceDocument.entities) {
+        aceDoc= new AceDocument(txtFileName, aceFileName);
+        if (aceDoc.entities != null) {
+            for (AceEntity aceEntity : aceDoc.entities) {
                 String val = "";
                 if (aceEntity.names != null && aceEntity.names.size() > 0) {
                     val = aceEntity.names.get(0).text.replaceAll("\\s+", " ").trim();
@@ -704,9 +705,9 @@ public class IcePreprocessor extends Thread {
     }
 
     public static void tagAdditionalMentions(Document doc,
-                                             AceDocument aceDocument) {
-        if (aceDocument.entities != null) {
-            for (AceEntity aceEntity : aceDocument.entities) {
+                                             AceDocument aceDoc) {
+        if (aceDoc.entities != null) {
+            for (AceEntity aceEntity : aceDoc.entities) {
                 String val = "";
                 if (aceEntity.names != null && aceEntity.names.size() > 0) {
                     val = aceEntity.names.get(0).text;
