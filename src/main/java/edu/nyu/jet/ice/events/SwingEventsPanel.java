@@ -350,7 +350,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
 
     public List<IceTree> findTreeOrClosest (String eventInstance) {
         DepTreeMap depTreeMap = DepTreeMap.getInstance();
-        depTreeMap.load();
+        depTreeMap.loadTrees();
         eventInstance = DepTreeMap.normalizeRepr(eventInstance);
         List<IceTree> trees = depTreeMap.findTree(eventInstance);
         if (trees != null) {
@@ -434,12 +434,12 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         frame.setSize(400, 580);
         frame.setAlwaysOnTop(true);
         String seed = inSeed;
-	System.out.println("Ice.selectedCorpus.eventInstanceFileName = " + Ice.selectedCorpus.eventInstanceFileName);
+	System.out.println("Ice.selectedCorpus.eventsFileName = " + Ice.selectedCorpus.eventsFileName);
 	System.out.println("Ice.selectedCorpus= " + Ice.selectedCorpus);
         EventBuilderThread builder = new EventBuilderThread(
                 seed,
 		FileNameSchema.getEventsFileName(Ice.selectedCorpusName),
-                // "cache/ACE-nw/Events", //Ice.selectedCorpus.eventInstanceFileName,
+                // "cache/ACE-nw/Events", //Ice.selectedCorpus.eventsFileName,
                 pathListFileName,
                 null,
                 bootstrap,
@@ -465,7 +465,7 @@ public class SwingEventsPanel extends JPanel implements Refreshable {
         currentEvent = event;
         DefaultListModel newListModel = new DefaultListModel();
         DepTreeMap depTreeMap = DepTreeMap.getInstance();
-        depTreeMap.load();
+        depTreeMap.loadTrees();
         for (IceTree tree : event.getTrees()) {
              //String repr = depTreeMap.findRepr(tree);
 	    String repr = tree.getRepr();

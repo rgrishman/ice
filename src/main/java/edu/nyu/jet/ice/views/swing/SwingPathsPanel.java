@@ -40,7 +40,6 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 
     private SwingIceStatusPanel iceStatusPanel;
     private JList patternList;
-    // private boolean sententialOnly;
     private boolean events;
     JTextField filterTextField = new JTextField(30);
 
@@ -108,7 +107,6 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 		    "Initializing Jet", 0, Ice.selectedCorpus.numberOfDocs + 30);
 		checkForAndFindRelations(progressMonitor);
 		// PathExtractionThread thread = new PathExtractionThread(true,
-		    // sententialOnly, 
 		    // events, filterTextField.getText(), patternList, progressMonitor);
 		// thread.start();
 		}});
@@ -161,15 +159,15 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
       */
 
     public void checkForAndFindRelations(ProgressMonitorI progressMonitor) {
-        String relationInstanceFileName = 
+        String relationsFileName = 
             FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);    //name + "Relations";
         String relationTypesFileName = 
             FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName);//name + "RelationTypes";
-        String eventInstanceFileName = 
+        String eventsFileName = 
             FileNameSchema.getEventsFileName(Ice.selectedCorpusName);       //name + "Events";
         String eventTypesFileName = 
             FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);   //name + "EventTypes";
-        String instanceFileName = events ? eventInstanceFileName : relationInstanceFileName;
+        String instanceFileName = events ? eventsFileName : relationsFileName;
         String typesFileName = events ? eventTypesFileName : relationTypesFileName;
         File file = new File(typesFileName);
         boolean fileExists = file.exists() && !file.isDirectory();
@@ -193,7 +191,6 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
             }
         }
         PathExtractionThread thread = new PathExtractionThread(shouldReuse,
-                // sententialOnly, 
                 events, filterTextField.getText(), patternList, progressMonitor);
         thread.start();
     }
@@ -204,7 +201,7 @@ public class SwingPathsPanel extends JPanel implements Refreshable {
 }
 
 /**
-  *  This is the class which actally displays the top-ranked patterns.
+  *  Thread which displays top-ranked patterns (paths or trees)
   */
 
 class PathExtractionThread extends Thread {
@@ -213,18 +210,15 @@ class PathExtractionThread extends Thread {
     private ProgressMonitorI progressMonitor;
     private String filter = "";;
     private JList patternList;
-    private boolean   sententialOnly = false;
     private boolean   events;
     private static final int SIZE_LIMIT = 100;
 
     public PathExtractionThread(boolean shouldReuse,
-                                // boolean sententialOnly,
             boolean events,
             String filter,
             JList patternList,
             ProgressMonitorI progressMonitor) {
         this.shouldReuse = shouldReuse;
-        // this.sententialOnly = sententialOnly;
         this.events = events;
         this.filter = filter;
         this.patternList    = patternList;
@@ -245,7 +239,7 @@ class PathExtractionThread extends Thread {
 			Ice.selectedCorpus.numberOfDocs,
 			progressMonitor);
 		finder.run();
-		Ice.selectedCorpus.relationInstanceFileName =
+		Ice.selectedCorpus.relationsFileName =
 		    FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
 		Ice.selectedCorpus.relationTypesFileName =
 		    FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
@@ -257,7 +251,7 @@ class PathExtractionThread extends Thread {
 			Ice.selectedCorpus.numberOfDocs,
 			progressMonitor);
 		finder.run();
-		Ice.selectedCorpus. eventInstanceFileName = 
+		Ice.selectedCorpus. eventsFileName = 
 		    FileNameSchema.getEventsFileName(Ice.selectedCorpusName);
 		Ice.selectedCorpus. eventTypesFileName = 
 		    FileNameSchema.getEventTypesFileName(Ice.selectedCorpusName);
@@ -270,11 +264,11 @@ class PathExtractionThread extends Thread {
         if (!events) {
             fileWithRankings = Ice.selectedCorpus.rankRelations();
             DepTreeMap depTreeMap = DepTreeMap.getInstance();
-            depTreeMap.load(false);
+            depTreeMap.loadTrees(false);
         } else /* events */ {
             fileWithRankings = Ice.selectedCorpus.rankEvents(); 
             DepPathMap depPathMap = DepPathMap.getInstance();
-            depPathMap.load(false);
+            depPathMap.loadPaths(false);
         }
 
     // filter and show paths
@@ -286,9 +280,6 @@ class PathExtractionThread extends Thread {
         while (k <= SIZE_LIMIT) {
             String line = reader.readLine();
             if (line == null) break;
-            if (sententialOnly && !line.matches(".*nsubj-1:.*:dobj.*")) {
-                continue;
-            }
             String[] parts = line.split("\\t");
             if (parts.length < 2) {
                 continue;

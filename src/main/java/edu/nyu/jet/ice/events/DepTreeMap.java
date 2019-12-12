@@ -130,12 +130,12 @@ public class DepTreeMap {
 	tree.setExample(example);
     }
 
-    public boolean load () {
-	return load (false);
+    public boolean loadTrees () {
+	return loadTrees (false);
     }
 
-    public boolean forceLoad () {
-	return load (true);
+    public boolean forceLoadTrees () {
+	return loadTrees (true);
     }
 
     /**
@@ -150,12 +150,12 @@ public class DepTreeMap {
      *  @return  true if the load was successful
      */
 
-    public boolean load (boolean always) {
+    public boolean loadTrees (boolean always) {
         String fileName = FileNameSchema.getEventReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName) && treeExampleMap.size() > 0) return true; 
-        logger.info ("Loading reprs and tooltips from file {}", fileName);
+        logger.info ("Loading tree reprs and tooltips from file {}", fileName);
         treeExampleMap.clear();
         treeReprMap.clear();
         reprTreeMap.clear();

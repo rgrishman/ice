@@ -58,7 +58,7 @@ public class IceEvent {
        public void updateTrees() {
            DepTreeMap depTreeMap = DepTreeMap.getInstance();
            trees = new ArrayList<IceTree>();
-           depTreeMap.load();
+           depTreeMap.loadTrees();
            for (String repr : reprs) {
                List<IceTree> trees = depTreeMap.findTree(repr);
                addTrees(trees);
