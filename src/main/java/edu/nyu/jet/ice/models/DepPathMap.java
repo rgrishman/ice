@@ -2,7 +2,7 @@ package edu.nyu.jet.ice.models;
 
 import edu.nyu.jet.aceJet.AnchoredPath;
 import edu.nyu.jet.ice.uicomps.Ice;
-import edu.nyu.jet.ice.events.DepTreeMap;
+// import edu.nyu.jet.ice.events.DepTreeMap; xxx
 import edu.nyu.jet.ice.utils.FileNameSchema;
 import edu.nyu.jet.Logger;
 import edu.nyu.jet.LoggerFactory;
@@ -160,12 +160,12 @@ public class DepPathMap {
         }
     }
 
-    public boolean load () {
-	return load (false);
+    public boolean loadPaths () {
+	return loadPaths (false);
     }
 
-    public boolean forceLoad () {
-	return load (true);
+    public boolean forceLoadPaths () {
+	return loadPaths (true);
     }
 
     /**
@@ -173,12 +173,12 @@ public class DepPathMap {
      *  currently selected corpus.
      */
 
-    public boolean load (boolean always) {
+    public boolean loadPaths (boolean always) {
         String fileName = FileNameSchema.getRelationReprFileName(Ice.selectedCorpusName);
         File f = new File(fileName);
         if (!f.exists() || f.isDirectory()) return false;
         if (previousFileName != null && previousFileName.equals(fileName)) return true;
-        logger.info ("Loading reprs and tooltips from file {}", fileName);
+        logger.info ("Loading path reprs and tooltips from file {}", fileName);
         reprPathMap.clear();
         int count = 0;
         try {
@@ -229,8 +229,8 @@ public class DepPathMap {
      */
 
     public static String normalizeRepr(String repr) {
-        // return repr.toLowerCase().replaceAll("\\s+", " ").trim();
-        return DepTreeMap.normalizeRepr (repr);
+        return repr.toLowerCase().replaceAll("\\s+", " ").trim();
+        // return DepPathMap.normalizeRepr (repr);
     }
 
     /**
