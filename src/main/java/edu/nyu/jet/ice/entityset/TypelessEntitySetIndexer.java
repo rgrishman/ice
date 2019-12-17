@@ -159,7 +159,7 @@ public class TypelessEntitySetIndexer {
 				List<Annotation> sentences = doc.annotationsOfType("sentence");
 				if (sentences == null) continue;
 				for (Annotation sentence : sentences) {
-					allEvents.addAll(processSentence(sentence, doc, syntacticRelationSet, words));
+                        allEvents.addAll(processSentence(sentence, doc, syntacticRelationSet, words));
 				}
 				if (progressMonitor != null) {
 					if (progressMonitor.isCanceled()) {

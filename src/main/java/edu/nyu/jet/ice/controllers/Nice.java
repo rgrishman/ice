@@ -10,6 +10,8 @@ import edu.nyu.jet.ice.views.Refreshable;
 import edu.nyu.jet.ice.views.swing.*;
 import edu.nyu.jet.ice.events.SwingEventsPanel; // <<
 import edu.nyu.jet.ice.uicomps.Ice;
+import edu.nyu.jet.concepts.ConceptHierarchy;
+import edu.nyu.jet.concepts.ConceptHierarchyWindow;
 import edu.nyu.jet.LoggerFactory;
 import net.miginfocom.swing.MigLayout;
 import org.ho.yaml.YamlDecoder;
@@ -87,6 +89,11 @@ public class Nice {
 	entitySetPanel.setName("entity set panel");
     }
 
+    /**
+      *  Saves the current state of the ICE model, including corpora,
+      *  entity sets, relations and events, to the yml file.
+
+
     public void saveProgress() {
         try {
             File yamlFile = new File("ice.yml");
@@ -110,6 +117,11 @@ public class Nice {
         JetEngineBuilder.build();
     }
 
+    /**
+     *  Where everything starts:  the entry point for the entire ICE system.
+     *  Performs various initializationa.
+     */
+
     public static void main(String[] args) throws IOException {
         printCover();
         LoggerFactory.setLoggers();
@@ -118,6 +130,12 @@ public class Nice {
         toolTipManager.setDismissDelay(60000);
         initIce();
         loadPathMatcher(iceProperties);
+        String ontologyFileName = iceProperties.getProperty("Ice.Ontology.fileName");
+        if (ontologyFileName != null) {
+            File ontologyFile = new File(ontologyFileName);
+            Ice.ontology = new ConceptHierarchy(ontologyFile);
+            new ConceptHierarchyWindow(Ice.ontology, ontologyFile);
+        }
         mainFrame = new JFrame();
         mainFrame.setLayout(new MigLayout());
         mainFrame.setTitle("Integrated Customization Environment (ICE) v0.2demo");
@@ -125,10 +143,16 @@ public class Nice {
 
         reassemble();
 
-	// verify that essential files are present
-	locateFile("parseprops");
-	locateFile("onomaprops");
+        // verify that essential files are present
+        locateFile("parseprops");
+        // locateFile("onomaprops");
     }
+
+    /**
+     *  Loads the yaml file, which contains information about the
+     *  current state of the model, including corpora, entity sets,
+     *  relations and events.
+     */
 
     public static void initIce(String branch) {
         String selectedCorpusName = null;;
@@ -190,6 +214,11 @@ public class Nice {
         return iceProperties;
     }
 
+    /**
+     *  If property <i>property</i> was assigned an imteger value
+     *  in iceprops, return that value, else returns <i>defaultValue</i>
+     */
+
     public static int iceIntegerProperty (String propertyName, int defaultValue) {
 	if (Ice.iceProperties.getProperty(propertyName) != null) {
 	    try {
@@ -221,7 +250,7 @@ public class Nice {
         if (f.exists())
             return f;
         System.err.println("Cannot locate file " + fname + ", cannot proceed");
-        System.exit(1);
+        // System.exit(1);
         return null;   // required by the compiler
     }
 
