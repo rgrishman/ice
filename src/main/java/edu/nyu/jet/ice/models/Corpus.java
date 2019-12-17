@@ -19,8 +19,6 @@ import edu.nyu.jet.ice.terminology.TermCounter;
 import edu.nyu.jet.ice.terminology.TermRanker;
 import edu.nyu.jet.ice.events.EventFinder;
 
-//import java.nio.file.Files;
-//import java.nio.file.Paths;
 import java.awt.*;
 import java.util.*;
 import java.io.*;
@@ -47,18 +45,22 @@ public class Corpus {
     public int numberOfDocs;
     public String docListFileName;
     public Map<String, String> preprocessCacheMap;
+    public String backgroundCorpus;
     // for term finder
     public String wordCountFileName;
-    public String backgroundCorpus;
     public String termFileName;
-    // for relation finder
-    public String relationTypesFileName;
-    public String relationInstanceFileName;
-    // public RelationBuilder relationBuilder;
-    // for event finder
-    public String eventTypesFileName;
-    public String eventInstanceFileName;
-    // public EventBuilder eventBuilder;
+
+    // for relations
+    public Map<String, Integer> relationTypeCounts = new HashMap<String, Integer>();
+    public Map<String, Integer> relationInstanceCounts = new HashMap<String, Integer>();
+    public String relationsFileName = FileNameSchema.getRelationsFileName(name);
+    public String relationTypesFileName = FileNameSchema.getRelationTypesFileName(name);
+
+    // for events
+    public Map<String, Integer> eventTypeCounts = new HashMap<String, Integer>();
+    public Map<String, Integer> eventInstanceCounts = new HashMap<String, Integer>();
+    public String eventsFileName = FileNameSchema.getEventsFileName(name);
+    public String eventTypesFileName = FileNameSchema.getEventTypesFileName(name);
 
     public Set<String> entitiesSuggested = new HashSet<String>();
     public Set<String> relationsSuggested = new HashSet<String>();
@@ -134,10 +136,6 @@ public class Corpus {
 
     public void setTermFileName(String s) {
         termFileName = s;
-    }
-
-    public String getRelationTypesFileName() {
-        return relationTypesFileName;
     }
 
     ProgressMonitorI wordProgressMonitor;
@@ -226,8 +224,8 @@ public class Corpus {
     public void findRelations (ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
 
         RelationFinder finder = new RelationFinder(
-                docListFileName, directory, filter, relationInstanceFileName,
-                relationTypesFileName, publishToTextArea, numberOfDocs,
+                docListFileName, directory, filter, FileNameSchema.getRelationsFileName(name),
+                FileNameSchema.getRelationTypesFileName(name), publishToTextArea, numberOfDocs,
                 progressMonitor);
         finder.start();
     }
@@ -285,8 +283,8 @@ public class Corpus {
     }
 
     public void findEvents (ProgressMonitorI progressMonitor, String docListPrefix, JTextArea publishToTextArea) {
-        eventInstanceFileName = FileNameSchema.getEventsFileName(name);
-        eventTypesFileName = FileNameSchema.getEventTypesFileName(name);
+        String eventInstanceFileName = FileNameSchema.getEventsFileName(name);
+        String eventTypesFileName = FileNameSchema.getEventTypesFileName(name);
         docListFileName = FileNameSchema.getDocListFileName(name);
 
         EventFinder finder = new EventFinder(
@@ -370,8 +368,8 @@ public class Corpus {
     }
 
     public List<String> getRelations(int limit) {
-        relationTypesFileName = FileNameSchema.getRelationTypesFileName(name);
-        return getTerms(relationTypesFileName, limit, Corpus.relationFilter);
+        String relationTypesFileName = FileNameSchema.getRelationTypesFileName(name);
+        return null;  // xxx  getTerms(relationTypesFileName, limit, Corpus.relationFilter);
     }
 
     public static List<String> getTerms(String termFile, int limit, ListFilter tf) {
@@ -391,7 +389,7 @@ public class Corpus {
 //            if (exampleFile.exists() && !exampleFile.isDirectory()) {
 //                exampleReader = new BufferedReader(new FileReader(exampleFile));
 //            }
-            boolean shouldReload = !depPathMap.load();
+            boolean shouldReload = !depPathMap.loadPaths();
             if (shouldReload) {
                 depPathMap.clear();
             }
