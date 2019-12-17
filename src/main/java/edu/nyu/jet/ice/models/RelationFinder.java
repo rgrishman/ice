@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.io.IOException;
 
 /**
- * count all dependency paths in corpus.
+ * A Thread for running DepPaths:  counts all dependency paths in corpus.
  */
 public class RelationFinder extends Thread {
 
@@ -21,14 +21,11 @@ public class RelationFinder extends Thread {
     public RelationFinder(String docListFileName, String directory, String filter,
                    String instances, String types, JTextArea area, int numberOfDocs,
                    ProgressMonitorI relationProgressMonitor) {
-        args = new String[7];
-        args[0] = "onomaprops";
+        args = new String[4];
+        args[0] = "parseprops";
         args[1] = docListFileName;
         args[2] = directory;
         args[3] = filter;
-        args[4] = instances;
-        args[5] = "temp";
-        args[6] = "temp.source.dict";
         this.types = types;
         this.area = area;
         this.numberOfDocs = numberOfDocs;
@@ -50,9 +47,10 @@ public class RelationFinder extends Thread {
             DepPaths.progressMonitor = relationProgressMonitor;
 	    System.out.println("$$$ types = " + types);
             DepPaths.main(args);
-            Corpus.sort("temp", types);
+            String sortedTypes = types + ".sorted";
+            Corpus.sort(types, sortedTypes);
 	    System.out.println("$$$ types = " + types);
-            depPathMap.load(true);
+            depPathMap.loadPaths(true);
             if(area != null) {
                 Corpus.displayTerms(types, 40, area, Corpus.relationFilter);
             }

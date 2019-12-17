@@ -9,8 +9,9 @@ import javax.swing.*;
 import java.io.IOException;
 
 /**
- * count all dependency paths in corpus.
+ * Counts all IceTrees in corpus.
  */
+
 public class EventFinder extends Thread {
 
     String[] args;
@@ -22,14 +23,11 @@ public class EventFinder extends Thread {
     public EventFinder(String docListFileName, String directory, String filter,
                    String instances, String types, JTextArea area, int numberOfDocs,
                    ProgressMonitorI eventProgressMonitor) {
-        args = new String[7];
-        args[0] = "onomaprops";
+        args = new String[4];
+        args[0] = "parseprops";
         args[1] = docListFileName;
         args[2] = directory;
         args[3] = filter;
-        args[4] = instances;
-        args[5] = "event-temp";   //  <==== lower-level bindings override this
-        args[6] = "temp.source.dict";
         this.types = types;
         this.area = area;
         this.numberOfDocs = numberOfDocs;
@@ -51,7 +49,7 @@ public class EventFinder extends Thread {
             DepPaths.progressMonitor = eventProgressMonitor;
             DepPaths.main(args);
        //   Corpus.sort("event-temp", types); //  <=====
-            depTreeMap.load(true);
+            depTreeMap.loadTrees(true);
             // if(area != null) {
                 // Corpus.displayTerms(types, 40, area, Corpus.eventFilter);
             // }

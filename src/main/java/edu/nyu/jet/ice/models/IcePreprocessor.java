@@ -23,10 +23,7 @@ import edu.nyu.jet.pat.PatternCollection;
 import edu.nyu.jet.pat.PatternSet;
 import edu.nyu.jet.refres.Resolve;
 import edu.nyu.jet.ice.terminology.TermCounter;
-import edu.nyu.jet.tipster.Annotation;
-import edu.nyu.jet.tipster.Document;
-import edu.nyu.jet.tipster.ExternalDocument;
-import edu.nyu.jet.tipster.Span;
+import edu.nyu.jet.tipster.*;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -91,7 +88,7 @@ public class IcePreprocessor extends Thread {
     }
 
     String inputDir;
-    String propsFile;
+    String propsFile = "parseprops";
     String docList;
     String inputSuffix;
     String cacheDir;
@@ -102,6 +99,8 @@ public class IcePreprocessor extends Thread {
     public void setProgressMonitor(ProgressMonitorI progressMonitor) {
         this.progressMonitor = progressMonitor;
     }
+
+    boolean isCanceled = false;
 
     ProgressMonitorI progressMonitor = null;
 
@@ -118,7 +117,7 @@ public class IcePreprocessor extends Thread {
 
     public IcePreprocessor(String inputDir, String propsFile, String docList, String inputSuffix, String cacheDir) {
         this.inputDir = inputDir;
-        this.propsFile = propsFile;
+        this.propsFile = "parseprops" ;
         this.docList = docList;
         this.inputSuffix = inputSuffix;
         this.cacheDir = cacheDir;
@@ -142,7 +141,7 @@ public class IcePreprocessor extends Thread {
             System.err.println("  propsFile docList inputDir inputSuffix cacheDir");
             System.exit(-1);
         }
-        String propsFile = args[0];
+        String propsFile = "parseprops"; // args[0];
         String docList = args[1];
         String inputDir = args[2];
         String inputSuffix = args[3];
@@ -156,7 +155,6 @@ public class IcePreprocessor extends Thread {
         icePreprocessor.processFiles(selectedCorpusDir,
                 docList.split(File.separator)[0].split("\\.")[0]);
     }
-
 
     /**
      * preprocess all the files in a corpus.
@@ -174,7 +172,7 @@ public class IcePreprocessor extends Thread {
         cacheDirFile.mkdirs();
 
         // initialize Jet
-        JetTest.initializeFromConfig(Nice.locateFile(propsFile));
+        JetTest.initializeFromConfig(Nice.locateFile("parseprops"));
 
         try {
             FileUtils.copyFile(Nice.locateFile(JetTest.getConfig("Jet.dataPath") + File.separator + "apf.v5.1.1.dtd"),
@@ -188,119 +186,122 @@ public class IcePreprocessor extends Thread {
         // ACE mode (provides additional antecedents ...)
         Resolve.ACE = true;
 
-        int docCount = 0;
-        String docName;
         if (progressMonitor != null) {
             progressMonitor.setProgress(5);
             progressMonitor.setNote("Loading Jet models... done.");
         }
+
         try {
             BufferedReader docListReader = new BufferedReader(new FileReader(docList));
             boolean isCanceled = false;
-            docCount = 0;
+            int docCount = 0;
+            String docName;
             System.out.println();
             while ((docName = docListReader.readLine()) != null) {
                 docCount++;
-                try {
-                    String inputFile;
-                    if ("*".equals(inputSuffix.trim())) {
-                        inputFile = docName;
-                    } else {
-                        inputFile = docName + "." + inputSuffix;
-                    }
-                    System.out.println(String.format("[Corpus:%s]", Ice.selectedCorpusName)
-                            + " Processing document " + docCount + ": " + inputFile);
-                    ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
-                    doc.setAllTags(true);
-                    doc.open();
-                    // process document
-                    Ace.monocase = Ace.allLowerCase(doc);
-                    // --------------- code from Ace.java
-                    doc.stretchAll();
-                    // process document
-                    Ace.monocase = Ace.allLowerCase(doc);
-                    Control.processDocument(doc, null, docCount == -1, docCount);
-                    Ace.tagReciprocalRelations(doc);
-                    String docId = Ace.getDocId(doc);
-                    if (docId == null)
-                        docId = docName;
-                    // create empty Ace document
-                    String sourceType = "text";
-                    aceDoc =
-                            new AceDocument(inputFile, sourceType, docId, doc.text());
-                    // build entities
-                    Ace.buildAceEntities(doc, docId, aceDoc);
-                    aceDoc.write(new PrintWriter(
-                            new BufferedWriter(
-                                    new FileWriter(getAceFileName(cacheDir, inputDir, inputFile)))), doc);
-                    // ---------------
-                    // IcePreprocessor.tagAdditionalMentions(doc, aceDoc);
-                    saveAnnotations(doc, aceDoc, getPosFileName(cacheDir, inputDir, inputFile));
-
-                    doc.removeAnnotationsOfType("ENAMEX");
-                    doc.removeAnnotationsOfType("entity");
-                    SyntacticRelationSet relations = doc.relations;
-                    if (relations == null) {
-                        continue;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                String inputFile;
+                if ("*".equals(inputSuffix.trim())) {
+                    inputFile = docName;
+                } else {
+                    inputFile = docName + "." + inputSuffix;
                 }
-                if (progressMonitor != null) {
-                    progressMonitor.setProgress(docCount + 5);
-                    progressMonitor.setNote(docCount + " files processed");
-                    if (progressMonitor.isCanceled()) {
-                        isCanceled = true;
-                        System.err.println("Relation path collection canceled.");
-                        break;
-                    }
-                }
-            }
-
-            // Do word count now
-            if (Ice.selectedCorpus != null) {
-                if (progressMonitor != null) {
-                    progressMonitor.setNote("Counting words and relations...");
-                }
-                if (countWords(isCanceled)) return;
-                System.err.println("Finding dependency paths...");
-                if (!isCanceled && (progressMonitor == null || !progressMonitor.isCanceled())) {
-                    RelationFinder finder = new RelationFinder(
-                            Ice.selectedCorpus.docListFileName, Ice.selectedCorpus.directory,
-                            Ice.selectedCorpus.filter, FileNameSchema.getRelationsFileName(Ice.selectedCorpusName),
-                            FileNameSchema.getRelationTypesFileName(Ice.selectedCorpusName), null,
-                            Ice.selectedCorpus.numberOfDocs,
-                            null);
-                    finder.run();
-                    Ice.selectedCorpus.relationTypesFileName =
-                            FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
-                    Ice.selectedCorpus.relationInstanceFileName =
-                            FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
-                }
-                if (progressMonitor != null && !progressMonitor.isCanceled()) {
-                    progressMonitor.setProgress(progressMonitor.getMaximum());
-                }
+                System.out.println(String.format("[Corpus:%s]", Ice.selectedCorpusName)
+                        + " Processing document " + docCount + ": " + inputFile);
+                ExternalDocument doc = new ExternalDocument("sgml", inputDir, inputFile);
+                doc.setAllTags(true);
+                doc.open();
+                Ace.monocase = Ace.allLowerCase(doc);
+                doc.stretchAll();
+                Control.processDocument(doc, null, docCount == -1, docCount);
+                saveAnnotations(doc, aceDoc, getPosFileName(cacheDir, inputDir, inputFile));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public static void loadAnnotations (Document doc) throws IOException {
+        loadPOS (doc);
+        loadENAMEX (doc);
+        loadTerms (doc);
+        loadEntities (doc);
+    }
+
+/*
+
+    public void postprocessDocument (Document doc) {
+        Ace.tagReciprocalRelations(doc);
+        String docId = Ace.getDocId(doc);
+        // build entities
+        Ace.buildAceEntities(doc, docId, aceDoc);
+        aceDoc.write(new PrintWriter
+                (new BufferedWriter
+                 (new FileWriter
+                  (getAceFileName
+                   (cacheDir, inputDir, inputFile)))), 
+                doc);
+        SyntacticRelationSet relations = doc.relations;
+        if (relations == null) {
+            docId = "";
+        }
+       
+        if (progressMonitor != null) {
+            progressMonitor.setProgress(docCount + 5);
+            progressMonitor.setNote(docCount + " files processed");
+            if (progressMonitor.isCanceled()) {
+                isCanceled = true;
+                System.err.println("Relation path collection canceled.");
+                break;
+            }
+        }
+        
+            // Do word count now
+       if (Ice.selectedCorpus != null) {
+           if (progressMonitor != null) {
+               progressMonitor.setNote("Counting words and relations...");
+           }
+           if (countWords(isCanceled)) return;
+           System.err.println("Finding dependency paths...");
+           if (!isCanceled && (progressMonitor == null || !progressMonitor.isCanceled())) {
+               RelationFinder finder = new RelationFinder
+                   (Ice.selectedCorpus.docListFileName, 
+                  Ice.selectedCorpus.directory,
+                    Ice.selectedCorpus.filter, 
+                  FileNameSchema.getRelationsFileName
+                    (Ice.selectedCorpusName),
+                    FileNameSchema.getRelationTypesFileName
+                 (Ice.selectedCorpusName), null,
+                    Ice.selectedCorpus.numberOfDocs,
+                   null);
+              finder.run();
+               Ice.selectedCorpus.relationTypesFileName =
+                   FileNameSchema.getRelationTypesFileName(Ice.selectedCorpus.name);
+               Ice.selectedCorpus.relationInstanceFileName =
+                   FileNameSchema.getRelationsFileName(Ice.selectedCorpusName);
+           }
+           if (progressMonitor != null && !progressMonitor.isCanceled()) {
+                progressMonitor.setProgress(progressMonitor.getMaximum());
+           }
+        }  
+    }
+
+*/
+
     /**
-     *  Saves POS tags, name tags, terms, dependency parses, and the extents
-     *  of entity mentions.  This information is saved in a single file;  the first
+     *  Saves POS tags, name tags, terms, dependency parses, entities, and
+     *  entity mentions.  This information is saved in a single file;  the first
      *  token in each line of the file indicates the type of information in that line.
      */
 
-    public static void saveAnnotations (Document doc, AceDocument aceDoc, String fn) throws IOException {
-        PrintWriter pw = new PrintWriter (new FileWriter (fn));
-        savePOS (doc, pw);
-        saveENAMEX (doc, pw);
-        saveTerms (doc, pw);
-        saveJetExtents (aceDoc, pw);
-        saveSyntacticRelationSet (doc.relations, pw);
-        pw.close();
-    }
+     static void saveAnnotations (Document doc, AceDocument aceDoc, String fn) throws IOException {
+         PrintWriter pw = new PrintWriter (new FileWriter (fn));
+         saveSyntacticRelationSet (doc.relations, pw);
+         savePOS (doc, pw);
+         saveENAMEX (doc, pw);
+         saveTerms (doc, pw);
+         saveEntities (doc, pw);
+         pw.close();
+     }
 
     /**
      *  Saves POS tags.
@@ -310,43 +311,36 @@ public class IcePreprocessor extends Thread {
         List<Annotation> names = doc.annotationsOfType("tagger");
         if (names != null) {
             for (Annotation name : names) {
-                saveAnnotation(pw, "tagger", name.span(), (String) name.get("cat"));
+                saveAnnotation(pw, "tagger", name.span(), "cat", (String) name.get("cat"));
             }
         }
     }
 
-    public static void saveAnnotation (PrintWriter pw, String type, Span s, String feat) {
-        saveAnnotation (pw, type, String.format("%d\t%d\t%s", s.start(), s.end(), feat));
-    }
+    /**
+     * Save an entry with no features in the annotation cache.
+     */
 
-    public static void saveAnnotation (PrintWriter pw, String type, String feat) {
-        pw.println(String.format("%s\t%s", type, feat));
+    public static void saveAnnotation (PrintWriter pw, String type, Span s) {
+        pw.println(String.format("%s\t%d\t%d", type, s.start(), s.end()));
     }
 
     /**
-     * save each name (ENAMEX annotation) in document <CODE>doc</CODE> to PrintWriter 
-     * <CODE>pw</CODE>.  File format: one name per line:  ENAMEX + start + end + type
+     * Save an entry with one feature in the annotation cache.
      */
 
-//    public static void saveENAMEX(Document doc, String fileName) throws IOException {
-//        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
-//        List<Annotation> names = doc.annotationsOfType("ENAMEX");
-//        if (names != null) {
-//            for (Annotation name : names) {
-//                pw.println(String.format("%s\t%d\t%d\t%s\t%s",
-//                        name.get("TYPE"), name.start(), name.end(),
-//                        name.get("val") != null ? name.get("val") : doc.text(name).replaceAll("\\s+", " ").trim(),
-//                        name.get("mType") != null ? name.get("mType") : name.get("TYPE")));
-//            }
-//        }
-//        pw.close();
-//    }
+    public static void saveAnnotation (PrintWriter pw, String type, Span s, String feat, String value) {
+        pw.println(String.format("%s\t%d\t%d\t%s\t%s", type, s.start(), s.end(), feat, value));
+    }
+
+    /**
+     *  Save all ENAMEX annotations with their TYPE features in the annotation cache.
+     */
 
     public static void saveENAMEX (Document doc, PrintWriter pw) {
-        List<Annotation> names = doc.annotationsOfType("ENAMEX");
+       List<Annotation> names = doc.annotationsOfType("ENAMEX");
         if (names != null) {
             for (Annotation name : names) {
-                saveAnnotation(pw, "ENAMEX", name.span(), (String) name.get("TYPE"));
+                saveAnnotation(pw, "ENAMEX", name.span(), "TYPE", (String)name.get("TYPE"));
             }
         }
     }
@@ -373,7 +367,7 @@ public class IcePreprocessor extends Thread {
             }
         }
         for (String k : localCount.keySet()) {
-            saveAnnotation (pw, "term", k + "\t" + localCount.get(k));
+            pw.println(String.format("term\t%s\t%d", k, localCount.get(k)));
         }
     }
 
@@ -393,7 +387,7 @@ public class IcePreprocessor extends Thread {
         if (!isCanceled) {
             // && (progressMonitor == null || !progressMonitor.isCanceled())
             String wordCountFileName = FileNameSchema.getWordCountFileName(Ice.selectedCorpus.name);
-            TermCounter counter = TermCounter.prepareRun("onomaprops",
+            TermCounter counter = TermCounter.prepareRun("onomaprops", // xxx
                     Arrays.asList(docFileNames),
                     Ice.selectedCorpus.directory,
                     Ice.selectedCorpus.filter,
@@ -407,7 +401,7 @@ public class IcePreprocessor extends Thread {
 
 
     private void createNewFileList(List<String> newFileNames, String newDirName, String docListFileName) throws IOException {
-        //Ice.selectedCorpus.directory = newDirName;
+        //Ice.selectedCorpus.directory = newDirName; xxx`
         PrintWriter fileListWriter = new PrintWriter(new FileWriter(docListFileName));
         for (String fileName : newFileNames) {
             if (!"*".equals(inputSuffix.trim())) {
@@ -425,7 +419,7 @@ public class IcePreprocessor extends Thread {
 
     public static PatternSet loadPatternSet(File file) throws IOException {
         PatternCollection pc = new PatternCollection();
-        pc.readPatternCollection(new FileReader(file));
+        // pc.readPatternCollection(new FileReader(file));
         pc.makePatternGraph();
         return pc.getPatternSet("quantifiers");
     }
@@ -489,29 +483,38 @@ public class IcePreprocessor extends Thread {
      * along with its extent.  Format:  one mention per line, mention id + start + end.
      */
 
-    public static void saveJetExtents(AceDocument aceDoc, PrintWriter pw) throws IOException {
-        List<AceEntity> entities = aceDoc.entities;
+    public static void saveEntities (Document doc, PrintWriter pw) throws IOException {
+        Vector<Annotation> entities = (Vector<Annotation>) doc.annotationsOfType("entity");
         if (entities != null) {
-            for (AceEntity entity : entities) {
-                for (AceEntityMention mention : entity.mentions) {
-                    saveAnnotation (pw, "jetExtent", mention.jetHead, mention.id);
+            for (Annotation entity : entities) {
+                Vector<Annotation> mentions = (Vector<Annotation>) entity.get("mentions");
+                for (Annotation mention : mentions) {
+                    saveAnnotation (pw, "EntityMention", mention.span());
                 }
+                saveAnnotation (pw, "Entity", entity.span());
             }
         }
     }
 
-    public static Map<String, Span> loadJetExtents() throws IOException {
-        Map<String, Span> jetExtentsMap = new HashMap<String, Span>();
+    public static void loadEntities (Document doc) throws IOException {
+        Vector<Annotation> mentions = new Vector<Annotation>();
         for (String line : annotationCache) {
-            if (line.startsWith("jetExtent")) {
+            if (line.startsWith("EntityMention")) {
                 String[] parts = line.split("\\t");
                 int start = Integer.valueOf(parts[1]);
                 int end = Integer.valueOf(parts[2]);
-                String id = parts[3];
-                jetExtentsMap.put(id, new Span(start, end));
+                Annotation mention = new Annotation("mention", new Span(start, end), null);
+                doc.addAnnotation(mention);
+                mentions.add(mention);
+            } else if (line.startsWith("Entity")) {
+                String[] parts = line.split("\\t");
+                int start = Integer.valueOf(parts[1]);
+                int end = Integer.valueOf(parts[2]);
+                if (mentions.size() > 0)
+                    doc.annotate("entity", new Span(start, end), new FeatureSet("mentions", mentions));
+                mentions = new Vector<Annotation>();
             }
         }
-        return jetExtentsMap;
     }
 
     /**
@@ -524,19 +527,18 @@ public class IcePreprocessor extends Thread {
         for (String line : annotationCache) {
             if (line.startsWith("ENAMEX")) {
                 String[] parts = line.split("\\t");
-                if (parts.length != 4 && parts.length != 6) {
+                if (parts.length != 5 && parts.length != 9) {
                     System.err.println("Format error in ENAMEX cache:");
                     System.err.println("\tline:" + line);
                     continue;
                 }
                 int start = Integer.valueOf(parts[1]);
                 int end = Integer.valueOf(parts[2]);
-                String type = parts[3];
-                String val  = parts.length == 6 ? parts[4].trim() : "UNK";
-                String mType = parts.length == 6 ? parts[5].trim() : "UNK";
+                String type = parts[4];
+                // String val  = parts.length == 6 ? parts[4].trim() : "UNK";  xxx
+                // String mType = parts.length == 6 ? parts[5].trim() : "UNK";  xxx
                 Annotation newAnn = new Annotation("ENAMEX", new Span(start, end),
                         new FeatureSet("TYPE", type));
-
                 boolean conflict = false;
                 for (Annotation existingAnn : existingNames) {
                     if (isCrossed(newAnn, existingAnn)) {
@@ -545,51 +547,6 @@ public class IcePreprocessor extends Thread {
                 }
                 if (!conflict) {
                     doc.addAnnotation(newAnn);
-                }
-            }
-        }
-    }
-    /**
-     *  For each ACE entity which includes a named mention, tag all other
-     *  mentions of the entity with the same ENAMEX tag, including name
-     *  and ACE type.
-     *  <br>
-     *  This requires that ACEDocuments be saved during preprocessing, and
-     *  assumes that entity coreference does not change.
-     */
-
-    public static void loadAdditionalMentions(Document doc,
-                                              String cacheDir,
-                                              String inputDir,
-                                              String inputFile) throws IOException {
-        String aceFileName = getAceFileName(cacheDir, inputDir, inputFile);
-        String txtFileName = inputDir + File.separator + inputFile;
-        if (!(new File(aceFileName)).exists()) {
-            return;
-        }
-
-        // String jetExtentsFileName = cacheFileName(cacheDir, inputDir, inputFile);
-        Map<String, Span> jetExtentsMap = loadJetExtents();
-        aceDoc= new AceDocument(txtFileName, aceFileName);
-        if (aceDoc.entities != null) {
-            for (AceEntity aceEntity : aceDoc.entities) {
-                String val = "";
-                if (aceEntity.names != null && aceEntity.names.size() > 0) {
-                    val = aceEntity.names.get(0).text.replaceAll("\\s+", " ").trim();
-                } else {
-                    break;
-                }
-                if (aceEntity.mentions != null) {
-                    for (AceEntityMention mention : aceEntity.mentions) {
-                        Span span = jetExtentsMap.get(mention.id);
-                        if (doc.annotationsAt(span.start(), "ENAMEX") == null) {
-                            doc.addAnnotation(new Annotation("ENAMEX",
-                                    span,
-                                    new FeatureSet("TYPE", aceEntity.type,
-                                            "val", val,
-                                            "mType", mention.type)));
-                        }
-                    }
                 }
             }
         }
@@ -704,6 +661,7 @@ public class IcePreprocessor extends Thread {
         return cacheFileName(cacheDir, inputDir, inputFile) + ".ace";
     }
 
+    /*
     public static void tagAdditionalMentions(Document doc,
                                              AceDocument aceDoc) {
         if (aceDoc.entities != null) {
@@ -729,6 +687,7 @@ public class IcePreprocessor extends Thread {
             }
         }
     }
+    */
 
     public static boolean isCrossed(Annotation ann1, Annotation ann2) {
         if (ann1.start() >= ann2.start() && ann1.start() < ann2.end() ||
@@ -780,7 +739,8 @@ public class IcePreprocessor extends Thread {
 
     public static void saveSyntacticRelationSet(SyntacticRelationSet relationSet, PrintWriter pw) throws IOException {
         for (SyntacticRelation sr : relationSet)
-            saveAnnotation (pw, "dep", relationToString(sr));
+            pw.println("dep\t" + relationToString(sr));
+
     }
 
     private static String relationToString (SyntacticRelation sr) {
@@ -794,15 +754,14 @@ public class IcePreprocessor extends Thread {
      *  message if the cache has no dependency information.
      */
 
-    public static SyntacticRelationSet loadSyntacticRelationSet() throws IOException {
+    public static SyntacticRelationSet loadSyntacticRelationSet() {
         SyntacticRelationSet relations = new SyntacticRelationSet();
         boolean found = false;
         for (String line : annotationCache) {
-            if (line.startsWith("dep")) {
-                line = line.substring(4);
-                relations.add(new SyntacticRelation(line));
-                found = true;
-            }
+            if (! line.startsWith("dep\t")) break;
+            line = line.substring(4);
+            relations.add(new SyntacticRelation(line));
+            found = true;
         }
         if (!found)
             System.out.println("Warning: no dependency information in annotation cache.");
@@ -874,7 +833,6 @@ public class IcePreprocessor extends Thread {
             }
             ret += stemmer.getStem(tmp[tmp.length - 1].toLowerCase(), pos.toLowerCase());
         }
-        //System.out.println("[stemmer] " + ret);
         return ret;
     }
 
