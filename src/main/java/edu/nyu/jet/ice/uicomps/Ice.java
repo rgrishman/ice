@@ -17,6 +17,7 @@ import edu.nyu.jet.ice.models.IceRelation;
 import edu.nyu.jet.ice.models.DepPathMap;
 import edu.nyu.jet.ice.events.IceEvent;
 import edu.nyu.jet.ice.events.DepTreeMap;
+import edu.nyu.jet.concepts.ConceptHierarchy;
 
 import edu.nyu.jet.Logger;
 import edu.nyu.jet.LoggerFactory;
@@ -44,10 +45,12 @@ public class Ice {
         selectedCorpusName = corpus;
         selectedCorpus = corpora.get(selectedCorpusName);
         DepPathMap depPathMap = DepPathMap.getInstance();
-        depPathMap.load(false);
+        depPathMap.loadPaths(false);
         DepTreeMap depTreeMap = DepTreeMap.getInstance();
-        depTreeMap.load(false);
+        depTreeMap.loadTrees(false);
     }
+
+    public static ConceptHierarchy ontology = null;;
 
     public static void addEntitySet (IceEntitySet entitySet) {
 	entitySets.put(entitySet.getType(), entitySet);
