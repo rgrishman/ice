@@ -99,7 +99,7 @@ public class SwingIceStatusPanel extends JPanel {
                 corpusEntitiesLabel.setForeground(Color.RED);
             }
             File relationFile = new File(FileNameSchema.getRelationsFileName(Ice.selectedCorpusName));
-            if (Ice.selectedCorpus.relationInstanceFileName != null) {
+            if (Ice.selectedCorpus.relationsFileName != null) {
                 corpusRelationsLabel.setText("Phrases found");
                 corpusRelationsLabel.setForeground(Color.GREEN);
             }
