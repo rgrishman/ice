@@ -66,7 +66,7 @@ Create an empty directory called *export* under the JET_HOME directory.
 Get a copy of *jet-release-script* from the JET git repository and run it.  It will
 produce a JET binary distribution (a tar file named jet-all.jar).
 
-## Building ICE`
+## Building ICE
 
 Create another empty directory called *export* under the ICE_HOME directory.
 Get a copy pf ice-release-script from the ICE  git repository and run it.  It will
